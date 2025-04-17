@@ -82,3 +82,37 @@ export interface UserStats {
   weeklyActivity: { date: string; duration: number }[];
   monthlyActivity: { date: string; duration: number }[];
 }
+
+export interface NsfwContentLog {
+  id: string;
+  userId: string;
+  source: string;
+  pageTitle: string;
+  url: string;
+  visitTimestamp: string;
+  duration: number; // in seconds
+  category: "image" | "video" | "text" | "other";
+  tags: string[];
+}
+
+export interface NsfwSourceSummary {
+  source: string;
+  visitCount: number;
+  totalDuration: number; // in seconds
+  lastVisit: string;
+}
+
+export interface NsfwTimePattern {
+  hour: number;
+  dayOfWeek: number;
+  visitCount: number;
+}
+
+export interface NsfwUserInsights {
+  topSources: NsfwSourceSummary[];
+  recentLogs: NsfwContentLog[];
+  timePatterns: NsfwTimePattern[];
+  totalVisits: number;
+  totalDuration: number; // in seconds
+  averageDuration: number; // in seconds
+}

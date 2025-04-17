@@ -6,9 +6,10 @@ import { ProfileStreaks } from "@/components/profile/profile-streaks";
 import { ProfileSaves } from "@/components/profile/profile-saves";
 import { ProfileClips } from "@/components/profile/profile-clips";
 import { ProfileStats } from "@/components/profile/profile-stats";
+import { ProfileNsfwLog } from "@/components/profile/profile-nsfw-log";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clip, Save, User, UserStats, UserStreak } from "@/types";
+import { Clip, NsfwContentLog, NsfwSourceSummary, NsfwTimePattern, NsfwUserInsights, Save, User, UserStats, UserStreak } from "@/types";
 
 // Mock data - this would come from Supabase in a real app
 const mockUser: User = {
@@ -95,6 +96,131 @@ const mockStats: UserStats = {
   ]
 };
 
+// Mock data for NSFW content logs
+const mockNsfwLogs: NsfwContentLog[] = [
+  {
+    id: "1",
+    userId: "1",
+    source: "Reddit",
+    pageTitle: "r/NSFW_Content_Discussion",
+    url: "https://reddit.com/r/NSFW_Content_Discussion",
+    visitTimestamp: "2023-04-16T21:30:00Z",
+    duration: 480, // 8 minutes
+    category: "text",
+    tags: ["discussion", "forum"]
+  },
+  {
+    id: "2",
+    userId: "1",
+    source: "ImgurNSFW",
+    pageTitle: "NSFW Image Gallery",
+    url: "https://imgur.com/nsfw/gallery",
+    visitTimestamp: "2023-04-15T22:15:00Z",
+    duration: 720, // 12 minutes
+    category: "image",
+    tags: ["gallery", "images"]
+  },
+  {
+    id: "3",
+    userId: "1",
+    source: "NSFWVideoSite",
+    pageTitle: "Video Content",
+    url: "https://example.com/nsfw-videos",
+    visitTimestamp: "2023-04-14T23:10:00Z",
+    duration: 960, // 16 minutes
+    category: "video",
+    tags: ["video", "streaming"]
+  },
+  {
+    id: "4",
+    userId: "1",
+    source: "Reddit",
+    pageTitle: "r/Another_NSFW_Subreddit",
+    url: "https://reddit.com/r/Another_NSFW_Subreddit",
+    visitTimestamp: "2023-04-13T20:45:00Z",
+    duration: 540, // 9 minutes
+    category: "text",
+    tags: ["discussion", "forum"]
+  },
+  {
+    id: "5",
+    userId: "1",
+    source: "AdultContentSite",
+    pageTitle: "Mixed Content Page",
+    url: "https://example.com/adult-content",
+    visitTimestamp: "2023-04-12T21:30:00Z",
+    duration: 840, // 14 minutes
+    category: "other",
+    tags: ["mixed", "content"]
+  }
+];
+
+// Create mock source summaries
+const mockSourceSummaries: NsfwSourceSummary[] = [
+  {
+    source: "Reddit",
+    visitCount: 15,
+    totalDuration: 7200, // 120 minutes
+    lastVisit: "2023-04-16T21:30:00Z"
+  },
+  {
+    source: "ImgurNSFW",
+    visitCount: 8,
+    totalDuration: 5400, // 90 minutes
+    lastVisit: "2023-04-15T22:15:00Z"
+  },
+  {
+    source: "NSFWVideoSite",
+    visitCount: 5,
+    totalDuration: 4800, // 80 minutes
+    lastVisit: "2023-04-14T23:10:00Z"
+  },
+  {
+    source: "AdultContentSite",
+    visitCount: 3,
+    totalDuration: 2520, // 42 minutes
+    lastVisit: "2023-04-12T21:30:00Z"
+  }
+];
+
+// Create mock time patterns
+const mockTimePatterns: NsfwTimePattern[] = [
+  { hour: 21, dayOfWeek: 2, visitCount: 12 },
+  { hour: 22, dayOfWeek: 2, visitCount: 18 },
+  { hour: 23, dayOfWeek: 2, visitCount: 22 },
+  { hour: 0, dayOfWeek: 3, visitCount: 15 },
+  { hour: 21, dayOfWeek: 3, visitCount: 10 },
+  { hour: 22, dayOfWeek: 3, visitCount: 16 },
+  { hour: 23, dayOfWeek: 3, visitCount: 20 },
+  { hour: 0, dayOfWeek: 4, visitCount: 12 },
+  { hour: 21, dayOfWeek: 4, visitCount: 8 },
+  { hour: 22, dayOfWeek: 4, visitCount: 14 },
+  { hour: 23, dayOfWeek: 4, visitCount: 17 },
+  { hour: 0, dayOfWeek: 5, visitCount: 11 },
+  { hour: 21, dayOfWeek: 5, visitCount: 14 },
+  { hour: 22, dayOfWeek: 5, visitCount: 24 },
+  { hour: 23, dayOfWeek: 5, visitCount: 26 },
+  { hour: 0, dayOfWeek: 6, visitCount: 18 },
+  { hour: 21, dayOfWeek: 6, visitCount: 12 },
+  { hour: 22, dayOfWeek: 6, visitCount: 22 },
+  { hour: 23, dayOfWeek: 6, visitCount: 28 },
+  { hour: 0, dayOfWeek: 0, visitCount: 19 },
+  { hour: 21, dayOfWeek: 0, visitCount: 10 },
+  { hour: 22, dayOfWeek: 0, visitCount: 16 },
+  { hour: 23, dayOfWeek: 0, visitCount: 19 },
+  { hour: 0, dayOfWeek: 1, visitCount: 14 }
+];
+
+// Create mock user insights
+const mockNsfwInsights: NsfwUserInsights = {
+  topSources: mockSourceSummaries,
+  recentLogs: mockNsfwLogs.slice(0, 3),
+  timePatterns: mockTimePatterns,
+  totalVisits: 31,
+  totalDuration: 19920, // 332 minutes
+  averageDuration: 642 // 10.7 minutes per visit
+};
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User>(mockUser);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -116,11 +242,12 @@ export default function ProfilePage() {
           />
           
           <Tabs defaultValue="streaks" className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6">
+            <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="streaks">Streaks</TabsTrigger>
               <TabsTrigger value="saves">Saves</TabsTrigger>
               <TabsTrigger value="clips">Clips</TabsTrigger>
               <TabsTrigger value="stats">Stats</TabsTrigger>
+              <TabsTrigger value="nsfw-log">NSFW Log</TabsTrigger>
             </TabsList>
             
             <TabsContent value="streaks">
@@ -137,6 +264,10 @@ export default function ProfilePage() {
             
             <TabsContent value="stats">
               <ProfileStats stats={mockStats} />
+            </TabsContent>
+            
+            <TabsContent value="nsfw-log">
+              <ProfileNsfwLog logs={mockNsfwLogs} insights={mockNsfwInsights} />
             </TabsContent>
           </Tabs>
         </div>

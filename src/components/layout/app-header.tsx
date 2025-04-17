@@ -124,7 +124,7 @@ export function AppHeader({
             </SheetTrigger>
             <SheetContent side="left">
               <SheetHeader>
-                <SheetTitle>TalkStream</SheetTitle>
+                <SheetTitle>Clutch</SheetTitle>
                 <SheetDescription>
                   Live voice and chat rooms
                 </SheetDescription>
