@@ -1,15 +1,12 @@
-
 import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { UserProfileHeader } from "@/components/profile/user-profile-header";
-import { ProfileStreaks } from "@/components/profile/profile-streaks";
 import { ProfileSaves } from "@/components/profile/profile-saves";
 import { ProfileClips } from "@/components/profile/profile-clips";
-import { ProfileStats } from "@/components/profile/profile-stats";
-import { ProfileNsfwLog } from "@/components/profile/profile-nsfw-log";
+import { ProfileCombinedStats } from "@/components/profile/profile-combined-stats";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clip, NsfwContentLog, NsfwSourceSummary, NsfwTimePattern, NsfwUserInsights, Save, User, UserStats, UserStreak } from "@/types";
+import { User, Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } from "@/types";
 
 // Mock data - this would come from Supabase in a real app
 const mockUser: User = {
@@ -232,7 +229,12 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader isAuthenticated={true} userName={user.name} userAvatar={user.avatar} isModerator={user.isModerator} />
+      <AppHeader 
+        isAuthenticated={true} 
+        userName={user.name} 
+        userAvatar={user.avatar} 
+        isModerator={user.isModerator} 
+      />
       
       <main className="flex-1 container py-6">
         <div className="flex flex-col gap-8">
@@ -241,17 +243,21 @@ export default function ProfilePage() {
             onEditProfile={() => setIsEditProfileOpen(true)} 
           />
           
-          <Tabs defaultValue="streaks" className="w-full">
-            <TabsList className="grid grid-cols-5 mb-6">
-              <TabsTrigger value="streaks">Streaks</TabsTrigger>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid grid-cols-4 mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="saves">Saves</TabsTrigger>
               <TabsTrigger value="clips">Clips</TabsTrigger>
-              <TabsTrigger value="stats">Stats</TabsTrigger>
-              <TabsTrigger value="nsfw-log">NSFW Log</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="streaks">
-              <ProfileStreaks streak={mockStreak} />
+            <TabsContent value="overview">
+              <ProfileCombinedStats 
+                stats={mockStats} 
+                nsfwLogs={mockNsfwLogs}
+                nsfwInsights={mockNsfwInsights}
+                streak={mockStreak}
+              />
             </TabsContent>
             
             <TabsContent value="saves">
@@ -262,12 +268,13 @@ export default function ProfilePage() {
               <ProfileClips clips={mockClips} />
             </TabsContent>
             
-            <TabsContent value="stats">
-              <ProfileStats stats={mockStats} />
-            </TabsContent>
-            
-            <TabsContent value="nsfw-log">
-              <ProfileNsfwLog logs={mockNsfwLogs} insights={mockNsfwInsights} />
+            <TabsContent value="activity">
+              <ProfileCombinedStats 
+                stats={mockStats}
+                nsfwLogs={mockNsfwLogs}
+                nsfwInsights={mockNsfwInsights}
+                streak={mockStreak}
+              />
             </TabsContent>
           </Tabs>
         </div>
