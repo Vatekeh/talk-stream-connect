@@ -3,8 +3,6 @@ import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { RoomCard } from "@/components/room/room-card";
 import { mockRooms } from "@/lib/mock-data";
-import { CreateRoomDialog } from "@/components/room/create-room-dialog";
-import { Room } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
@@ -27,13 +25,9 @@ export default function HomePage() {
       
       <main className="flex-1 container py-6">
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Explore Rooms</h1>
-              <p className="text-muted-foreground">Join live conversations or start your own</p>
-            </div>
-            
-            <CreateRoomDialog />
+          <div>
+            <h1 className="text-3xl font-bold">Explore Rooms</h1>
+            <p className="text-muted-foreground">Join live conversations</p>
           </div>
           
           <div className="relative">
@@ -56,7 +50,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <h2 className="text-xl font-medium">No rooms found</h2>
               <p className="text-muted-foreground">
-                Try a different search or create your own room
+                Try a different search
               </p>
             </div>
           )}
@@ -65,3 +59,4 @@ export default function HomePage() {
     </div>
   );
 }
+
