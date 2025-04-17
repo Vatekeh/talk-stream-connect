@@ -95,6 +95,7 @@ export interface NsfwContentLog {
   tags: string[];
 }
 
+// Adding the missing interfaces:
 export interface NsfwSourceSummary {
   source: string;
   visitCount: number;
