@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogIn, Menu, ShieldAlert, User } from "lucide-react";
+import { LogIn, Menu, ShieldAlert, User, Handshake } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,10 +46,10 @@ export function AppHeader({
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-talkstream-purple text-white font-semibold">
-              TS
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1D4ED8] text-white">
+              <Handshake className="h-4 w-4" />
             </div>
-            <span className="font-semibold text-lg hidden sm:inline-block">TalkStream</span>
+            <span className="font-semibold text-lg hidden sm:inline-block">Clutch</span>
           </Link>
           
           <nav className="hidden md:flex gap-6">
