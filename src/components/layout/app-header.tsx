@@ -138,6 +138,17 @@ export function AppHeader({
                 >
                   <Link to="/">Home</Link>
                 </Button>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className="justify-start" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Link to="/profile">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </Button>
                 {isModerator && (
                   <Button 
                     variant="ghost" 
