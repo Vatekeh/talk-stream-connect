@@ -1,4 +1,8 @@
 
+/**
+ * ContentLogTable component displays a table of NSFW content access logs
+ * with sorting, formatting, and empty state handling.
+ */
 import { 
   Table, 
   TableBody, 
@@ -15,6 +19,7 @@ interface ContentLogTableProps {
 }
 
 export function ContentLogTable({ logs }: ContentLogTableProps) {
+  // Utility function to format duration from seconds to minutes and seconds
   function formatDuration(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -24,6 +29,7 @@ export function ContentLogTable({ logs }: ContentLogTableProps) {
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
+        {/* Table header with column titles */}
         <TableHeader>
           <TableRow>
             <TableHead>Source</TableHead>
@@ -34,6 +40,8 @@ export function ContentLogTable({ logs }: ContentLogTableProps) {
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
+        
+        {/* Table body with conditional rendering based on logs existence */}
         <TableBody>
           {logs.length > 0 ? (
             logs.map((log) => (
