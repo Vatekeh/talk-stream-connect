@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { UserProfileHeader } from "@/components/profile/user-profile-header";
-import { ProfileSaves } from "@/components/profile/profile-saves";
-import { ProfileClips } from "@/components/profile/profile-clips";
-import { ProfileCombinedStats } from "@/components/profile/profile-combined-stats";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
+import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { User, Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } from "@/types";
 
 // Mock data - this would come from Supabase in a real app
@@ -153,7 +150,7 @@ const mockNsfwLogs: NsfwContentLog[] = [
 ];
 
 // Create mock source summaries
-const mockSourceSummaries: NsfwSourceSummary[] = [
+const mockSourceSummaries: any[] = [
   {
     source: "Reddit",
     visitCount: 15,
@@ -181,7 +178,7 @@ const mockSourceSummaries: NsfwSourceSummary[] = [
 ];
 
 // Create mock time patterns
-const mockTimePatterns: NsfwTimePattern[] = [
+const mockTimePatterns: any[] = [
   { hour: 21, dayOfWeek: 2, visitCount: 12 },
   { hour: 22, dayOfWeek: 2, visitCount: 18 },
   { hour: 23, dayOfWeek: 2, visitCount: 22 },
@@ -209,7 +206,7 @@ const mockTimePatterns: NsfwTimePattern[] = [
 ];
 
 // Create mock user insights
-const mockNsfwInsights: NsfwUserInsights = {
+const mockNsfwInsights: any = {
   topSources: mockSourceSummaries,
   recentLogs: mockNsfwLogs.slice(0, 3),
   timePatterns: mockTimePatterns,
@@ -218,9 +215,8 @@ const mockNsfwInsights: NsfwUserInsights = {
   averageDuration: 642 // 10.7 minutes per visit
 };
 
-export default function ProfilePage() {
-  const [user, setUser] = useState<User>(mockUser);
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+function ProfilePageContent() {
+  const { user, setUser, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
 
   const handleUpdateProfile = (updatedUser: User) => {
     setUser({ ...user, ...updatedUser });
@@ -243,40 +239,14 @@ export default function ProfilePage() {
             onEditProfile={() => setIsEditProfileOpen(true)} 
           />
           
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="saves">Saves</TabsTrigger>
-              <TabsTrigger value="clips">Clips</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview">
-              <ProfileCombinedStats 
-                stats={mockStats} 
-                nsfwLogs={mockNsfwLogs}
-                nsfwInsights={mockNsfwInsights}
-                streak={mockStreak}
-              />
-            </TabsContent>
-            
-            <TabsContent value="saves">
-              <ProfileSaves saves={mockSaves} />
-            </TabsContent>
-            
-            <TabsContent value="clips">
-              <ProfileClips clips={mockClips} />
-            </TabsContent>
-            
-            <TabsContent value="activity">
-              <ProfileCombinedStats 
-                stats={mockStats}
-                nsfwLogs={mockNsfwLogs}
-                nsfwInsights={mockNsfwInsights}
-                streak={mockStreak}
-              />
-            </TabsContent>
-          </Tabs>
+          <ProfileTabs 
+            stats={mockStats}
+            nsfwLogs={mockNsfwLogs}
+            nsfwInsights={mockNsfwInsights}
+            streak={mockStreak}
+            saves={mockSaves}
+            clips={mockClips}
+          />
         </div>
       </main>
       
@@ -287,5 +257,13 @@ export default function ProfilePage() {
         onSave={handleUpdateProfile}
       />
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <ProfileProvider>
+      <ProfilePageContent />
+    </ProfileProvider>
   );
 }
