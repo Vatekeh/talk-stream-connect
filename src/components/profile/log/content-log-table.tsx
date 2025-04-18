@@ -1,17 +1,14 @@
 
-import { format } from "date-fns";
 import { 
   Table, 
   TableBody, 
-  TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Eye, LinkIcon } from "lucide-react";
 import { NsfwContentLog } from "@/types";
+import { ContentLogRow } from "./content-log-row";
+import { ContentLogEmpty } from "./content-log-empty";
 
 interface ContentLogTableProps {
   logs: NsfwContentLog[];
@@ -40,38 +37,14 @@ export function ContentLogTable({ logs }: ContentLogTableProps) {
         <TableBody>
           {logs.length > 0 ? (
             logs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="font-medium">{log.source}</TableCell>
-                <TableCell className="max-w-[200px] truncate" title={log.pageTitle}>
-                  {log.pageTitle}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(log.visitTimestamp), "MMM d, yyyy h:mm a")}
-                </TableCell>
-                <TableCell>{formatDuration(log.duration)}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="capitalize">
-                    {log.category}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end space-x-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <LinkIcon size={16} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye size={16} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+              <ContentLogRow 
+                key={log.id} 
+                log={log} 
+                formatDuration={formatDuration}
+              />
             ))
           ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                No logs found.
-              </TableCell>
-            </TableRow>
+            <ContentLogEmpty />
           )}
         </TableBody>
       </Table>
