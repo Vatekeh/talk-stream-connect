@@ -39,8 +39,7 @@ export default function SurveyPage() {
           <Carousel
             opts={{
               align: "start",
-              loop: false,
-              draggable: false
+              loop: false
             }}
             className="w-full"
             setApi={(api) => {

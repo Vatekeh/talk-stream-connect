@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { surveySteps } from "@/components/survey/surveySteps";
 
 export interface SurveyFormData {
   feeling: string;
@@ -78,7 +80,12 @@ export function useSurvey() {
     try {
       const { error } = await supabase
         .from('survey_responses')
-        .insert([{ ...formData, user_id: user.id }]);
+        .insert([{ 
+          ...formData, 
+          user_id: user.id,
+          // Map future_goal_significance to success_definition to maintain database compatibility
+          success_definition: formData.future_goal_significance 
+        }]);
       
       if (error) throw error;
 
