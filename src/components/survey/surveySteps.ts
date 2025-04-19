@@ -27,7 +27,13 @@ export const surveySteps = [
       {
         id: "journey_duration",
         label: "How long have you been on the SR/NoFap journey?",
-        type: "textarea" as const
+        type: "radio" as const,
+        options: [
+          "< 1 year",
+          "1-2 years",
+          "3-5 years",
+          "+5 years"
+        ]
       },
       {
         id: "virginity_status",
@@ -43,18 +49,36 @@ export const surveySteps = [
       {
         id: "nsfw_start_age",
         label: "When did you first start consuming NSFW content?",
-        type: "textarea" as const
+        type: "radio" as const,
+        options: [
+          "Under 13 years old",
+          "13-15 years old",
+          "16-18 years old",
+          "18+ years old"
+        ]
       },
       {
         id: "longest_streak",
         label: "What has been your longest streak so far?",
-        type: "textarea" as const
+        type: "radio" as const,
+        options: [
+          "Less than a week",
+          "Less than two weeks",
+          "Less than a month",
+          "Less than 3 months",
+          "More than 3 months"
+        ]
       },
       {
         id: "goal_frequency",
         label: "How often do you reach your streak goals?",
         type: "radio" as const,
         options: ["Frequently", "Sometimes", "Rarely"]
+      },
+      {
+        id: "future_goal_significance",
+        label: "What would reaching a one-year streak mean to you?",
+        type: "textarea" as const
       }
     ]
   },
