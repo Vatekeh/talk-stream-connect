@@ -44,7 +44,7 @@ export const surveySteps = [
     ]
   },
   {
-    title: "History & Goals",
+    title: "History",
     fields: [
       {
         id: "nsfw_start_age",
@@ -68,7 +68,12 @@ export const surveySteps = [
           "Less than 3 months",
           "More than 3 months"
         ]
-      },
+      }
+    ]
+  },
+  {
+    title: "Goals & Challenges",
+    fields: [
       {
         id: "goal_frequency",
         label: "How often do you reach your streak goals?",
@@ -83,16 +88,11 @@ export const surveySteps = [
     ]
   },
   {
-    title: "Motivation & Challenges",
+    title: "Motivation & Rewards",
     fields: [
       {
         id: "motivation_factors",
         label: "What keeps you motivated to keep trying?",
-        type: "textarea" as const
-      },
-      {
-        id: "success_definition",
-        label: "What would you consider a successful outcome from using this app?",
         type: "textarea" as const
       },
       {
