@@ -10,7 +10,6 @@ import LoginPage from "./pages/LoginPage";
 import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
-import Index from "./pages/Index"; // Import the Index page
 
 const queryClient = new QueryClient();
 
@@ -21,8 +20,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} /> {/* Add this route */}
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/room/:roomId" element={<RoomPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/moderation" element={<ModerationPage />} />
