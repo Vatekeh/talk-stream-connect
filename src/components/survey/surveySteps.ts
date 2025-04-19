@@ -1,7 +1,7 @@
 
 export const surveySteps = [
   {
-    title: "Current State & Intentions",
+    title: "Current State",
     fields: [
       {
         id: "feeling",
@@ -13,7 +13,12 @@ export const surveySteps = [
           "Struggling or feeling low",
           "Prefer not to say"
         ]
-      },
+      }
+    ]
+  },
+  {
+    title: "Your Intention",
+    fields: [
       {
         id: "motivation",
         label: "What brings you here today?",
@@ -22,7 +27,7 @@ export const surveySteps = [
     ]
   },
   {
-    title: "Your Journey",
+    title: "Journey Duration",
     fields: [
       {
         id: "journey_duration",
@@ -34,7 +39,12 @@ export const surveySteps = [
           "3-5 years",
           "+5 years"
         ]
-      },
+      }
+    ]
+  },
+  {
+    title: "Personal Status",
+    fields: [
       {
         id: "virginity_status",
         label: "Do you still have your V-card?",
@@ -56,7 +66,12 @@ export const surveySteps = [
           "16-18 years old",
           "18+ years old"
         ]
-      },
+      }
+    ]
+  },
+  {
+    title: "Current Progress",
+    fields: [
       {
         id: "longest_streak",
         label: "What has been your longest streak so far?",
@@ -72,14 +87,19 @@ export const surveySteps = [
     ]
   },
   {
-    title: "Goals & Challenges",
+    title: "Goal Setting",
     fields: [
       {
         id: "goal_frequency",
         label: "How often do you reach your streak goals?",
         type: "radio" as const,
         options: ["Frequently", "Sometimes", "Rarely"]
-      },
+      }
+    ]
+  },
+  {
+    title: "Future Goals",
+    fields: [
       {
         id: "future_goal_significance",
         label: "What would reaching a one-year streak mean to you?",
@@ -88,18 +108,28 @@ export const surveySteps = [
     ]
   },
   {
-    title: "Motivation & Rewards",
+    title: "Motivation",
     fields: [
       {
         id: "motivation_factors",
         label: "What keeps you motivated to keep trying?",
         type: "textarea" as const
-      },
+      }
+    ]
+  },
+  {
+    title: "Challenges",
+    fields: [
       {
         id: "biggest_challenge",
         label: "What is the most daunting aspect of SR/NoFap for you?",
         type: "textarea" as const
-      },
+      }
+    ]
+  },
+  {
+    title: "Rewards",
+    fields: [
       {
         id: "most_rewarding",
         label: "What is the most rewarding aspect of it?",
