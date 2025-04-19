@@ -62,10 +62,15 @@ export function useSurvey() {
       
       // Update the future goal question when longest_streak changes
       if (id === "longest_streak") {
-        const fields = surveySteps[3].fields;
-        const futureGoalField = fields.find(f => f.id === "future_goal_significance");
-        if (futureGoalField) {
-          futureGoalField.label = getFutureGoalQuestion(value);
+        const futureGoalStep = surveySteps.find(step => 
+          step.fields.some(field => field.id === "future_goal_significance")
+        );
+        
+        if (futureGoalStep) {
+          const futureGoalField = futureGoalStep.fields.find(f => f.id === "future_goal_significance");
+          if (futureGoalField) {
+            futureGoalField.label = getFutureGoalQuestion(value);
+          }
         }
       }
       
@@ -80,12 +85,12 @@ export function useSurvey() {
     try {
       const { error } = await supabase
         .from('survey_responses')
-        .insert([{ 
+        .insert({ 
           ...formData, 
           user_id: user.id,
           // Map future_goal_significance to success_definition to maintain database compatibility
-          success_definition: formData.future_goal_significance 
-        }]);
+          success_definition: formData.future_goal_significance
+        });
       
       if (error) throw error;
 
