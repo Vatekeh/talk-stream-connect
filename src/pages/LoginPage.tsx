@@ -1,4 +1,3 @@
-
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,14 +13,12 @@ export default function LoginPage() {
   const { user, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
   if (user && !isLoading) {
     return <Navigate to="/" replace />;
   }
 
   const handleAnonymousLogin = () => {
     setLoading(true);
-    // This would be replaced with actual Supabase anonymous auth
     setTimeout(() => {
       setLoading(false);
     }, 1000);
@@ -31,14 +28,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       <AuthHeader />
       
-      {/* Main content with authentication forms */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <Card className="animate-in">
             <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl">Welcome to TalkStream</CardTitle>
+              <CardTitle className="text-2xl">Welcome to Clutch</CardTitle>
               <CardDescription>
-                Sign in to join live voice and chat rooms
+                Sign in to connect with support professionals
               </CardDescription>
             </CardHeader>
             

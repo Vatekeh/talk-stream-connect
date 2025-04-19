@@ -7,9 +7,9 @@ export function AuthHeader() {
       <div className="container flex h-16 items-center">
         <Link to="/" className="flex items-center space-x-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-talkstream-purple text-white font-semibold">
-            TS
+            C
           </div>
-          <span className="font-semibold text-lg">TalkStream</span>
+          <span className="font-semibold text-lg">Clutch</span>
         </Link>
       </div>
     </header>

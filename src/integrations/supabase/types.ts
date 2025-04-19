@@ -16,6 +16,8 @@ export type Database = {
           created_at: string
           id: string
           is_moderator: boolean | null
+          phone_number: string | null
+          survey_completed: boolean | null
           updated_at: string
           username: string | null
         }
@@ -25,6 +27,8 @@ export type Database = {
           created_at?: string
           id: string
           is_moderator?: boolean | null
+          phone_number?: string | null
+          survey_completed?: boolean | null
           updated_at?: string
           username?: string | null
         }
@@ -34,8 +38,64 @@ export type Database = {
           created_at?: string
           id?: string
           is_moderator?: boolean | null
+          phone_number?: string | null
+          survey_completed?: boolean | null
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          biggest_challenge: string
+          created_at: string
+          feeling: string
+          goal_frequency: string
+          id: string
+          journey_duration: string
+          longest_streak: string
+          most_rewarding: string
+          motivation: string
+          motivation_factors: string
+          nsfw_start_age: string
+          success_definition: string
+          updated_at: string
+          user_id: string
+          virginity_status: string
+        }
+        Insert: {
+          biggest_challenge: string
+          created_at?: string
+          feeling: string
+          goal_frequency: string
+          id?: string
+          journey_duration: string
+          longest_streak: string
+          most_rewarding: string
+          motivation: string
+          motivation_factors: string
+          nsfw_start_age: string
+          success_definition: string
+          updated_at?: string
+          user_id: string
+          virginity_status: string
+        }
+        Update: {
+          biggest_challenge?: string
+          created_at?: string
+          feeling?: string
+          goal_frequency?: string
+          id?: string
+          journey_duration?: string
+          longest_streak?: string
+          most_rewarding?: string
+          motivation?: string
+          motivation_factors?: string
+          nsfw_start_age?: string
+          success_definition?: string
+          updated_at?: string
+          user_id?: string
+          virginity_status?: string
         }
         Relationships: []
       }
