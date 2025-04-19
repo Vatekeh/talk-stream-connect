@@ -2,6 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { SurveyFormData } from "@/hooks/useSurvey";
 
 interface SurveyStepProps {
   fields: {
@@ -10,7 +11,7 @@ interface SurveyStepProps {
     type: "radio" | "textarea";
     options?: string[];
   }[];
-  formData: Record<string, string>;
+  formData: SurveyFormData;
   updateFormData: (id: string, value: string) => void;
 }
 
@@ -22,7 +23,7 @@ export function SurveyStep({ fields, formData, updateFormData }: SurveyStepProps
           <Label>{field.label}</Label>
           {field.type === "radio" ? (
             <RadioGroup
-              value={formData[field.id]}
+              value={formData[field.id as keyof SurveyFormData] || ""}
               onValueChange={(value) => updateFormData(field.id, value)}
             >
               <div className="space-y-2">
@@ -36,7 +37,7 @@ export function SurveyStep({ fields, formData, updateFormData }: SurveyStepProps
             </RadioGroup>
           ) : (
             <Textarea
-              value={formData[field.id]}
+              value={formData[field.id as keyof SurveyFormData] || ""}
               onChange={(e) => updateFormData(field.id, e.target.value)}
               placeholder="Type your answer here..."
             />
