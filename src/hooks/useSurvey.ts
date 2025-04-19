@@ -79,7 +79,10 @@ export function useSurvey() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error("You must be logged in to submit the survey");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -94,15 +97,22 @@ export function useSurvey() {
       
       if (error) throw error;
 
-      await supabase
+      // Update the user profile to mark survey as completed
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ survey_completed: true })
         .eq('id', user.id);
+        
+      if (profileError) throw profileError;
 
       toast.success("Survey completed successfully!");
-      navigate("/");
+      
+      // Force navigation to the homepage after a short delay
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 300);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "There was an error submitting your survey");
     } finally {
       setLoading(false);
     }

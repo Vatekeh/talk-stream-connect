@@ -11,6 +11,7 @@ import {
   CarouselItem,
   CarouselNext,
 } from "@/components/ui/carousel";
+import { useEffect } from "react";
 
 export default function SurveyPage() {
   const {
