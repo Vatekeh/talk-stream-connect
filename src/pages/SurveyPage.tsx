@@ -40,6 +40,7 @@ export default function SurveyPage() {
             opts={{
               align: "start",
               loop: false,
+              draggable: false
             }}
             className="w-full"
             setApi={(api) => {
@@ -59,7 +60,11 @@ export default function SurveyPage() {
                       updateFormData={updateFormData}
                     />
                     
-                    <div className="flex justify-end pt-4">
+                    <div className="flex justify-between pt-4">
+                      {index > 0 && (
+                        <CarouselPrevious className="relative translate-x-0 translate-y-0 left-0" />
+                      )}
+                      <div className="flex-1" />
                       {isLastStep && index === surveySteps.length - 1 ? (
                         <Button
                           onClick={handleSubmit}
@@ -74,14 +79,14 @@ export default function SurveyPage() {
                             "Submit"
                           )}
                         </Button>
-                      ) : null}
+                      ) : (
+                        <CarouselNext className="relative translate-x-0 translate-y-0 right-0" />
+                      )}
                     </div>
                   </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            {!isLastStep && <CarouselNext />}
-            {currentStep > 0 && <CarouselPrevious />}
           </Carousel>
         </CardContent>
       </Card>
