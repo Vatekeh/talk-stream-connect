@@ -1,10 +1,17 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { SurveyStep } from "@/components/survey/SurveyStep";
 import { surveySteps } from "@/components/survey/surveySteps";
 import { useSurvey } from "@/hooks/useSurvey";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function SurveyPage() {
   const {
@@ -17,6 +24,7 @@ export default function SurveyPage() {
   } = useSurvey();
 
   const currentStepData = surveySteps[currentStep];
+  const isLastStep = currentStep === surveySteps.length - 1;
 
   const isStepValid = () => {
     return currentStepData.fields.every(field => 
@@ -24,47 +32,57 @@ export default function SurveyPage() {
     );
   };
 
-  const isLastStep = currentStep === surveySteps.length - 1;
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>Pre-Dashboard Survey</CardTitle>
-          <CardDescription>
-            Help us understand your journey better ({currentStep + 1}/{surveySteps.length})
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <SurveyStep
-              fields={currentStepData.fields}
-              formData={formData}
-              updateFormData={updateFormData}
-            />
-            
-            <div className="flex justify-between pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentStep(prev => prev - 1)}
-                disabled={currentStep === 0}
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={isLastStep ? handleSubmit : () => setCurrentStep(prev => prev + 1)}
-                disabled={!isStepValid() || loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : isLastStep ? "Submit" : "Next"}
-              </Button>
-            </div>
-          </div>
+        <CardContent className="p-6">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: false,
+            }}
+            className="w-full"
+            setApi={(api) => {
+              api?.on("select", () => {
+                const selectedIndex = api.selectedScrollSnap();
+                setCurrentStep(selectedIndex);
+              });
+            }}
+          >
+            <CarouselContent>
+              {surveySteps.map((step, index) => (
+                <CarouselItem key={index} className="pt-6">
+                  <div className="space-y-6">
+                    <SurveyStep
+                      fields={step.fields}
+                      formData={formData}
+                      updateFormData={updateFormData}
+                    />
+                    
+                    <div className="flex justify-end pt-4">
+                      {isLastStep && index === surveySteps.length - 1 ? (
+                        <Button
+                          onClick={handleSubmit}
+                          disabled={!isStepValid() || loading}
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Submit"
+                          )}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {!isLastStep && <CarouselNext />}
+            {currentStep > 0 && <CarouselPrevious />}
+          </Carousel>
         </CardContent>
       </Card>
     </div>
