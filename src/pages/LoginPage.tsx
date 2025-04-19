@@ -1,67 +1,46 @@
-
-/**
- * LoginPage component handles user authentication with email/password and anonymous login
- * Provides both login and signup functionality in a tabbed interface
- */
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  // Navigation and loading state management
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  
-  // Form input states
+  const { signIn, signUp, user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  
-  /**
-   * Handles user login form submission
-   * Currently uses mock implementation with setTimeout
-   */
-  const handleLogin = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  if (user && !isLoading) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // This would be replaced with actual Supabase authentication
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/");
-    }, 1000);
+    await signIn(email, password);
+    setLoading(false);
   };
-  
-  /**
-   * Handles new user registration form submission
-   * Currently uses mock implementation with setTimeout
-   */
-  const handleSignup = (e: React.FormEvent) => {
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // This would be replaced with actual Supabase authentication
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/");
-    }, 1000);
+    await signUp(email, password);
+    setLoading(false);
   };
-  
-  /**
-   * Handles anonymous user login
-   * Currently uses mock implementation with setTimeout
-   */
+
   const handleAnonymousLogin = () => {
     setLoading(true);
     
     // This would be replaced with actual Supabase anonymous auth
     setTimeout(() => {
       setLoading(false);
-      navigate("/");
+      // navigate("/");  // original code
     }, 1000);
   };
   
@@ -131,7 +110,12 @@ export default function LoginPage() {
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Signing in..." : "Sign In"}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Signing in...
+                        </>
+                      ) : "Sign In"}
                     </Button>
                   </form>
                 </TabsContent>
@@ -172,7 +156,12 @@ export default function LoginPage() {
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Creating account..." : "Create Account"}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : "Create Account"}
                     </Button>
                   </form>
                 </TabsContent>

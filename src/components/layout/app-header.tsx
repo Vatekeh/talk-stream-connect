@@ -20,6 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppHeaderProps {
   isAuthenticated?: boolean;
@@ -35,10 +36,10 @@ export function AppHeader({
   isModerator = false
 }: AppHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { signOut } = useAuth();
   
   const handleLogout = () => {
-    // This would be replaced with actual Supabase functionality
-    console.log("Logging out");
+    signOut();
   };
 
   return (
