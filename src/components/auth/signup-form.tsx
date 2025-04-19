@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, Phone } from "lucide-react";
 
 export function SignupForm() {
   const { signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password);
+    await signUp(email, password, { phone_number: phone });
     setLoading(false);
   };
 
@@ -42,6 +43,21 @@ export function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input 
+            id="phone" 
+            type="tel" 
+            placeholder="Your phone number" 
+            value={phone} 
+            onChange={(e) => setPhone(e.target.value)}
+            className="pl-10"
+            required
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
