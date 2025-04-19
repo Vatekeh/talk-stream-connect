@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogIn, Menu, ShieldAlert, User, Handshake } from "lucide-react";
+import { NavigationLinks } from "./navigation-links";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,17 +52,10 @@ export function AppHeader({
             <span className="font-semibold text-lg hidden sm:inline-block">Clutch</span>
           </Link>
           
-          <nav className="hidden md:flex gap-6">
-            <Link to="/" className="text-sm font-medium">
-              Home
-            </Link>
-            {isModerator && (
-              <Link to="/moderation" className="text-sm font-medium flex items-center gap-1">
-                <ShieldAlert size={14} />
-                Moderation
-              </Link>
-            )}
-          </nav>
+          <NavigationLinks 
+            isModerator={isModerator} 
+            className="hidden md:flex gap-6"
+          />
         </div>
         
         <div className="flex items-center space-x-2">
@@ -130,14 +123,11 @@ export function AppHeader({
                 </SheetDescription>
               </SheetHeader>
               <div className="py-4 flex flex-col gap-3">
-                <Button 
-                  variant="ghost" 
-                  asChild 
-                  className="justify-start" 
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Link to="/">Home</Link>
-                </Button>
+                <NavigationLinks 
+                  isModerator={isModerator} 
+                  className="flex flex-col gap-3"
+                  onClickLink={() => setIsMenuOpen(false)}
+                />
                 <Button 
                   variant="ghost" 
                   asChild 
@@ -149,19 +139,6 @@ export function AppHeader({
                     Profile
                   </Link>
                 </Button>
-                {isModerator && (
-                  <Button 
-                    variant="ghost" 
-                    asChild 
-                    className="justify-start" 
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Link to="/moderation" className="flex items-center gap-2">
-                      <ShieldAlert size={16} />
-                      Moderation
-                    </Link>
-                  </Button>
-                )}
               </div>
             </SheetContent>
           </Sheet>
