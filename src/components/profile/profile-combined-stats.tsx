@@ -12,24 +12,31 @@ import { ActivityPatterns } from "./stats/activity-patterns";
 
 interface ProfileCombinedStatsProps {
   stats: UserStats;
-  nsfwLogs: NsfwContentLog[];
-  nsfwInsights: NsfwUserInsights;
   streak: UserStreak;
+  nsfwLogs?: NsfwContentLog[];
+  nsfwInsights?: NsfwUserInsights;
 }
 
 export function ProfileCombinedStats({ 
   stats, 
-  nsfwLogs, 
-  nsfwInsights,
+  nsfwLogs = [], // Default to empty array
+  nsfwInsights = {
+    topSources: [],
+    recentLogs: [],
+    timePatterns: [],
+    totalVisits: 0,
+    totalDuration: 0,
+    averageDuration: 0
+  }, // Default object with empty values
   streak 
 }: ProfileCombinedStatsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("logs");
   
   const filteredLogs = nsfwLogs.filter(log => 
-    log.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.pageTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.url.toLowerCase().includes(searchTerm.toLowerCase())
+    log.source?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.pageTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.url?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -88,7 +95,18 @@ export function ProfileCombinedStats({
             </TabsContent>
             
             <TabsContent value="patterns">
-              <ActivityPatterns timePatterns={nsfwInsights.timePatterns} />
+              {nsfwInsights?.timePatterns && nsfwInsights.timePatterns.length > 0 ? (
+                <ActivityPatterns timePatterns={nsfwInsights.timePatterns} />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>No Pattern Data</CardTitle>
+                    <CardDescription>
+                      No activity pattern data is available at this time
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              )}
             </TabsContent>
             
             <TabsContent value="insights">
