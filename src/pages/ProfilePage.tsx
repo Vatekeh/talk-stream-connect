@@ -7,6 +7,7 @@ import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 function ProfilePageContent() {
   const { user, setUser, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
@@ -54,7 +55,6 @@ function ProfilePageContent() {
               name: profile?.username || '',
               avatar: profile?.avatar_url,
               bio: profile?.bio,
-              pronouns: profile?.pronouns,
               createdAt: profile?.created_at,
               isModerator: profile?.is_moderator
             }}
@@ -78,7 +78,6 @@ function ProfilePageContent() {
           name: profile?.username || '',
           avatar: profile?.avatar_url,
           bio: profile?.bio,
-          pronouns: profile?.pronouns,
           createdAt: profile?.created_at,
           isModerator: profile?.is_moderator
         }}

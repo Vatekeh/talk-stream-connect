@@ -25,25 +25,38 @@ export function useProfileData(userId: string) {
         .from('user_saves')
         .select(`
           id,
+          from_user_id,
           message,
-          created_at,
-          profiles!user_saves_from_user_id_fkey (
-            username,
-            avatar_url
-          )
+          created_at
         `)
         .eq('to_user_id', userId);
       
       if (error) throw error;
       
-      return data.map((save) => ({
-        id: save.id,
-        fromUserId: save.from_user_id,
-        fromUserName: save.profiles.username,
-        fromUserAvatar: save.profiles.avatar_url,
-        message: save.message,
-        timestamp: save.created_at
-      }));
+      // Get user profiles for the from_user_ids
+      const userIds = data.map(save => save.from_user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+        
+      if (profilesError) throw profilesError;
+      
+      // Map profiles to saves
+      const savesWithProfiles = data.map(save => {
+        const fromUser = profiles.find(profile => profile.id === save.from_user_id);
+        return {
+          id: save.id,
+          fromUserId: save.from_user_id,
+          toUserId: userId,
+          fromUserName: fromUser?.username || 'Unknown User',
+          fromUserAvatar: fromUser?.avatar_url,
+          message: save.message,
+          timestamp: save.created_at
+        };
+      });
+      
+      return savesWithProfiles;
     }
   });
 
@@ -56,7 +69,19 @@ export function useProfileData(userId: string) {
         .eq('user_id', userId);
       
       if (error) throw error;
-      return data;
+      
+      // Map database fields to match Clip type
+      return data.map(clip => ({
+        id: clip.id,
+        userId: clip.user_id,
+        roomId: clip.room_id,
+        roomName: clip.room_name,
+        title: clip.title,
+        description: clip.description,
+        duration: clip.duration,
+        timestamp: clip.created_at,
+        thumbnailUrl: undefined // Add default value for optional field
+      }));
     }
   });
 
