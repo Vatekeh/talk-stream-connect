@@ -113,9 +113,11 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     try {
       const enabled = !isMicrophoneEnabled;
       if (enabled) {
-        await room.localParticipant.enableMicrophone();
+        // Use createLocalAudioTrack instead of enableMicrophone
+        await room.localParticipant.setMicrophoneEnabled(true);
       } else {
-        room.localParticipant.disableMicrophone();
+        // Use disableLocalTrack instead of disableMicrophone
+        await room.localParticipant.setMicrophoneEnabled(false);
       }
       setIsMicrophoneEnabled(enabled);
     } catch (error) {
@@ -130,9 +132,11 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     try {
       const enabled = !isCameraEnabled;
       if (enabled) {
-        await room.localParticipant.enableCamera();
+        // Use createLocalVideoTrack instead of enableCamera
+        await room.localParticipant.setCameraEnabled(true);
       } else {
-        room.localParticipant.disableCamera();
+        // Use disableLocalTrack instead of disableCamera
+        await room.localParticipant.setCameraEnabled(false);
       }
       setIsCameraEnabled(enabled);
     } catch (error) {

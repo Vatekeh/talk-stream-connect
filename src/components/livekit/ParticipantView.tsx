@@ -50,8 +50,9 @@ export function ParticipantView({
       else {
         const remoteParticipant = participant as RemoteParticipant;
         
-        // Check for already subscribed tracks
-        for (const trackPub of remoteParticipant.trackPublications.values()) {
+        // Check for already subscribed tracks - Fixed method
+        const trackPublications = Array.from(remoteParticipant.getTracks());
+        for (const trackPub of trackPublications) {
           if (trackPub.track) {
             if (trackPub.kind === Track.Kind.Video) {
               setVideoTrack(trackPub.track);
