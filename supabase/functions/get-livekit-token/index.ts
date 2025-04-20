@@ -5,6 +5,7 @@ import { AccessToken } from "https://esm.sh/livekit-server-sdk@1.2.7";
 const LIVEKIT_API_KEY = Deno.env.get('LIVEKIT_API_KEY') || '';
 const LIVEKIT_API_SECRET = Deno.env.get('LIVEKIT_API_SECRET') || '';
 
+// Define proper CORS headers for all responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
