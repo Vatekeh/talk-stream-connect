@@ -7,10 +7,12 @@ import { AuthHeader } from "@/components/auth/auth-header";
 import { PhoneVerification } from "@/components/auth/phone-verification";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const { user, isLoading, signInWithGoogle } = useAuth();
   const [signingIn, setSigningIn] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,28 +32,48 @@ export default function LoginPage() {
 
   // Check if user is already signed in and has phone number
   useEffect(() => {
-    if (user && !isLoading && user.user_metadata?.phone_number) {
-      navigate('/');
+    if (user && !isLoading) {
+      if (user.user_metadata?.phone_number) {
+        setRedirecting(true);
+        // Add a short delay to prevent quick flashes of content
+        const timeout = setTimeout(() => {
+          navigate('/');
+        }, 500);
+        return () => clearTimeout(timeout);
+      }
     }
   }, [user, isLoading, navigate]);
 
   const handleGoogleSignIn = async () => {
-    setSigningIn(true);
-    await signInWithGoogle();
-    // We don't need to reset signingIn as the page will redirect
+    try {
+      setSigningIn(true);
+      await signInWithGoogle();
+      // We don't need to reset signingIn as the page will redirect
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast.error("Sign in failed. Please try again.");
+      setSigningIn(false);
+    }
   };
 
+  // Show loading state when the auth state is still being determined
   if (isLoading) {
     return (
       <div className="min-h-screen flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading authentication state...</span>
       </div>
     );
   }
 
   // If user is already signed in and has verified their phone, redirect to home
-  if (user?.user_metadata?.phone_number) {
-    return <Navigate to="/" replace />;
+  if (redirecting || (user && user.user_metadata?.phone_number)) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Redirecting to home page...</span>
+      </div>
+    );
   }
 
   return (

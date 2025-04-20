@@ -27,30 +27,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.info(`Auth state changed: ${event}`, session);
+      (event, currentSession) => {
+        console.info(`Auth state changed: ${event}`, currentSession);
         
         // Update the session and user state
-        setSession(session);
-        setUser(session?.user ?? null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         setIsLoading(false);
 
         // Handle profile update after session data is set
-        if (session?.user) {
+        if (currentSession?.user) {
           // Use setTimeout to avoid Supabase SDK deadlocks
           setTimeout(async () => {
             try {
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session.user.id)
+                .eq('id', currentSession.user.id)
                 .single();
 
               if (profile) {
                 await supabase
                   .from('profiles')
                   .update({ last_activity: new Date().toISOString() })
-                  .eq('id', session.user.id);
+                  .eq('id', currentSession.user.id);
               }
             } catch (error) {
               console.error("Error updating profile:", error);
@@ -61,10 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.info("Initial session check:", session ? "Session found" : "No session");
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.info("Initial session check:", currentSession ? "Session found" : "No session");
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
       setIsLoading(false);
     });
 
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Google sign in error:", error);
       toast.error("Failed to sign in with Google: " + error.message);
+      throw error; // Propagate error for handling in the component
     }
   };
 
@@ -102,6 +103,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id);
       
       if (error) throw error;
+      
+      // Update user metadata
+      const { data, error: updateError } = await supabase.auth.updateUser({
+        data: { phone_number: phone }
+      });
+      
+      if (updateError) throw updateError;
+      
+      // Update the local user state with new metadata
+      if (data?.user) {
+        setUser(data.user);
+      }
+      
       toast.success("Phone number updated successfully");
       navigate("/");
     } catch (error: any) {
@@ -130,8 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Navigate to login page and show success message
       console.log("Sign out successful, navigating to login page");
-      navigate("/login");
       toast.success("Signed out successfully");
+      navigate("/login");
     } catch (error: any) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out: " + error.message);
