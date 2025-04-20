@@ -5,9 +5,9 @@ import { AccessToken } from "https://esm.sh/livekit-server-sdk@1.2.7";
 const LIVEKIT_API_KEY = Deno.env.get('LIVEKIT_API_KEY') || '';
 const LIVEKIT_API_SECRET = Deno.env.get('LIVEKIT_API_SECRET') || '';
 
-// Define proper CORS headers for all responses
+// Define CORS headers allowing only https://matcher.group origin
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://matcher.group',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -15,11 +15,10 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // IMPORTANT: Always handle CORS preflight requests FIRST
+  // Handle CORS preflight requests for allowed origin
   if (req.method === 'OPTIONS') {
     console.log("Handling OPTIONS preflight request");
-    return new Response(null, {
-      status: 204,
+    return new Response('ok', {
       headers: corsHeaders,
     });
   }
@@ -27,7 +26,6 @@ serve(async (req) => {
   try {
     console.log(`Processing ${req.method} request to get-livekit-token`);
     
-    // Ensure secrets are configured (but always send CORS headers!)
     if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
       console.error("Missing LiveKit API credentials");
       return new Response(
@@ -47,13 +45,11 @@ serve(async (req) => {
       );
     }
 
-    // Create a new token for the user
     const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
       identity: userId,
       name: name || userId,
     });
 
-    // Grant permissions
     token.addGrant({
       roomJoin: true,
       room,
@@ -65,7 +61,6 @@ serve(async (req) => {
     const jwt = token.toJwt();
     console.log(`Token generated successfully for ${userId} in room ${room}`);
 
-    // Return the JWT
     return new Response(
       JSON.stringify({ token: jwt }),
       { 
@@ -74,7 +69,6 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    // Always include CORS headers on error for client debugging
     console.error('Error generating LiveKit token:', error);
     return new Response(
       JSON.stringify({ error: `Failed to generate token: ${error && error.message ? error.message : error}` }),
