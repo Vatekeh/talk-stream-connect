@@ -5,9 +5,9 @@ import { AccessToken } from "https://esm.sh/livekit-server-sdk@1.2.7";
 const LIVEKIT_API_KEY = Deno.env.get('LIVEKIT_API_KEY') || '';
 const LIVEKIT_API_SECRET = Deno.env.get('LIVEKIT_API_SECRET') || '';
 
-// Define CORS headers allowing only https://matcher.group origin
+// Define CORS headers allowing all origins during development
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://matcher.group',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -15,7 +15,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests for allowed origin
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("Handling OPTIONS preflight request");
     return new Response('ok', {
