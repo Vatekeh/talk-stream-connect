@@ -25,30 +25,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.info("AuthProvider initialized, setting up listeners");
     
+    // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.info(`Auth state changed: ${event}`, session);
+        
+        // Update the session and user state
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
 
+        // Handle profile update after session data is set
         if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Use setTimeout to avoid Supabase SDK deadlocks
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-          if (profile) {
-            await supabase
-              .from('profiles')
-              .update({ last_activity: new Date().toISOString() })
-              .eq('id', session.user.id);
-          }
+              if (profile) {
+                await supabase
+                  .from('profiles')
+                  .update({ last_activity: new Date().toISOString() })
+                  .eq('id', session.user.id);
+              }
+            } catch (error) {
+              console.error("Error updating profile:", error);
+            }
+          }, 0);
         }
       }
     );
 
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.info("Initial session check:", session ? "Session found" : "No session");
       setSession(session);
@@ -56,7 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      console.info("Auth state listener unsubscribed");
+    };
   }, []);
 
   const signInWithGoogle = async () => {
@@ -99,12 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Signing out user...");
       
-      // Clear local state first
+      // First clear the client-side session state to immediately update UI
       setUser(null);
       setSession(null);
       
-      // Then perform Supabase signout
-      const { error } = await supabase.auth.signOut();
+      // Then perform the actual sign out with Supabase
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // Ensures signout across all tabs/devices
+      });
       
       if (error) {
         console.error("Sign out error:", error);

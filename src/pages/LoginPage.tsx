@@ -1,5 +1,5 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 export default function LoginPage() {
   const { user, isLoading, signInWithGoogle } = useAuth();
   const [signingIn, setSigningIn] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // If URL contains '#' it might be a redirect from Supabase Auth
@@ -27,13 +28,29 @@ export default function LoginPage() {
     }
   }, []);
 
+  // Check if user is already signed in and has phone number
+  useEffect(() => {
+    if (user && !isLoading && user.user_metadata?.phone_number) {
+      navigate('/');
+    }
+  }, [user, isLoading, navigate]);
+
   const handleGoogleSignIn = async () => {
     setSigningIn(true);
     await signInWithGoogle();
     // We don't need to reset signingIn as the page will redirect
   };
 
-  if (user?.user_metadata?.phone_number && !isLoading) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // If user is already signed in and has verified their phone, redirect to home
+  if (user?.user_metadata?.phone_number) {
     return <Navigate to="/" replace />;
   }
 
@@ -52,11 +69,7 @@ export default function LoginPage() {
             </CardHeader>
             
             <CardContent className="space-y-4">
-              {isLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              ) : user ? (
+              {user ? (
                 <PhoneVerification />
               ) : (
                 <Button 

@@ -39,9 +39,9 @@ export function AppHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { signOut } = useAuth();
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("Logout button clicked, calling signOut()");
-    signOut();
+    await signOut();
   };
 
   return (
