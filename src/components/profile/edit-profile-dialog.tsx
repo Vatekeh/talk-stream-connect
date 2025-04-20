@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -7,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "@/types";
 import { useForm } from "react-hook-form";
-import { Camera } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/lib/toast";
-import { Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -61,11 +61,18 @@ export function EditProfileDialog({ isOpen, onClose, user, onSave }: EditProfile
         avatar: avatarPreview || user.avatar,
       });
       
-      toast.success('Profile updated successfully');
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
       onClose();
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error(error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
