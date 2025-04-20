@@ -23,8 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.info("AuthProvider initialized, setting up listeners");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.info(`Auth state changed: ${event}`, session);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -47,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.info("Initial session check:", session ? "Session found" : "No session");
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -93,13 +97,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log("Signing out user...");
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Sign out error:", error);
+        throw error;
+      }
+      
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      
+      // Navigate to login page and show success message
+      console.log("Sign out successful, navigating to login page");
       navigate("/login");
       toast.success("Signed out successfully");
     } catch (error: any) {
       console.error("Sign out error:", error);
-      toast.error(error.message);
+      toast.error("Failed to sign out: " + error.message);
     }
   };
 

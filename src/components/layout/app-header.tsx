@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,6 +40,7 @@ export function AppHeader({
   const { signOut } = useAuth();
   
   const handleLogout = () => {
+    console.log("Logout button clicked, calling signOut()");
     signOut();
   };
 
