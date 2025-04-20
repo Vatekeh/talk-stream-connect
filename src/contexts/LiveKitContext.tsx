@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Room, RoomEvent, RemoteParticipant, LocalParticipant, RemoteTrackPublication, ConnectionState } from "livekit-client";
+import { Room, RoomEvent, RemoteParticipant, LocalParticipant, ConnectionState } from "livekit-client";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -35,10 +35,22 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     try {
       // Call Supabase Edge Function to get a token
       const { data, error } = await supabase.functions.invoke('get-livekit-token', {
-        body: { room: roomName, userId: user?.id }
+        body: { 
+          room: roomName, 
+          userId: user?.id,
+          name: user?.user_metadata?.full_name || user?.email
+        }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error getting LiveKit token:", error);
+        throw error;
+      }
+      
+      if (!data || !data.token) {
+        throw new Error("No token returned from the server");
+      }
+      
       return data.token;
     } catch (error) {
       console.error("Error getting LiveKit token:", error);
@@ -56,41 +68,53 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     try {
       setIsConnecting(true);
       
-      // Create a new room if it doesn't exist
-      if (!room) {
-        const newRoom = new Room({
-          adaptiveStream: true,
-          dynacast: true,
-        });
-        setRoom(newRoom);
-
-        // Set up event listeners
-        newRoom.on(RoomEvent.ParticipantConnected, () => {
-          toast.info("A participant has joined the room");
-        });
-        
-        newRoom.on(RoomEvent.ParticipantDisconnected, () => {
-          toast.info("A participant has left the room");
-        });
-        
-        newRoom.on(RoomEvent.ConnectionStateChanged, (state: ConnectionState) => {
-          setIsConnected(state === ConnectionState.Connected);
-          if (state === ConnectionState.Disconnected) {
-            setIsMicrophoneEnabled(false);
-            setIsCameraEnabled(false);
-          }
-        });
-        
-        // Get token and connect to room
-        const token = await getToken(roomName);
-        await newRoom.connect(import.meta.env.VITE_LIVEKIT_URL, token);
-        
-        setIsConnected(true);
-        toast.success(`Connected to room: ${roomName}`);
+      // Disconnect from existing room if any
+      if (room) {
+        room.disconnect();
       }
+      
+      // Create a new room
+      const newRoom = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+      });
+      setRoom(newRoom);
+
+      // Set up event listeners
+      newRoom.on(RoomEvent.ParticipantConnected, () => {
+        toast.info("A participant has joined the room");
+      });
+      
+      newRoom.on(RoomEvent.ParticipantDisconnected, () => {
+        toast.info("A participant has left the room");
+      });
+      
+      newRoom.on(RoomEvent.ConnectionStateChanged, (state: ConnectionState) => {
+        console.log("Connection state changed to:", state);
+        setIsConnected(state === ConnectionState.Connected);
+        if (state === ConnectionState.Disconnected) {
+          setIsMicrophoneEnabled(false);
+          setIsCameraEnabled(false);
+        }
+      });
+      
+      // Get token and connect to room
+      const token = await getToken(roomName);
+      if (!token) {
+        throw new Error("Failed to get token");
+      }
+      
+      console.log("Connecting to LiveKit server...");
+      await newRoom.connect(import.meta.env.VITE_LIVEKIT_URL, token);
+      console.log("Connected to LiveKit server");
+      
+      setIsConnected(true);
+      toast.success(`Connected to room: ${roomName}`);
     } catch (error) {
       console.error("Error joining room:", error);
       toast.error("Failed to join the room");
+      setRoom(null);
+      setIsConnected(false);
     } finally {
       setIsConnecting(false);
     }
@@ -108,18 +132,22 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleMicrophone = async () => {
-    if (!room || !room.localParticipant) return;
+    if (!room || !room.localParticipant) {
+      toast.error("Not connected to a room");
+      return;
+    }
     
     try {
       const enabled = !isMicrophoneEnabled;
-      if (enabled) {
-        // Use createLocalAudioTrack instead of enableMicrophone
-        await room.localParticipant.setMicrophoneEnabled(true);
-      } else {
-        // Use disableLocalTrack instead of disableMicrophone
-        await room.localParticipant.setMicrophoneEnabled(false);
+      
+      if (!isConnected) {
+        toast.error("Cannot toggle microphone: not connected to room");
+        return;
       }
+      
+      await room.localParticipant.setMicrophoneEnabled(enabled);
       setIsMicrophoneEnabled(enabled);
+      toast.success(enabled ? "Microphone enabled" : "Microphone disabled");
     } catch (error) {
       console.error("Error toggling microphone:", error);
       toast.error("Failed to toggle microphone");
@@ -127,18 +155,22 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleCamera = async () => {
-    if (!room || !room.localParticipant) return;
+    if (!room || !room.localParticipant) {
+      toast.error("Not connected to a room");
+      return;
+    }
     
     try {
       const enabled = !isCameraEnabled;
-      if (enabled) {
-        // Use createLocalVideoTrack instead of enableCamera
-        await room.localParticipant.setCameraEnabled(true);
-      } else {
-        // Use disableLocalTrack instead of disableCamera
-        await room.localParticipant.setCameraEnabled(false);
+      
+      if (!isConnected) {
+        toast.error("Cannot toggle camera: not connected to room");
+        return;
       }
+      
+      await room.localParticipant.setCameraEnabled(enabled);
       setIsCameraEnabled(enabled);
+      toast.success(enabled ? "Camera enabled" : "Camera disabled");
     } catch (error) {
       console.error("Error toggling camera:", error);
       toast.error("Failed to toggle camera");
