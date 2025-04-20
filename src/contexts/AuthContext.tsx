@@ -9,9 +9,9 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  updatePhoneNumber: (phone: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (profile) {
-            // Update last activity
             await supabase
               .from('profiles')
               .update({ last_activity: new Date().toISOString() })
@@ -56,22 +55,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/login`
+        }
+      });
       if (error) throw error;
-      navigate("/");
-      toast.success("Welcome back!");
     } catch (error: any) {
       toast.error(error.message);
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const updatePhoneNumber = async (phone: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone_number: phone })
+        .eq('id', user?.id);
+      
       if (error) throw error;
-      toast.success("Welcome! Please check your email to verify your account.");
+      toast.success("Phone number updated successfully");
+      navigate("/");
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -88,7 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      signInWithGoogle, 
+      signOut,
+      updatePhoneNumber 
+    }}>
       {children}
     </AuthContext.Provider>
   );
