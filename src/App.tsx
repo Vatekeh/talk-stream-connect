@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { LiveKitProvider } from "@/contexts/LiveKitContext";
+import { LiveKitProvider } from "@/contexts/LiveKitProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RequireSurvey } from "@/components/auth/RequireSurvey";
 import HomePage from "./pages/HomePage";
