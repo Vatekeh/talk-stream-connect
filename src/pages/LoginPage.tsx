@@ -13,27 +13,24 @@ export default function LoginPage() {
   const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
-    // If URL contains '#' it might be a redirect from Supabase Auth
+    // Add console logs to track the authentication flow
+    console.log("LoginPage - Current user:", user);
+    console.log("LoginPage - Is loading:", isLoading);
+    
+    // If URL contains '#' it might be a redirect from OAuth provider
     if (window.location.hash) {
-      // Let the Supabase client handle the hash
-      const timeout = setTimeout(() => {
-        // Clear any OAuth related hash fragments
-        if (window.location.hash) {
-          window.location.hash = '';
-        }
-      }, 1000);
-      
-      return () => clearTimeout(timeout);
+      console.log("Auth redirect detected with hash:", window.location.hash);
     }
-  }, []);
+  }, [user, isLoading]);
 
   const handleGoogleSignIn = async () => {
     setSigningIn(true);
     await signInWithGoogle();
-    // We don't need to reset signingIn as the page will redirect
+    // We leave signingIn true as the page will redirect or be refreshed
   };
 
   if (user?.user_metadata?.phone_number && !isLoading) {
+    console.log("User has phone number, redirecting to home");
     return <Navigate to="/" replace />;
   }
 

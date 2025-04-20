@@ -23,34 +23,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Handle auth state changes first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, newSession) => {
+        console.log("Auth state changed:", event);
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         setIsLoading(false);
 
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        if (newSession?.user) {
+          // Don't make additional calls here directly, use setTimeout
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', newSession.user.id)
+                .single();
 
-          if (profile) {
-            await supabase
-              .from('profiles')
-              .update({ last_activity: new Date().toISOString() })
-              .eq('id', session.user.id);
-          }
+              if (profile) {
+                await supabase
+                  .from('profiles')
+                  .update({ last_activity: new Date().toISOString() })
+                  .eq('id', newSession.user.id);
+              }
+            } catch (error) {
+              console.error("Error updating last activity:", error);
+            }
+          }, 0);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Then get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
       setIsLoading(false);
     });
+
+    // Handle redirect URL tokens (OAuth)
+    if (window.location.hash) {
+      console.log("Found hash in URL, handling potential OAuth redirect");
+      const timeout = setTimeout(() => {
+        // Clear any OAuth related hash fragments
+        if (window.location.hash) {
+          window.location.hash = '';
+        }
+      }, 1000);
+      
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
+    }
 
     return () => subscription.unsubscribe();
   }, []);
