@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogIn, Menu, ShieldAlert, User, Handshake } from "lucide-react";
+import { LogIn, Menu, ShieldAlert, User, Handshake, LogOut } from "lucide-react";
 import { NavigationLinks } from "./navigation-links";
 import {
   DropdownMenu,
@@ -100,7 +100,7 @@ export function AppHeader({
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
-                  <LogIn className="mr-2 h-4 w-4 rotate-180" />
+                  <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
