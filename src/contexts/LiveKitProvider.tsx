@@ -1,4 +1,12 @@
 
+/**
+ * LiveKitProvider context for managing LiveKit video room state.
+ * Handles connecting, disconnecting, toggling audio/video, and updating local state as participants change.
+ * Consumes user from AuthContext for authorization when joining a room.
+ *
+ * All event and state changes push toast notifications for real-time feedback.
+ */
+
 import { useState, useEffect, ReactNode } from "react";
 import { Room, RoomEvent, RemoteParticipant, LocalParticipant, ConnectionState } from "livekit-client";
 import { useAuth } from "./AuthContext";
@@ -14,7 +22,10 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
   const [isMicrophoneEnabled, setIsMicrophoneEnabled] = useState(false);
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 
-  // Function to get a token from the server
+  /**
+   * Fetches a LiveKit access token from Supabase Edge Function.
+   * Will throw on any auth or network failure.
+   */
   const getToken = async (roomName: string): Promise<string> => {
     try {
       // Call Supabase Edge Function to get a token
@@ -43,6 +54,10 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Connects to the specified LiveKit room.
+   * Ensures only one connection at a time, and cleans up any prior room.
+   */
   const joinRoom = async (roomName: string) => {
     if (!user) {
       toast.error("You must be logged in to join a room");
@@ -57,14 +72,14 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
         room.disconnect();
       }
 
-      // Create a new room
+      // Create a new room instance
       const newRoom = new Room({
         adaptiveStream: true,
         dynacast: true,
       });
       setRoom(newRoom);
 
-      // Set up event listeners
+      // Attach listeners for participant and connection events
       newRoom.on(RoomEvent.ParticipantConnected, () => {
         toast.info("A participant has joined the room");
       });
@@ -104,6 +119,9 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Disconnects from the active LiveKit room and resets all relevant state.
+   */
   const leaveRoom = () => {
     if (room) {
       room.disconnect();
@@ -115,6 +133,10 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Enables or disables the local user's microphone and updates local state.
+   * Will show toasts for both error and success.
+   */
   const toggleMicrophone = async () => {
     if (!room || !room.localParticipant) {
       toast.error("Not connected to a room");
@@ -136,6 +158,9 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Enables or disables the local user's camera and updates local state.
+   */
   const toggleCamera = async () => {
     if (!room || !room.localParticipant) {
       toast.error("Not connected to a room");
@@ -157,7 +182,7 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Clean up on unmount
+  // Room cleanup on unmount
   useEffect(() => {
     return () => {
       if (room) {
@@ -166,6 +191,9 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     };
   }, [room]);
 
+  /**
+   * Value provided to context consumers in the app for shared room state and controls.
+   */
   const value = {
     room,
     isConnecting,

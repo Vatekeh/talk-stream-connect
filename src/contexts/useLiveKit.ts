@@ -1,4 +1,10 @@
 
+/**
+ * useLiveKit() React hook for consuming LiveKitContext.
+ * Ensures proper context usage by throwing outside <LiveKitProvider>.
+ * 
+ * @returns LiveKitContextType object (room state, join/leave/toggle functions)
+ */
 import { useContext } from "react";
 import LiveKitContext from "./LiveKitContext";
 

@@ -1,4 +1,19 @@
 
+/**
+ * AuthContext provides user authentication state and utilities (sign in, sign out, update profile).
+ * Manages both user and session state for Supabase authentication, and supports Google login.
+ * 
+ * @context
+ *  user - User object from Supabase, null if not authenticated
+ *  session - Session object containing auth tokens
+ *  isLoading - Whether authentication is being determined
+ *  signInWithGoogle - Async function to log in with Google
+ *  signOut - Async function to log out from the app
+ *  updatePhoneNumber - Async function to update user's phone number
+ * 
+ * Must be wrapped in an <AuthProvider> for any component using the useAuth hook.
+ */
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +31,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * AuthProvider component: provides authentication context to children.
+ * - Handles onAuthStateChange with Supabase.
+ * - Handles redirect-to-login when not logged in.
+ * - Updates local state immediately for responsive UI on logout.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -25,19 +46,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.info("AuthProvider initialized, setting up listeners");
     
-    // First set up the auth state change listener
+    // Set up auth change listener before checking session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.info(`Auth state changed: ${event}`, currentSession);
         
-        // Update the session and user state
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
 
-        // Handle profile update after session data is set
+        // Update profile activity timestamp, if logged in.
         if (currentSession?.user) {
-          // Use setTimeout to avoid Supabase SDK deadlocks
+          // Use setTimeout to avoid SDK deadlocks.
           setTimeout(async () => {
             try {
               const { data: profile } = await supabase
@@ -60,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Then check for existing session
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.info("Initial session check:", currentSession ? "Session found" : "No session");
       setSession(currentSession);
@@ -68,12 +88,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
+    // Cleanup the listener on unmount
     return () => {
       subscription.unsubscribe();
       console.info("Auth state listener unsubscribed");
     };
   }, []);
 
+  /**
+   * Starts the Google OAuth sign-in flow.
+   * If error occurs, shows a toast message.
+   */
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -90,6 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Updates phone number in both `profiles` and user metadata.
+   * If successful, navigates to main page and shows a toast.
+   */
   const updatePhoneNumber = async (phone: string) => {
     try {
       if (!user) {
@@ -111,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (updateError) throw updateError;
       
-      // Update the local user state with new metadata
+      // Locally update user state
       if (data?.user) {
         setUser(data.user);
       }
@@ -124,17 +153,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Signs out from Supabase AND clears local state for responsive UI.
+   * Navigates to login page on success.
+   */
   const signOut = async () => {
     try {
       console.log("Signing out user...");
-      
-      // First clear the client-side session state to immediately update UI
       setUser(null);
       setSession(null);
       
-      // Then perform the actual sign out with Supabase
       const { error } = await supabase.auth.signOut({
-        scope: 'global' // Ensures signout across all tabs/devices
+        scope: 'global'
       });
       
       if (error) {
@@ -142,7 +172,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      // Navigate to login page and show success message
       console.log("Sign out successful, navigating to login page");
       toast.success("Signed out successfully");
       navigate("/login");
@@ -152,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Wrap all state and functions in the AuthContext.Provider
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -166,6 +196,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * useAuth() consumes AuthContext.
+ * Throws an Error if used outside of an <AuthProvider>.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
