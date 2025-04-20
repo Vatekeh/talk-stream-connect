@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { useLiveKit } from "@/contexts/LiveKitContext";
+// Fix the import of useLiveKit from the correct path
+import { useLiveKit } from "@/contexts/useLiveKit";
 import { Button } from "@/components/ui/button";
 import { 
   Mic, 
