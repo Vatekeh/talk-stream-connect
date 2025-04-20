@@ -60,37 +60,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/login`
+          redirectTo: window.location.origin + '/login'
         }
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Google sign in error:", error);
+      toast.error("Failed to sign in with Google: " + error.message);
     }
   };
 
   const updatePhoneNumber = async (phone: string) => {
     try {
+      if (!user) {
+        toast.error("You must be logged in to update your phone number");
+        return;
+      }
+      
       const { error } = await supabase
         .from('profiles')
         .update({ phone_number: phone })
-        .eq('id', user?.id);
+        .eq('id', user.id);
       
       if (error) throw error;
       toast.success("Phone number updated successfully");
       navigate("/");
     } catch (error: any) {
+      console.error("Phone update error:", error);
       toast.error(error.message);
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       navigate("/login");
       toast.success("Signed out successfully");
+    } catch (error: any) {
+      console.error("Sign out error:", error);
+      toast.error(error.message);
     }
   };
 
