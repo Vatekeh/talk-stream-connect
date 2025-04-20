@@ -22,76 +22,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Function to handle initial session setup
-  const handleAuthChange = (event: string, newSession: Session | null) => {
-    console.log("Auth state changed:", event, newSession?.user?.id);
-    
-    // Update state synchronously
-    setSession(newSession);
-    setUser(newSession?.user ?? null);
-    setIsLoading(false);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
 
-    // Defer profile operations to prevent auth deadlock
-    if (newSession?.user) {
-      setTimeout(async () => {
-        try {
+        if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', newSession.user.id)
+            .eq('id', session.user.id)
             .single();
 
           if (profile) {
             await supabase
               .from('profiles')
               .update({ last_activity: new Date().toISOString() })
-              .eq('id', newSession.user.id);
+              .eq('id', session.user.id);
           }
-        } catch (error) {
-          console.error("Error updating last activity:", error);
         }
-      }, 0);
-    }
-  };
+      }
+    );
 
-  useEffect(() => {
-    console.log("AuthProvider initialized, setting up listeners");
-
-    // Handle any hash fragments or query params from OAuth
-    if (window.location.hash || window.location.search.includes('access_token')) {
-      console.log("Found OAuth parameters in URL");
-    }
-
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log("Initial session check:", initialSession?.user?.id || "No session");
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setIsLoading(false);
     });
 
-    // Cleanup hash fragments after auth processing
-    const timeout = setTimeout(() => {
-      if (window.location.hash) {
-        console.log("Cleaning up hash fragments");
-        // Use history API instead of directly modifying location.hash
-        const cleanURL = window.location.href.split('#')[0];
-        window.history.replaceState(null, '', cleanURL);
-      }
-    }, 1000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     try {
-      console.log("Initiating Google sign in");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -102,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Google sign in error:", error);
       toast.error("Failed to sign in with Google: " + error.message);
-      throw error; // Rethrow for handling in the component
     }
   };
 
