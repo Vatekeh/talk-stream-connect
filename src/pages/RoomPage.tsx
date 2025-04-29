@@ -14,6 +14,8 @@ import { Room } from "@/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Link } from "react-router-dom";
 
+// MIGRATION NOTE: This page will need significant updates to use Agora SDK instead of LiveKit
+// Main changes include: initialization, room joining, audio streaming, and participant tracking
 export default function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -22,7 +24,9 @@ export default function RoomPage() {
   const [isChatOpen, setIsChatOpen] = useState(!isMobile);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(!isMobile);
   
-  // This would be replaced with actual Supabase query
+  // MIGRATION NOTE: Room data fetching will need to be adjusted
+  // Agora doesn't have built-in room management - this will need to be implemented
+  // with Agora RTM or a custom backend solution
   const room = mockRooms.find(r => r.id === roomId) || {
     id: roomId || "new",
     name: "New Room",
@@ -53,8 +57,10 @@ export default function RoomPage() {
     }
   };
   
+  // MIGRATION NOTE: Room leaving functionality needs to be updated for Agora
+  // Agora requires: client.leave() to exit a channel
   const handleLeaveRoom = () => {
-    // This would be replaced with actual Supabase functionality
+    // This would be replaced with Agora client.leave() functionality
     navigate("/");
   };
   
@@ -67,6 +73,13 @@ export default function RoomPage() {
       document.title = "TalkStream";
     };
   }, [room.name]);
+
+  // MIGRATION NOTE: Missing LiveKit initialization and room joining logic
+  // Agora equivalent would need to be added:
+  // 1. Initialize Agora client
+  // 2. Fetch Agora token
+  // 3. Join Agora channel
+  // 4. Set up event handlers for remote users
   
   return (
     <div className="min-h-screen flex flex-col">

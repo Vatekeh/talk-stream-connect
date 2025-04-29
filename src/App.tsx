@@ -13,6 +13,8 @@ import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
+// MIGRATION NOTE: Agora SDK initialization may be needed at this level
+// Consider adding an AgoraProvider context to manage the client instance
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -20,6 +22,7 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
+          {/* MIGRATION NOTE: Consider adding AgoraProvider here if needed */}
           <Toaster />
           <Sonner />
           <Routes>

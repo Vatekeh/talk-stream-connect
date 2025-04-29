@@ -15,6 +15,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User } from "@/types";
 
+// MIGRATION NOTE: This component will need to be updated to use Agora SDK methods
+// for audio control instead of LiveKit methods
 interface RoomControlsProps {
   roomId: string;
   currentUser?: User;
@@ -34,19 +36,25 @@ export function RoomControls({
   isParticipantsOpen,
   onLeaveRoom
 }: RoomControlsProps) {
+  // MIGRATION NOTE: These state variables will need to interact with Agora SDK
+  // Agora uses different methods for mute/unmute (localAudioTrack.setEnabled())
   const [isMuted, setIsMuted] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   
   const isMobile = useMediaQuery("(max-width: 640px)");
   
+  // MIGRATION NOTE: Replace LiveKit audio control with Agora equivalent
+  // Agora uses localAudioTrack.setEnabled(!isMuted) for mute toggle
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    // This would be replaced with actual Supabase functionality
+    // This would be replaced with actual Agora functionality
   };
   
+  // MIGRATION NOTE: Hand raising will need custom implementation with Agora
+  // Consider using Agora RTM for signaling this information to other participants
   const toggleHand = () => {
     setIsHandRaised(!isHandRaised);
-    // This would be replaced with actual Supabase functionality
+    // This would be replaced with Agora RTM signaling
   };
   
   const shareRoom = () => {
