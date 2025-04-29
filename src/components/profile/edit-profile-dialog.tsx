@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "@/types";
 import { useForm } from "react-hook-form";
-import { Camera, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { Camera } from "lucide-react";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -27,57 +25,27 @@ type ProfileFormValues = {
 };
 
 export function EditProfileDialog({ isOpen, onClose, user, onSave }: EditProfileDialogProps) {
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar || null);
   
   const form = useForm<ProfileFormValues>({
     defaultValues: {
-      name: user?.name || '',
-      pronouns: user?.pronouns || '',
-      bio: user?.bio || '',
+      name: user.name,
+      pronouns: user.pronouns || "",
+      bio: user.bio || "",
     }
   });
 
-  const handleSubmit = async (values: ProfileFormValues) => {
-    try {
-      setIsSubmitting(true);
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: values.name,
-          bio: values.bio,
-          avatar_url: avatarPreview
-        })
-        .eq('id', user?.id);
-      
-      if (error) throw error;
-      
-      onSave({
-        ...user,
-        name: values.name,
-        pronouns: values.pronouns,
-        bio: values.bio,
-        avatar: avatarPreview || user.avatar,
-      });
-      
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-      onClose();
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = (values: ProfileFormValues) => {
+    onSave({
+      ...user,
+      name: values.name,
+      pronouns: values.pronouns,
+      bio: values.bio,
+      avatar: avatarPreview || user.avatar,
+    });
   };
 
+  // In a real implementation, this would upload to Supabase storage
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -173,19 +141,10 @@ export function EditProfileDialog({ isOpen, onClose, user, onSave }: EditProfile
             />
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
+              <Button type="submit">Save Changes</Button>
             </DialogFooter>
           </form>
         </Form>

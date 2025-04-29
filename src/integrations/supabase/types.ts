@@ -14,16 +14,10 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
-          current_streak: number | null
           id: string
           is_moderator: boolean | null
-          last_activity: string | null
-          longest_streak: number | null
-          messages_posted: number | null
           phone_number: string | null
-          rooms_joined: number | null
           survey_completed: boolean | null
-          time_in_rooms: number | null
           updated_at: string
           username: string | null
         }
@@ -31,16 +25,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
-          current_streak?: number | null
           id: string
           is_moderator?: boolean | null
-          last_activity?: string | null
-          longest_streak?: number | null
-          messages_posted?: number | null
           phone_number?: string | null
-          rooms_joined?: number | null
           survey_completed?: boolean | null
-          time_in_rooms?: number | null
           updated_at?: string
           username?: string | null
         }
@@ -48,16 +36,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
-          current_streak?: number | null
           id?: string
           is_moderator?: boolean | null
-          last_activity?: string | null
-          longest_streak?: number | null
-          messages_posted?: number | null
           phone_number?: string | null
-          rooms_joined?: number | null
           survey_completed?: boolean | null
-          time_in_rooms?: number | null
           updated_at?: string
           username?: string | null
         }
@@ -114,63 +96,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           virginity_status?: string
-        }
-        Relationships: []
-      }
-      user_clips: {
-        Row: {
-          created_at: string
-          description: string | null
-          duration: number
-          id: string
-          room_id: string
-          room_name: string
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          duration: number
-          id?: string
-          room_id: string
-          room_name: string
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          duration?: number
-          id?: string
-          room_id?: string
-          room_name?: string
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_saves: {
-        Row: {
-          created_at: string
-          from_user_id: string
-          id: string
-          message: string | null
-          to_user_id: string
-        }
-        Insert: {
-          created_at?: string
-          from_user_id: string
-          id?: string
-          message?: string | null
-          to_user_id: string
-        }
-        Update: {
-          created_at?: string
-          from_user_id?: string
-          id?: string
-          message?: string | null
-          to_user_id?: string
         }
         Relationships: []
       }

@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogIn, Menu, ShieldAlert, User, Handshake, LogOut } from "lucide-react";
+import { LogIn, Menu, ShieldAlert, User, Handshake } from "lucide-react";
 import { NavigationLinks } from "./navigation-links";
 import {
   DropdownMenu,
@@ -39,9 +38,8 @@ export function AppHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { signOut } = useAuth();
   
-  const handleLogout = async () => {
-    console.log("Logout button clicked, calling signOut()");
-    await signOut();
+  const handleLogout = () => {
+    signOut();
   };
 
   return (
@@ -100,7 +98,7 @@ export function AppHeader({
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2 h-4 w-4 rotate-180" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

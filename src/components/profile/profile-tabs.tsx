@@ -7,24 +7,17 @@ import { Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } f
 
 interface ProfileTabsProps {
   stats: UserStats;
+  nsfwLogs: NsfwContentLog[];
+  nsfwInsights: NsfwUserInsights;
+  streak: UserStreak;
   saves: Save[];
   clips: Clip[];
-  streak: UserStreak;
-  nsfwLogs?: NsfwContentLog[]; // Make optional
-  nsfwInsights?: NsfwUserInsights; // Make optional
 }
 
 export function ProfileTabs({ 
   stats, 
-  nsfwLogs = [], // Provide default value
-  nsfwInsights = {
-    topSources: [],
-    recentLogs: [],
-    timePatterns: [],
-    totalVisits: 0,
-    totalDuration: 0,
-    averageDuration: 0
-  }, // Provide default value
+  nsfwLogs, 
+  nsfwInsights, 
   streak, 
   saves, 
   clips 
