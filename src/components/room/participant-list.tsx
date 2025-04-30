@@ -1,3 +1,4 @@
+
 import { User } from "@/types";
 import { 
   Hand, 
@@ -19,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ParticipantListProps {
   speakers: User[];
@@ -186,26 +188,80 @@ export function ParticipantList({
   
   const renderUserIcon = (user: User) => {
     if (user.id === hostId) {
-      return <ShieldCheck size={14} className="text-talkstream-purple" />;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ShieldCheck size={14} className="text-talkstream-purple" />
+            </TooltipTrigger>
+            <TooltipContent>Host</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     }
+    
     if (user.isModerator) {
-      return <ShieldAlert size={14} className="text-talkstream-purple" />;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ShieldAlert size={14} className="text-talkstream-purple" />
+            </TooltipTrigger>
+            <TooltipContent>Moderator</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     }
+    
     if (user.isHandRaised) {
-      return <Hand size={14} className="text-amber-500" />;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Hand size={14} className="text-amber-500" />
+            </TooltipTrigger>
+            <TooltipContent>Hand Raised</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     }
+    
     return null;
   };
   
   const renderUserStatus = (user: User) => {
     if (user.isSpeaker) {
       return user.isMuted ? (
-        <MicOff size={14} className="text-muted-foreground" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <MicOff size={14} className="text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>Microphone Off</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ) : (
-        <Mic size={14} className="text-green-500" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Mic size={14} className="text-green-500" />
+            </TooltipTrigger>
+            <TooltipContent>Microphone On</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     }
-    return <UserIcon size={14} className="text-muted-foreground" />;
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <UserIcon size={14} className="text-muted-foreground" />
+          </TooltipTrigger>
+          <TooltipContent>Listener</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
   
   const getInitials = (name: string) => {
@@ -283,7 +339,14 @@ export function ParticipantList({
                   
                   <div className="flex items-center">
                     {user.isHandRaised && (
-                      <Hand size={14} className="text-amber-500 mr-2" />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Hand size={14} className="text-amber-500 mr-2" />
+                          </TooltipTrigger>
+                          <TooltipContent>Hand Raised</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {renderUserControls(user)}
                   </div>
