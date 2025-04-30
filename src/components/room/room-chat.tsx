@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SendHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { mockMessages } from "@/lib/mock-data"; // Import mock messages for now
 
 interface RoomChatProps {
   roomId: string;
-  messages: Message[];
+  messages?: Message[];
 }
 
-export function RoomChat({ roomId, messages }: RoomChatProps) {
+export function RoomChat({ roomId, messages = mockMessages }: RoomChatProps) {
   const [newMessage, setNewMessage] = useState("");
   const messageEndRef = useRef<HTMLDivElement>(null);
   
