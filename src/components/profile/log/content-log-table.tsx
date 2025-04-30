@@ -1,6 +1,8 @@
 
 /**
- * ContentLogTable component displays a table of NSFW content access logs
+ * ContentLogTable Component
+ * 
+ * Displays a table of NSFW content access logs
  * with sorting, formatting, and empty state handling.
  */
 import { 
@@ -19,7 +21,11 @@ interface ContentLogTableProps {
 }
 
 export function ContentLogTable({ logs }: ContentLogTableProps) {
-  // Utility function to format duration from seconds to minutes and seconds
+  /**
+   * Utility function to format duration from seconds to minutes and seconds
+   * @param seconds - Duration in seconds
+   * @returns Formatted string (e.g., "2m 45s" or "30s")
+   */
   function formatDuration(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;

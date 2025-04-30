@@ -1,4 +1,14 @@
 
+/**
+ * RoomHeader Component
+ * 
+ * Displays the header section of a room including:
+ * - Navigation back to rooms list
+ * - Live status badge
+ * - Participant count
+ * - Room name and description
+ * - Host information with avatar
+ */
 import { Link } from "react-router-dom";
 import { ChevronLeft, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +24,7 @@ interface RoomHeaderProps {
 export function RoomHeader({ room, participantCount }: RoomHeaderProps) {
   return (
     <div className="mb-4">
+      {/* Back navigation button */}
       <Button variant="ghost" size="sm" asChild className="gap-1 mb-2">
         <Link to="/">
           <ChevronLeft size={16} />
@@ -22,19 +33,25 @@ export function RoomHeader({ room, participantCount }: RoomHeaderProps) {
       </Button>
       
       <div className="flex flex-wrap justify-between items-start gap-4">
+        {/* Room information section */}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
+            {/* Live status indicator */}
             <BadgePulse color="purple">LIVE</BadgePulse>
+            
+            {/* Participant count */}
             <div className="flex items-center text-sm text-muted-foreground">
               <Users size={14} className="mr-1" />
               {participantCount} Participants
             </div>
           </div>
           
+          {/* Room name and description */}
           <h1 className="text-2xl font-bold">{room?.name}</h1>
           {room?.description && <p className="text-muted-foreground">{room.description}</p>}
         </div>
         
+        {/* Host information with avatar */}
         <div className="flex items-center gap-2">
           <Avatar className="h-10 w-10 border-2 border-background">
             <AvatarImage src={room?.hostAvatar} alt={room?.hostName || ""} />

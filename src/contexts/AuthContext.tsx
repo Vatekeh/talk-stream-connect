@@ -1,10 +1,19 @@
 
+/**
+ * AuthContext
+ * 
+ * Provides authentication state and functions throughout the application.
+ * Handles user sessions, profile creation, and authentication actions.
+ */
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+/**
+ * Authentication context type definition
+ */
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -16,7 +25,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * AuthProvider component that wraps the application to provide
+ * authentication state and functions to all children
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // State for authentication data
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
   
-  // Function to create a profile if it doesn't exist
+  /**
+   * Creates a user profile in the database if it doesn't exist
+   * Called after authentication to ensure all users have a profile
+   */
   const createProfileIfNeeded = async (user: User) => {
     try {
       // Check if profile exists
@@ -88,6 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Sign in function - authenticates user with email and password
+   */
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -99,6 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Sign up function - creates a new user account
+   * Includes user metadata for profile creation
+   */
   const signUp = async (email: string, password: string, username?: string) => {
     try {
       const { error, data } = await supabase.auth.signUp({ 
@@ -119,6 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Sign out function - logs the current user out
+   * and redirects to login page
+   */
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -136,6 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Custom hook to use the auth context
+ * Throws an error if used outside of AuthProvider
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

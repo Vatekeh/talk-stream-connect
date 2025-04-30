@@ -1,4 +1,10 @@
 
+/**
+ * RoomContent Component
+ * 
+ * Manages the layout and display of the main content area in a room.
+ * Handles responsive design for chat and participants panels.
+ */
 import { User } from "@/types";
 import { RoomChat } from "./room-chat";
 import { ParticipantList } from "./participant-list";
@@ -25,10 +31,12 @@ export function RoomContent({
   isParticipantsOpen,
   remoteUsers
 }: RoomContentProps) {
+  // Check if device is mobile for responsive layout
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   return (
     <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+      {/* Main content area - hidden on mobile when chat/participants are open */}
       <div className={`md:col-span-2 lg:col-span-3 flex flex-col rounded-xl bg-accent p-4 ${isMobile && (isChatOpen || isParticipantsOpen) ? 'hidden' : ''}`}>
         <div className="flex-1 flex items-center justify-center">
           {/* Audio visualization or room status */}
@@ -46,12 +54,14 @@ export function RoomContent({
       {/* Mobile: Show either chat or participants, but not both */}
       {isMobile ? (
         <>
+          {/* Mobile chat panel */}
           {isChatOpen && (
             <div className="h-[calc(100vh-300px)]">
               <RoomChat roomId={roomId} messages={[]} />
             </div>
           )}
           
+          {/* Mobile participants panel */}
           {isParticipantsOpen && (
             <div className="h-[calc(100vh-300px)]">
               <ParticipantList 
@@ -66,12 +76,14 @@ export function RoomContent({
       ) : (
         // Desktop: Show both based on toggle state
         <>
+          {/* Desktop chat panel */}
           {isChatOpen && (
             <div className="h-[calc(100vh-300px)]">
               <RoomChat roomId={roomId} messages={[]} />
             </div>
           )}
           
+          {/* Desktop participants panel - hidden on medium screens when chat is open */}
           {isParticipantsOpen && (
             <div className={`h-[calc(100vh-300px)] ${isChatOpen ? 'hidden lg:block' : ''}`}>
               <ParticipantList 

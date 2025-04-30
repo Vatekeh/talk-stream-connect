@@ -1,6 +1,8 @@
 
 /**
- * ContentLogRow component renders a single row in the content log table
+ * ContentLogRow Component
+ * 
+ * Renders a single row in the content log table
  * with formatted timestamp, duration, and action buttons.
  */
 import { format } from "date-fns";

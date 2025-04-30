@@ -1,7 +1,9 @@
 
 /**
- * ContentLogActions component provides interactive buttons for each log entry
- * Includes options to copy link and view details
+ * ContentLogActions Component
+ * 
+ * Provides interactive buttons for each log entry.
+ * Includes options to copy link and view details.
  */
 import { Button } from "@/components/ui/button";
 import { Eye, LinkIcon } from "lucide-react";

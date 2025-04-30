@@ -1,7 +1,9 @@
 
 /**
- * ContentLogEmpty component displays a message when no logs are available
- * Spans across all columns to maintain table structure
+ * ContentLogEmpty Component
+ * 
+ * Displays a message when no logs are available.
+ * Spans across all columns to maintain table structure.
  */
 import { TableCell, TableRow } from "@/components/ui/table";
 
