@@ -13,9 +13,8 @@ import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
-// Agora SDK imports
+// Agora SDK import
 import AgoraRTC from "agora-rtc-sdk-ng";
-import { AgoraRTCProvider } from "agora-rtc-react";
 import { AgoraProvider } from "@/contexts/AgoraContext";
 
 const queryClient = new QueryClient();
@@ -28,20 +27,18 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
-          <AgoraRTCProvider client={rtcClient}>
-            <AgoraProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-                <Route path="/room/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
-                <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AgoraProvider>
-          </AgoraRTCProvider>
+          <AgoraProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+              <Route path="/room/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
+              <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AgoraProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

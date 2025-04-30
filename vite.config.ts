@@ -32,6 +32,11 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       external: [],
+      output: {
+        manualChunks: {
+          'agora-vendor': ['agora-rtc-sdk-ng', 'agora-rtc-react']
+        }
+      }
     }
   }
 }));
