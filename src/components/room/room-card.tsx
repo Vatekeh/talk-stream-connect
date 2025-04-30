@@ -14,6 +14,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room }: RoomCardProps) {
+  // Calculate actual participant count - only count real participants
   const participantCount = room.speakers.length + room.participants.length;
   const timeSince = formatDistanceToNow(new Date(room.createdAt), { addSuffix: true });
   

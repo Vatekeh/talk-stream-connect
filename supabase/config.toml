@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.get-agora-appid]
 verify_jwt = true
+
+[functions.cleanup-rooms]
+verify_jwt = true

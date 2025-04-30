@@ -67,58 +67,65 @@ export default function HomePage() {
           throw participantsError;
         }
         
-        // Format rooms with participants
-        const formattedRooms = roomData.map(room => {
-          const roomParticipants = participantsData?.filter(p => p.room_id === room.id) || [];
-          
-          const speakers = roomParticipants
-            .filter(p => p.is_speaker)
-            .map(p => {
-              const profile = p.profiles || {};
-              return {
-                id: p.user_id,
-                name: (profile as any).username || 'Anonymous',
-                avatar: (profile as any).avatar_url || undefined,
-                isModerator: p.is_moderator,
-                isSpeaker: true,
-                isMuted: p.is_muted,
-                isHandRaised: p.is_hand_raised
-              };
-            });
-          
-          const participants = roomParticipants
-            .filter(p => !p.is_speaker)
-            .map(p => {
-              const profile = p.profiles || {};
-              return {
-                id: p.user_id,
-                name: (profile as any).username || 'Anonymous',
-                avatar: (profile as any).avatar_url || undefined,
-                isModerator: p.is_moderator,
-                isSpeaker: false,
-                isMuted: p.is_muted,
-                isHandRaised: p.is_hand_raised
-              };
-            });
-          
-          // Find the host participant
-          const hostParticipant = roomParticipants.find(p => p.user_id === room.host_id);
-          const hostProfile = hostParticipant?.profiles || {};
-          
-          return {
-            id: room.id,
-            name: room.name,
-            description: room.description,
-            hostId: room.host_id,
-            hostName: (hostProfile as any).username || 'Anonymous',
-            hostAvatar: (hostProfile as any).avatar_url,
-            speakers,
-            participants,
-            isLive: true,
-            createdAt: room.created_at,
-            topic: room.topic
-          };
-        });
+        // Format rooms with participants and filter out rooms with no participants
+        const formattedRooms = roomData
+          .map(room => {
+            const roomParticipants = participantsData?.filter(p => p.room_id === room.id) || [];
+            
+            // Skip rooms with no participants
+            if (roomParticipants.length === 0) {
+              return null;
+            }
+            
+            const speakers = roomParticipants
+              .filter(p => p.is_speaker)
+              .map(p => {
+                const profile = p.profiles || {};
+                return {
+                  id: p.user_id,
+                  name: (profile as any).username || 'Anonymous',
+                  avatar: (profile as any).avatar_url || undefined,
+                  isModerator: p.is_moderator,
+                  isSpeaker: true,
+                  isMuted: p.is_muted,
+                  isHandRaised: p.is_hand_raised
+                };
+              });
+            
+            const participants = roomParticipants
+              .filter(p => !p.is_speaker)
+              .map(p => {
+                const profile = p.profiles || {};
+                return {
+                  id: p.user_id,
+                  name: (profile as any).username || 'Anonymous',
+                  avatar: (profile as any).avatar_url || undefined,
+                  isModerator: p.is_moderator,
+                  isSpeaker: false,
+                  isMuted: p.is_muted,
+                  isHandRaised: p.is_hand_raised
+                };
+              });
+            
+            // Find the host participant
+            const hostParticipant = roomParticipants.find(p => p.user_id === room.host_id);
+            const hostProfile = hostParticipant?.profiles || {};
+            
+            return {
+              id: room.id,
+              name: room.name,
+              description: room.description,
+              hostId: room.host_id,
+              hostName: (hostProfile as any).username || 'Anonymous',
+              hostAvatar: (hostProfile as any).avatar_url,
+              speakers,
+              participants,
+              isLive: true,
+              createdAt: room.created_at,
+              topic: room.topic
+            };
+          })
+          .filter(Boolean) as Room[]; // Filter out null rooms (those with no participants)
         
         setRooms(formattedRooms);
       } catch (error) {
