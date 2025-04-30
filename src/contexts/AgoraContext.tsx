@@ -96,16 +96,16 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       const token = await getAgoraToken(channelName, uid);
       
       // Get Agora App ID from environment or stored configuration
-      const appId = await supabase.functions.invoke("get-agora-appid", {
+      const { data, error } = await supabase.functions.invoke("get-agora-appid", {
         body: {}
-      }).then(res => res.data?.appId);
+      });
       
-      if (!appId) {
+      if (error || !data?.appId) {
         throw new Error("Failed to retrieve Agora App ID");
       }
       
       // Join the channel
-      await client.join(appId, channelName, token, uid);
+      await client.join(data.appId, channelName, token, uid);
       
       // Create and publish local audio track
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();

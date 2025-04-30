@@ -9,11 +9,11 @@ This document outlines the migration progress from LiveKit to Agora SDK for our 
 - [x] Create new Agora token generator edge function
 - [x] Update Supabase config.toml for new edge function
 - [x] Implement AgoraContext for managing client connections
-- [x] Update App.tsx with AgoraRTCProvider
+- [x] Update App.tsx with AgoraProvider
 - [x] Refactor RoomControls component to use Agora
 - [x] Refactor RoomPage to use Agora
 - [x] Fix TypeScript imports and build configuration
-- [ ] Configure Agora secrets in Supabase
+- [x] Configure Agora secrets in Supabase
 - [ ] Test end-to-end functionality
 - [ ] Remove LiveKit dependencies
 - [ ] Update tests to use Agora
@@ -39,15 +39,16 @@ We chose Agora's latest SDK (v4.x) for our migration for several key benefits:
 | Token generation | RtcTokenBuilder | ✅ Implemented |
 | Room events | Agora events | ✅ Implemented |
 
-## Next Steps
-
-1. Configure the Agora App ID and App Certificate as secrets in Supabase
-2. Test the token generation and audio functionality
-3. Update any remaining LiveKit references in the codebase
-4. Remove the LiveKit token generation function once migration is complete
-
 ## Important Notes
 
-- We need to set up the following Supabase secrets:
+- The following Supabase secrets have been configured:
   - `AGORA_APP_ID` - Your Agora App ID
   - `AGORA_APP_CERTIFICATE` - Your Agora App Certificate
+
+## Debugging Tips
+
+If you encounter build issues:
+1. Make sure Agora packages are properly installed
+2. Check that Vite configuration includes proper handling of Agora packages
+3. Verify that TypeScript types are properly imported
+4. Test token generation by checking the Edge Function logs

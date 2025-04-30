@@ -13,14 +13,10 @@ import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
-// Agora SDK import
-import AgoraRTC from "agora-rtc-sdk-ng";
+// Import AgoraProvider
 import { AgoraProvider } from "@/contexts/AgoraContext";
 
 const queryClient = new QueryClient();
-
-// Initialize Agora RTC client
-const rtcClient = AgoraRTC.createClient({ codec: "vp8", mode: "rtc" });
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
