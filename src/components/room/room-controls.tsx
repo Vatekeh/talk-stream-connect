@@ -14,9 +14,8 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User } from "@/types";
+import { useAgora } from "@/contexts/AgoraContext";
 
-// MIGRATION NOTE: This component will need to be updated to use Agora SDK methods
-// for audio control instead of LiveKit methods
 interface RoomControlsProps {
   roomId: string;
   currentUser?: User;
@@ -36,31 +35,28 @@ export function RoomControls({
   isParticipantsOpen,
   onLeaveRoom
 }: RoomControlsProps) {
-  // MIGRATION NOTE: These state variables will need to interact with Agora SDK
-  // Agora uses different methods for mute/unmute (localAudioTrack.setEnabled())
-  const [isMuted, setIsMuted] = useState(false);
+  // Use Agora context for audio control
+  const { toggleMute, isMuted } = useAgora();
+  
   const [isHandRaised, setIsHandRaised] = useState(false);
   
   const isMobile = useMediaQuery("(max-width: 640px)");
   
-  // MIGRATION NOTE: Replace LiveKit audio control with Agora equivalent
-  // Agora uses localAudioTrack.setEnabled(!isMuted) for mute toggle
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    // This would be replaced with actual Agora functionality
+  // Handle mute/unmute with Agora
+  const handleToggleMute = async () => {
+    await toggleMute();
   };
   
-  // MIGRATION NOTE: Hand raising will need custom implementation with Agora
-  // Consider using Agora RTM for signaling this information to other participants
+  // Hand raising will need custom implementation with Agora RTM
   const toggleHand = () => {
     setIsHandRaised(!isHandRaised);
-    // This would be replaced with Agora RTM signaling
+    // This would be implemented with Agora RTM for signaling
   };
   
   const shareRoom = () => {
     if (navigator.share) {
       navigator.share({
-        title: "Join my TalkStream room",
+        title: "Join my audio room",
         text: "I'm in a live audio room. Join me!",
         url: window.location.href,
       }).catch((err) => {
@@ -81,7 +77,7 @@ export function RoomControls({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={toggleMute}
+                onClick={handleToggleMute}
                 className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
               >
                 {isMuted ? <MicOff size={20} /> : <Mic size={20} />}

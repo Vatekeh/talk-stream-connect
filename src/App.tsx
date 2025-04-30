@@ -13,26 +13,32 @@ import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
-// MIGRATION NOTE: Agora SDK initialization may be needed at this level
-// Consider adding an AgoraProvider context to manage the client instance
+// Agora SDK imports
+import AgoraRTC from "agora-rtc-sdk-ng";
+import { AgoraRTCProvider } from "agora-rtc-react";
+
 const queryClient = new QueryClient();
+
+// Initialize Agora RTC client
+const rtcClient = AgoraRTC.createClient({ codec: "vp8", mode: "rtc" });
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
-          {/* MIGRATION NOTE: Consider adding AgoraProvider here if needed */}
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/room/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
-            <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AgoraRTCProvider client={rtcClient}>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+              <Route path="/room/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
+              <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AgoraRTCProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

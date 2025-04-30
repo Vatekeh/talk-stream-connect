@@ -13,20 +13,20 @@ import { ChevronLeft, Users } from "lucide-react";
 import { Room } from "@/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Link } from "react-router-dom";
+import { useAgora } from "@/contexts/AgoraContext";
 
-// MIGRATION NOTE: This page will need significant updates to use Agora SDK instead of LiveKit
-// Main changes include: initialization, room joining, audio streaming, and participant tracking
 export default function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
+  // Agora context for audio functionality
+  const { joinChannel, leaveChannel, remoteUsers } = useAgora();
+  
   const [isChatOpen, setIsChatOpen] = useState(!isMobile);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(!isMobile);
   
-  // MIGRATION NOTE: Room data fetching will need to be adjusted
-  // Agora doesn't have built-in room management - this will need to be implemented
-  // with Agora RTM or a custom backend solution
+  // Mock room data - in production, this would come from your database
   const room = mockRooms.find(r => r.id === roomId) || {
     id: roomId || "new",
     name: "New Room",
@@ -57,29 +57,33 @@ export default function RoomPage() {
     }
   };
   
-  // MIGRATION NOTE: Room leaving functionality needs to be updated for Agora
-  // Agora requires: client.leave() to exit a channel
-  const handleLeaveRoom = () => {
-    // This would be replaced with Agora client.leave() functionality
+  // Join Agora channel when component mounts
+  useEffect(() => {
+    if (roomId) {
+      joinChannel(roomId);
+    }
+    
+    return () => {
+      leaveChannel();
+    };
+  }, [roomId]);
+  
+  // Handle leaving the room
+  const handleLeaveRoom = async () => {
+    await leaveChannel();
     navigate("/");
   };
   
-  const participantCount = room.speakers.length + room.participants.length;
+  // Calculate participants including remote Agora users
+  const participantCount = room.speakers.length + room.participants.length + remoteUsers.length;
   
   // Set document title
   useEffect(() => {
-    document.title = `${room.name} | TalkStream`;
+    document.title = `${room.name} | Audio Room`;
     return () => {
-      document.title = "TalkStream";
+      document.title = "Audio Room";
     };
   }, [room.name]);
-
-  // MIGRATION NOTE: Missing LiveKit initialization and room joining logic
-  // Agora equivalent would need to be added:
-  // 1. Initialize Agora client
-  // 2. Fetch Agora token
-  // 3. Join Agora channel
-  // 4. Set up event handlers for remote users
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -126,11 +130,13 @@ export default function RoomPage() {
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
           <div className={`md:col-span-2 lg:col-span-3 flex flex-col rounded-xl bg-accent p-4 ${isMobile && (isChatOpen || isParticipantsOpen) ? 'hidden' : ''}`}>
             <div className="flex-1 flex items-center justify-center">
-              {/* This is where the audio visualization would go */}
+              {/* Audio visualization or room status */}
               <div className="text-center">
                 <h2 className="text-xl font-medium mb-2">Audio Room</h2>
                 <p className="text-muted-foreground">
-                  Audio functionality would be implemented with Supabase Realtime.
+                  {remoteUsers.length > 0 
+                    ? `Connected with ${remoteUsers.length} other participants` 
+                    : 'Waiting for others to join...'}
                 </p>
               </div>
             </div>
