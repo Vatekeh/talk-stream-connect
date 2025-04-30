@@ -21,22 +21,11 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: [
-      'agora-rtc-sdk-ng',
-      'agora-rtc-react'
-    ]
+    include: ['agora-rtc-sdk-ng', 'agora-rtc-react']
   },
   build: {
     commonjsOptions: {
       include: [/agora-rtc-sdk-ng/, /agora-rtc-react/, /node_modules/]
-    },
-    rollupOptions: {
-      external: [],
-      output: {
-        manualChunks: {
-          'agora-vendor': ['agora-rtc-sdk-ng', 'agora-rtc-react']
-        }
-      }
     }
   }
 }));
