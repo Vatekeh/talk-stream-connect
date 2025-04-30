@@ -8,6 +8,7 @@ import { CreateRoomDialog } from "@/components/room/create-room-dialog";
 import { Room } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,13 +29,22 @@ export default function HomePage() {
           .eq('is_active', true)
           .order('created_at', { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching rooms:", error);
+          toast({
+            title: "Error loading rooms",
+            description: "Could not fetch room data. Please try again later.",
+            variant: "destructive",
+          });
+          throw error;
+        }
         
         // Get all participants for each room
         const roomIds = roomData.map(room => room.id);
         
         if (roomIds.length === 0) {
           setRooms([]);
+          setIsLoading(false);
           return;
         }
         
@@ -47,7 +57,15 @@ export default function HomePage() {
           `)
           .in('room_id', roomIds);
           
-        if (participantsError) throw participantsError;
+        if (participantsError) {
+          console.error("Error fetching participants:", participantsError);
+          toast({
+            title: "Error loading participants",
+            description: "Could not fetch participant data. Please try again later.",
+            variant: "destructive",
+          });
+          throw participantsError;
+        }
         
         // Format rooms with participants
         const formattedRooms = roomData.map(room => {
@@ -140,7 +158,7 @@ export default function HomePage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader isAuthenticated={!!user} userName={user?.user_metadata?.name || "User"} isModerator={user?.user_metadata?.isModerator} />
+      <AppHeader isAuthenticated={!!user} userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} isModerator={user?.user_metadata?.isModerator} />
       
       <main className="flex-1 container py-6">
         <div className="flex flex-col gap-6">

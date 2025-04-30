@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -46,7 +45,16 @@ export default function RoomPage() {
         .eq('id', roomId)
         .single();
         
-      if (roomError) throw roomError;
+      if (roomError) {
+        console.error("Error fetching room:", roomError);
+        toast({
+          title: "Error loading room",
+          description: "Could not load room data. The room may no longer exist.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
       
       // Get room participants with profiles
       const { data: participantsData, error: participantsError } = await supabase
@@ -57,7 +65,15 @@ export default function RoomPage() {
         `)
         .eq('room_id', roomId);
         
-      if (participantsError) throw participantsError;
+      if (participantsError) {
+        console.error("Error fetching participants:", participantsError);
+        toast({
+          title: "Error loading participants",
+          description: "Could not fetch participant data. Please try again later.",
+          variant: "destructive",
+        });
+        throw participantsError;
+      }
       
       // Format participants
       const speakers = participantsData
@@ -131,10 +147,9 @@ export default function RoomPage() {
       console.error("Error fetching room data:", error);
       toast({
         title: "Error loading room",
-        description: "Could not load room data. The room may no longer exist.",
+        description: "Could not load room data. Please try again later.",
         variant: "destructive",
       });
-      navigate('/');
     } finally {
       setIsLoading(false);
     }
@@ -153,10 +168,41 @@ export default function RoomPage() {
         .eq('user_id', user.id)
         .maybeSingle();
         
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking room participation:", checkError);
+        throw checkError;
+      }
       
       // If not already in the room, add them
       if (!data) {
+        // First check if the user has a profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Error checking user profile:", profileError);
+          throw profileError;
+        }
+          
+        // Create profile if it doesn't exist
+        if (!profileData) {
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              username: user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous'
+            });
+              
+          if (createProfileError) {
+            console.error("Error creating user profile:", createProfileError);
+            throw createProfileError;
+          }
+        }
+          
+        // Now join the room
         const { error } = await supabase
           .from('room_participants')
           .insert({
@@ -166,9 +212,12 @@ export default function RoomPage() {
             is_moderator: false,
             is_muted: true
           });
+            
+        if (error) {
+          console.error("Error joining room:", error);
+          throw error;
+        }
           
-        if (error) throw error;
-        
         toast({
           title: "Joined room",
           description: "You have joined the room as a listener.",
@@ -176,6 +225,11 @@ export default function RoomPage() {
       }
     } catch (error) {
       console.error("Error joining room:", error);
+      toast({
+        title: "Error joining room",
+        description: "Could not join the room. Please try again later.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -357,7 +411,11 @@ export default function RoomPage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader isAuthenticated={!!user} userName={user?.user_metadata?.name || "User"} isModerator={currentUserParticipant?.isModerator} />
+      <AppHeader 
+        isAuthenticated={!!user} 
+        userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} 
+        isModerator={currentUserParticipant?.isModerator} 
+      />
       
       <main className="flex-1 container flex flex-col py-4">
         <div className="mb-4">

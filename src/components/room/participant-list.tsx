@@ -1,4 +1,3 @@
-
 import { User } from "@/types";
 import { 
   Hand, 
@@ -42,12 +41,44 @@ export function ParticipantList({
   // Function to update user status (speaker/moderator)
   const updateParticipantStatus = async (userId: string, updates: any) => {
     try {
+      // First check if the user has a profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (profileError) {
+        console.error("Error checking user profile:", profileError);
+        throw profileError;
+      }
+        
+      // Create profile if it doesn't exist
+      if (!profileData) {
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            // Use a default username for now
+            username: 'Anonymous'
+          });
+            
+        if (createProfileError) {
+          console.error("Error creating user profile:", createProfileError);
+          throw createProfileError;
+        }
+      }
+      
+      // Now update the participant status
       const { error } = await supabase
         .from('room_participants')
         .update(updates)
         .eq('user_id', userId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating participant status:", error);
+        throw error;
+      }
       
       const action = updates.is_speaker !== undefined 
         ? (updates.is_speaker ? "promoted to speaker" : "removed as speaker")
@@ -177,6 +208,14 @@ export function ParticipantList({
     return <UserIcon size={14} className="text-muted-foreground" />;
   };
   
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase();
+  };
+  
   return (
     <div className="flex flex-col h-full bg-background rounded-xl overflow-hidden border">
       <div className="px-4 py-3 border-b">
@@ -197,13 +236,13 @@ export function ParticipantList({
                 >
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarImage src={user.avatar} alt={user.name || "User"} />
                       <AvatarFallback className="bg-talkstream-purple text-white">
-                        {user.name.split(" ").map(n => n[0]).join("")}
+                        {getInitials(user.name || "?")}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium">{user.name}</span>
+                      <span className="text-sm font-medium">{user.name || "Anonymous"}</span>
                       {renderUserIcon(user)}
                     </div>
                   </div>
