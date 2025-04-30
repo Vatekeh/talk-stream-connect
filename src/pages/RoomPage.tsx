@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -52,7 +53,7 @@ export default function RoomPage() {
         .from('room_participants')
         .select(`
           *,
-          profiles(id, username, avatar_url, bio)
+          profiles:user_id(id, username, avatar_url, bio, pronouns)
         `)
         .eq('room_id', roomId);
         
@@ -65,14 +66,14 @@ export default function RoomPage() {
           const profile = p.profiles || {};
           return {
             id: p.user_id,
-            name: profile.username || 'Anonymous',
-            avatar: profile.avatar_url,
+            name: (profile as any).username || 'Anonymous',
+            avatar: (profile as any).avatar_url,
             isModerator: p.is_moderator,
             isSpeaker: true,
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
-            pronouns: profile.pronouns,
-            bio: profile.bio
+            pronouns: (profile as any).pronouns,
+            bio: (profile as any).bio
           };
         });
         
@@ -82,14 +83,14 @@ export default function RoomPage() {
           const profile = p.profiles || {};
           return {
             id: p.user_id,
-            name: profile.username || 'Anonymous',
-            avatar: profile.avatar_url,
+            name: (profile as any).username || 'Anonymous',
+            avatar: (profile as any).avatar_url,
             isModerator: p.is_moderator,
             isSpeaker: false,
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
-            pronouns: profile.pronouns,
-            bio: profile.bio
+            pronouns: (profile as any).pronouns,
+            bio: (profile as any).bio
           };
         });
       
@@ -103,8 +104,8 @@ export default function RoomPage() {
         name: roomData.name,
         description: roomData.description,
         hostId: roomData.host_id,
-        hostName: hostProfile.username || 'Anonymous',
-        hostAvatar: hostProfile.avatar_url,
+        hostName: (hostProfile as any).username || 'Anonymous',
+        hostAvatar: (hostProfile as any).avatar_url,
         speakers,
         participants,
         isLive: roomData.is_active,
@@ -377,19 +378,19 @@ export default function RoomPage() {
                 </div>
               </div>
               
-              <h1 className="text-2xl font-bold">{room.name}</h1>
-              {room.description && <p className="text-muted-foreground">{room.description}</p>}
+              <h1 className="text-2xl font-bold">{room?.name}</h1>
+              {room?.description && <p className="text-muted-foreground">{room.description}</p>}
             </div>
             
             <div className="flex items-center gap-2">
               <Avatar className="h-10 w-10 border-2 border-background">
-                <AvatarImage src={room.hostAvatar} alt={room.hostName} />
+                <AvatarImage src={room?.hostAvatar} alt={room?.hostName || ""} />
                 <AvatarFallback className="bg-talkstream-purple text-white">
-                  {room.hostName.split(" ").map(n => n[0]).join("")}
+                  {room?.hostName ? room.hostName.split(" ").map(n => n[0]).join("") : "?"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{room.hostName}</p>
+                <p className="text-sm font-medium">{room?.hostName}</p>
                 <p className="text-xs text-muted-foreground">Host</p>
               </div>
             </div>

@@ -43,7 +43,7 @@ export default function HomePage() {
           .from('room_participants')
           .select(`
             *,
-            profiles(id, username, avatar_url)
+            profiles:user_id(id, username, avatar_url)
           `)
           .in('room_id', roomIds);
           
@@ -59,8 +59,8 @@ export default function HomePage() {
               const profile = p.profiles || {};
               return {
                 id: p.user_id,
-                name: profile.username || 'Anonymous',
-                avatar: profile.avatar_url || undefined,
+                name: (profile as any).username || 'Anonymous',
+                avatar: (profile as any).avatar_url || undefined,
                 isModerator: p.is_moderator,
                 isSpeaker: true,
                 isMuted: p.is_muted,
@@ -74,8 +74,8 @@ export default function HomePage() {
               const profile = p.profiles || {};
               return {
                 id: p.user_id,
-                name: profile.username || 'Anonymous',
-                avatar: profile.avatar_url || undefined,
+                name: (profile as any).username || 'Anonymous',
+                avatar: (profile as any).avatar_url || undefined,
                 isModerator: p.is_moderator,
                 isSpeaker: false,
                 isMuted: p.is_muted,
@@ -92,8 +92,8 @@ export default function HomePage() {
             name: room.name,
             description: room.description,
             hostId: room.host_id,
-            hostName: hostProfile.username || 'Anonymous',
-            hostAvatar: hostProfile.avatar_url,
+            hostName: (hostProfile as any).username || 'Anonymous',
+            hostAvatar: (hostProfile as any).avatar_url,
             speakers,
             participants,
             isLive: true,
