@@ -12,6 +12,7 @@ This document outlines the migration progress from LiveKit to Agora SDK for our 
 - [x] Update App.tsx with AgoraRTCProvider
 - [x] Refactor RoomControls component to use Agora
 - [x] Refactor RoomPage to use Agora
+- [x] Fix TypeScript imports and build configuration
 - [ ] Configure Agora secrets in Supabase
 - [ ] Test end-to-end functionality
 - [ ] Remove LiveKit dependencies

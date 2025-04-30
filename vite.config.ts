@@ -25,5 +25,10 @@ export default defineConfig(({ mode }) => ({
       'agora-rtc-sdk-ng',
       'agora-rtc-react'
     ]
+  },
+  build: {
+    commonjsOptions: {
+      include: [/agora-rtc-sdk-ng/, /agora-rtc-react/, /node_modules/]
+    }
   }
 }));
