@@ -63,6 +63,80 @@ export type Database = {
         }
         Relationships: []
       }
+      room_participants: {
+        Row: {
+          id: string
+          is_hand_raised: boolean
+          is_moderator: boolean
+          is_muted: boolean
+          is_speaker: boolean
+          joined_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_hand_raised?: boolean
+          is_moderator?: boolean
+          is_muted?: boolean
+          is_speaker?: boolean
+          joined_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_hand_raised?: boolean
+          is_moderator?: boolean
+          is_muted?: boolean
+          is_speaker?: boolean
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          is_active: boolean
+          name: string
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       survey_responses: {
         Row: {
           biggest_challenge: string

@@ -15,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 export function CreateRoomDialog() {
   const [open, setOpen] = useState(false);
@@ -24,27 +27,65 @@ export function CreateRoomDialog() {
   const [isCreating, setIsCreating] = useState(false);
   
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  const handleCreateRoom = () => {
-    if (!roomName.trim()) return;
+  const handleCreateRoom = async () => {
+    if (!roomName.trim() || !user) return;
     
     setIsCreating(true);
     
-    // This would be replaced with actual Supabase integration
-    setTimeout(() => {
-      // Simulate room creation
-      const newRoomId = Date.now().toString();
-      setIsCreating(false);
-      setOpen(false);
+    try {
+      // Create room in the database
+      const { data: room, error } = await supabase
+        .from('rooms')
+        .insert({
+          name: roomName,
+          description: roomDescription || null,
+          topic: roomTopic || null,
+          host_id: user.id,
+          is_active: true
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
       
+      // Join the room as a host (speaker and moderator)
+      const { error: participantError } = await supabase
+        .from('room_participants')
+        .insert({
+          room_id: room.id,
+          user_id: user.id,
+          is_speaker: true,
+          is_moderator: true,
+          is_muted: false
+        });
+        
+      if (participantError) throw participantError;
+
       // Reset form
       setRoomName("");
       setRoomDescription("");
       setRoomTopic("");
       
-      // Navigate to the new room
-      navigate(`/room/${newRoomId}`);
-    }, 1000);
+      // Close the dialog and navigate to the new room
+      setOpen(false);
+      navigate(`/room/${room.id}`);
+      
+      toast({
+        title: "Room created",
+        description: `Your room "${roomName}" has been created successfully.`,
+      });
+    } catch (error: any) {
+      console.error("Error creating room:", error);
+      toast({
+        title: "Error creating room",
+        description: error.message || "Failed to create room. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
   
   return (
@@ -102,7 +143,7 @@ export function CreateRoomDialog() {
           </Button>
           <Button 
             onClick={handleCreateRoom} 
-            disabled={!roomName.trim() || isCreating}
+            disabled={!roomName.trim() || isCreating || !user}
           >
             {isCreating ? "Creating..." : "Create Room"}
           </Button>

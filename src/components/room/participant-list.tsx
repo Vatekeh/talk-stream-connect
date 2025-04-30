@@ -18,12 +18,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface ParticipantListProps {
   speakers: User[];
   participants: User[];
   hostId: string;
-  currentUser?: User;
+  currentUser?: User | null;
 }
 
 export function ParticipantList({ 
@@ -36,6 +38,58 @@ export function ParticipantList({
   const isModerator = currentUser?.isModerator;
   
   const canModerate = isHost || isModerator;
+  
+  // Function to update user status (speaker/moderator)
+  const updateParticipantStatus = async (userId: string, updates: any) => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .update(updates)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      const action = updates.is_speaker !== undefined 
+        ? (updates.is_speaker ? "promoted to speaker" : "removed as speaker")
+        : (updates.is_moderator ? "promoted to moderator" : "removed as moderator");
+      
+      toast({
+        title: "Status updated",
+        description: `User has been ${action}.`,
+      });
+    } catch (error) {
+      console.error("Error updating participant status:", error);
+      toast({
+        title: "Error updating status",
+        description: "Failed to update user status.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Function to remove participant from room
+  const removeParticipant = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .delete()
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "User removed",
+        description: "User has been removed from the room.",
+      });
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      toast({
+        title: "Error removing user",
+        description: "Failed to remove user from room.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const renderUserControls = (user: User) => {
     if (!canModerate && user.id !== currentUser?.id) return null;
@@ -51,18 +105,29 @@ export function ParticipantList({
           {canModerate && user.id !== currentUser?.id && (
             <>
               {user.isSpeaker ? (
-                <DropdownMenuItem>Remove as speaker</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_speaker: false })}>
+                  Remove as speaker
+                </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem>Make speaker</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_speaker: true, is_muted: false })}>
+                  Make speaker
+                </DropdownMenuItem>
               )}
               
               {user.isModerator ? (
-                <DropdownMenuItem>Remove as moderator</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_moderator: false })}>
+                  Remove as moderator
+                </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem>Make moderator</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_moderator: true })}>
+                  Make moderator
+                </DropdownMenuItem>
               )}
               
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={() => removeParticipant(user.id)}
+              >
                 Remove from room
               </DropdownMenuItem>
             </>
@@ -72,12 +137,15 @@ export function ParticipantList({
             <>
               {user.isSpeaker && (
                 user.isMuted ? (
-                  <DropdownMenuItem>Unmute</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_muted: false })}>
+                    Unmute
+                  </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem>Mute</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => updateParticipantStatus(user.id, { is_muted: true })}>
+                    Mute
+                  </DropdownMenuItem>
                 )
               )}
-              <DropdownMenuItem>Leave room</DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -175,14 +243,9 @@ export function ParticipantList({
                   </div>
                   
                   <div className="flex items-center">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7 text-amber-500"
-                      title="Raise hand"
-                    >
-                      <Hand size={14} />
-                    </Button>
+                    {user.isHandRaised && (
+                      <Hand size={14} className="text-amber-500 mr-2" />
+                    )}
                     {renderUserControls(user)}
                   </div>
                 </div>

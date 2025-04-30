@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Hand, 
@@ -18,12 +17,14 @@ import { useAgora } from "@/contexts/AgoraContext";
 
 interface RoomControlsProps {
   roomId: string;
-  currentUser?: User;
+  currentUser?: User | null;
   onToggleChat: () => void;
   onToggleParticipants: () => void;
   isChatOpen: boolean;
   isParticipantsOpen: boolean;
   onLeaveRoom: () => void;
+  onToggleHand: () => void;
+  isHandRaised: boolean;
 }
 
 export function RoomControls({ 
@@ -33,24 +34,18 @@ export function RoomControls({
   onToggleParticipants,
   isChatOpen,
   isParticipantsOpen,
-  onLeaveRoom
+  onLeaveRoom,
+  onToggleHand,
+  isHandRaised
 }: RoomControlsProps) {
   // Use Agora context for audio control
   const { toggleMute, isMuted } = useAgora();
-  
-  const [isHandRaised, setIsHandRaised] = useState(false);
   
   const isMobile = useMediaQuery("(max-width: 640px)");
   
   // Handle mute/unmute with Agora
   const handleToggleMute = async () => {
     await toggleMute();
-  };
-  
-  // Hand raising will need custom implementation with Agora RTM
-  const toggleHand = () => {
-    setIsHandRaised(!isHandRaised);
-    // This would be implemented with Agora RTM for signaling
   };
   
   const shareRoom = () => {
@@ -68,44 +63,49 @@ export function RoomControls({
     }
   };
   
+  // Determine if user can use mic (speakers only)
+  const canUseMic = currentUser?.isSpeaker || false;
+  
   return (
     <div className="w-full bg-background border-t py-3 px-4 flex items-center justify-between">
       <div className="flex items-center space-x-2">
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleToggleMute}
-                className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
-              >
-                {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isMuted ? "Unmute" : "Mute"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={toggleHand}
-                className={isHandRaised ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
-              >
-                <Hand size={20} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isHandRaised ? "Lower hand" : "Raise hand"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {canUseMic ? (
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleToggleMute}
+                  className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
+                >
+                  {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isMuted ? "Unmute" : "Mute"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={onToggleHand}
+                  className={isHandRaised ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
+                >
+                  <Hand size={20} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isHandRaised ? "Lower hand" : "Raise hand"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
       
       <div className="flex items-center space-x-2">
