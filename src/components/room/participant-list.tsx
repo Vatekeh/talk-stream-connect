@@ -1,4 +1,3 @@
-
 import { User } from "@/types";
 import { 
   Hand, 
@@ -19,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ParticipantListProps {
@@ -87,15 +86,13 @@ export function ParticipantList({
         : (updates.is_moderator ? "promoted to moderator" : "removed as moderator");
       
       toast({
-        title: "Status updated",
         description: `User has been ${action}.`,
       });
     } catch (error) {
       console.error("Error updating participant status:", error);
       toast({
-        title: "Error updating status",
-        description: "Failed to update user status.",
         variant: "destructive",
+        description: "Failed to update user status.",
       });
     }
   };
@@ -111,15 +108,13 @@ export function ParticipantList({
       if (error) throw error;
       
       toast({
-        title: "User removed",
         description: "User has been removed from the room.",
       });
     } catch (error) {
       console.error("Error removing participant:", error);
       toast({
-        title: "Error removing user",
-        description: "Failed to remove user from room.",
         variant: "destructive",
+        description: "Failed to remove user from room.",
       });
     }
   };
