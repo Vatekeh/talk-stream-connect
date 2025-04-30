@@ -38,45 +38,62 @@ export default function HomePage() {
           return;
         }
         
+        // Query room participants with profiles
         const { data: participantsData, error: participantsError } = await supabase
           .from('room_participants')
-          .select('*, profiles:user_id(id, username, avatar_url)')
+          .select(`
+            *,
+            profiles(id, username, avatar_url)
+          `)
           .in('room_id', roomIds);
           
         if (participantsError) throw participantsError;
         
         // Format rooms with participants
         const formattedRooms = roomData.map(room => {
-          const roomParticipants = participantsData.filter(p => p.room_id === room.id) || [];
-          const speakers = roomParticipants.filter(p => p.is_speaker).map(p => ({
-            id: p.profiles.id,
-            name: p.profiles.username || 'Anonymous',
-            avatar: p.profiles.avatar_url || undefined,
-            isModerator: p.is_moderator,
-            isSpeaker: true,
-            isMuted: p.is_muted,
-            isHandRaised: p.is_hand_raised
-          }));
+          const roomParticipants = participantsData?.filter(p => p.room_id === room.id) || [];
           
-          const participants = roomParticipants.filter(p => !p.is_speaker).map(p => ({
-            id: p.profiles.id,
-            name: p.profiles.username || 'Anonymous',
-            avatar: p.profiles.avatar_url || undefined,
-            isModerator: p.is_moderator,
-            isSpeaker: false,
-            isMuted: p.is_muted,
-            isHandRaised: p.is_hand_raised
-          }));
+          const speakers = roomParticipants
+            .filter(p => p.is_speaker)
+            .map(p => {
+              const profile = p.profiles || {};
+              return {
+                id: p.user_id,
+                name: profile.username || 'Anonymous',
+                avatar: profile.avatar_url || undefined,
+                isModerator: p.is_moderator,
+                isSpeaker: true,
+                isMuted: p.is_muted,
+                isHandRaised: p.is_hand_raised
+              };
+            });
           
-          const host = roomParticipants.find(p => p.user_id === room.host_id)?.profiles || {};
+          const participants = roomParticipants
+            .filter(p => !p.is_speaker)
+            .map(p => {
+              const profile = p.profiles || {};
+              return {
+                id: p.user_id,
+                name: profile.username || 'Anonymous',
+                avatar: profile.avatar_url || undefined,
+                isModerator: p.is_moderator,
+                isSpeaker: false,
+                isMuted: p.is_muted,
+                isHandRaised: p.is_hand_raised
+              };
+            });
+          
+          // Find the host participant
+          const hostParticipant = roomParticipants.find(p => p.user_id === room.host_id);
+          const hostProfile = hostParticipant?.profiles || {};
           
           return {
             id: room.id,
             name: room.name,
             description: room.description,
             hostId: room.host_id,
-            hostName: host.username || 'Anonymous',
-            hostAvatar: host.avatar_url,
+            hostName: hostProfile.username || 'Anonymous',
+            hostAvatar: hostProfile.avatar_url,
             speakers,
             participants,
             isLive: true,

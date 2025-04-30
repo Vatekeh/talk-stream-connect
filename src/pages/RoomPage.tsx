@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -48,10 +47,13 @@ export default function RoomPage() {
         
       if (roomError) throw roomError;
       
-      // Get room participants
+      // Get room participants with profiles
       const { data: participantsData, error: participantsError } = await supabase
         .from('room_participants')
-        .select('*, profiles:user_id(id, username, avatar_url, bio)')
+        .select(`
+          *,
+          profiles(id, username, avatar_url, bio)
+        `)
         .eq('room_id', roomId);
         
       if (participantsError) throw participantsError;
@@ -59,34 +61,41 @@ export default function RoomPage() {
       // Format participants
       const speakers = participantsData
         .filter(p => p.is_speaker)
-        .map(p => ({
-          id: p.user_id,
-          name: p.profiles.username || 'Anonymous',
-          avatar: p.profiles.avatar_url,
-          isModerator: p.is_moderator,
-          isSpeaker: true,
-          isMuted: p.is_muted,
-          isHandRaised: p.is_hand_raised,
-          pronouns: p.profiles.pronouns,
-          bio: p.profiles.bio
-        }));
+        .map(p => {
+          const profile = p.profiles || {};
+          return {
+            id: p.user_id,
+            name: profile.username || 'Anonymous',
+            avatar: profile.avatar_url,
+            isModerator: p.is_moderator,
+            isSpeaker: true,
+            isMuted: p.is_muted,
+            isHandRaised: p.is_hand_raised,
+            pronouns: profile.pronouns,
+            bio: profile.bio
+          };
+        });
         
       const participants = participantsData
         .filter(p => !p.is_speaker)
-        .map(p => ({
-          id: p.user_id,
-          name: p.profiles.username || 'Anonymous',
-          avatar: p.profiles.avatar_url,
-          isModerator: p.is_moderator,
-          isSpeaker: false,
-          isMuted: p.is_muted,
-          isHandRaised: p.is_hand_raised,
-          pronouns: p.profiles.pronouns,
-          bio: p.profiles.bio
-        }));
+        .map(p => {
+          const profile = p.profiles || {};
+          return {
+            id: p.user_id,
+            name: profile.username || 'Anonymous',
+            avatar: profile.avatar_url,
+            isModerator: p.is_moderator,
+            isSpeaker: false,
+            isMuted: p.is_muted,
+            isHandRaised: p.is_hand_raised,
+            pronouns: profile.pronouns,
+            bio: profile.bio
+          };
+        });
       
-      // Get host info
-      const host = participantsData.find(p => p.user_id === roomData.host_id)?.profiles || {};
+      // Find the host participant
+      const hostParticipant = participantsData.find(p => p.user_id === roomData.host_id);
+      const hostProfile = hostParticipant?.profiles || {};
       
       // Format room object
       const formattedRoom = {
@@ -94,8 +103,8 @@ export default function RoomPage() {
         name: roomData.name,
         description: roomData.description,
         hostId: roomData.host_id,
-        hostName: host.username || 'Anonymous',
-        hostAvatar: host.avatar_url,
+        hostName: hostProfile.username || 'Anonymous',
+        hostAvatar: hostProfile.avatar_url,
         speakers,
         participants,
         isLive: roomData.is_active,
