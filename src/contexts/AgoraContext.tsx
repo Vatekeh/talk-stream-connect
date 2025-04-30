@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import AgoraRTC, { 
+import AgoraRTC from "agora-rtc-sdk-ng";
+import type { 
   IAgoraRTCClient, 
   IAgoraRTCRemoteUser, 
   ILocalAudioTrack 
@@ -95,7 +96,13 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       const token = await getAgoraToken(channelName, uid);
       
       // Get Agora App ID from environment or stored configuration
-      const appId = "your_app_id"; // Will be replaced with actual App ID from Supabase secrets
+      const appId = await supabase.functions.invoke("get-agora-appid", {
+        body: {}
+      }).then(res => res.data?.appId);
+      
+      if (!appId) {
+        throw new Error("Failed to retrieve Agora App ID");
+      }
       
       // Join the channel
       await client.join(appId, channelName, token, uid);

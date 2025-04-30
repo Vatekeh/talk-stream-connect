@@ -1,10 +1,11 @@
 
-project_id = "ggbvhsuuwqwjghxpuapg"
+project_id = "your-project-id"
 
-# MIGRATION NOTE: This function will need to be replaced with an Agora token generation function
-[functions.get-livekit-token]
-verify_jwt = false
-
-# Added new Agora token generation function
 [functions.get-agora-token]
-verify_jwt = false
+verify_jwt = true
+
+[functions.get-agora-appid]
+verify_jwt = true
+
+[functions.get-livekit-token]
+verify_jwt = true

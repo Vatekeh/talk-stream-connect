@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { RtcTokenBuilder, RtcRole } from "npm:agora-token@1.0.0";
+import { RtcTokenBuilder, RtcRole } from "npm:agora-access-token@2.0.4";
 
 // Define CORS headers
 const corsHeaders = {
@@ -21,7 +21,6 @@ serve(async (req: Request) => {
   }
 
   try {
-    // Create Supabase client to access secrets
     // Get Agora credentials from environment variables
     const appId = Deno.env.get("AGORA_APP_ID") || "";
     const appCertificate = Deno.env.get("AGORA_APP_CERTIFICATE") || "";

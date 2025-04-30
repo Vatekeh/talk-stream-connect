@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     commonjsOptions: {
       include: [/agora-rtc-sdk-ng/, /agora-rtc-react/, /node_modules/]
+    },
+    rollupOptions: {
+      external: [],
     }
   }
 }));

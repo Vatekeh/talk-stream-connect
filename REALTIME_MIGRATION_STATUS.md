@@ -45,3 +45,9 @@ We chose Agora's latest SDK (v4.x) for our migration for several key benefits:
 2. Test the token generation and audio functionality
 3. Update any remaining LiveKit references in the codebase
 4. Remove the LiveKit token generation function once migration is complete
+
+## Important Notes
+
+- We need to set up the following Supabase secrets:
+  - `AGORA_APP_ID` - Your Agora App ID
+  - `AGORA_APP_CERTIFICATE` - Your Agora App Certificate
