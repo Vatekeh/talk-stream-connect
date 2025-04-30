@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useRoomData(roomId: string | undefined) {
   const [room, setRoom] = useState<Room | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null); // Add error state
   const [currentUserParticipant, setCurrentUserParticipant] = useState<User | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -27,22 +28,24 @@ export function useRoomData(roomId: string | undefined) {
         
       if (roomError) {
         console.error("Error fetching room:", roomError);
+        setError(new Error(roomError.message)); // Store the error
         toast.error("Could not load room data. The room may no longer exist.");
         navigate('/');
         return;
       }
       
-      // Get room participants with profiles
+      // Get room participants with profiles - REMOVED pronouns from select
       const { data: participantsData, error: participantsError } = await supabase
         .from('room_participants')
         .select(`
           *,
-          profiles:user_id(id, username, avatar_url, bio, pronouns)
+          profiles:user_id(id, username, avatar_url, bio)
         `)
         .eq('room_id', roomId);
         
       if (participantsError) {
         console.error("Error fetching participants:", participantsError);
+        setError(new Error(participantsError.message)); // Store the error
         toast.error("Could not fetch participant data. Please try again later.");
         throw participantsError;
       }
@@ -60,8 +63,8 @@ export function useRoomData(roomId: string | undefined) {
             isSpeaker: true,
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
-            pronouns: (profile as any).pronouns,
             bio: (profile as any).bio
+            // pronouns field removed
           };
         });
         
@@ -77,8 +80,8 @@ export function useRoomData(roomId: string | undefined) {
             isSpeaker: false,
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
-            pronouns: (profile as any).pronouns,
             bio: (profile as any).bio
+            // pronouns field removed
           };
         });
       
@@ -102,14 +105,16 @@ export function useRoomData(roomId: string | undefined) {
       };
       
       setRoom(formattedRoom);
+      setError(null); // Clear any previous errors
       
       // Check if current user is in the room
       if (user) {
         const userParticipant = [...speakers, ...participants].find(p => p.id === user.id) || null;
         setCurrentUserParticipant(userParticipant);
       }
-    } catch (error) {
-      console.error("Error fetching room data:", error);
+    } catch (err) {
+      console.error("Error fetching room data:", err);
+      setError(err instanceof Error ? err : new Error("Unknown error occurred"));
       toast.error("Could not load room data. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -149,6 +154,7 @@ export function useRoomData(roomId: string | undefined) {
   return {
     room,
     isLoading,
+    error, // Return error state
     currentUserParticipant,
     setCurrentUserParticipant
   };

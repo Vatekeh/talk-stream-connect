@@ -7,7 +7,7 @@ export interface User {
   isSpeaker?: boolean;
   isMuted?: boolean;
   isHandRaised?: boolean;
-  pronouns?: string;
+  pronouns?: string; // Explicitly marked as optional
   bio?: string;
   createdAt?: string;
   lastActive?: string;

@@ -18,6 +18,11 @@ export function RoomCard({ room }: RoomCardProps) {
   const participantCount = room.speakers.length + room.participants.length;
   const timeSince = formatDistanceToNow(new Date(room.createdAt), { addSuffix: true });
   
+  // Skip rendering this card if the room is empty (no participants) or not active
+  if (participantCount === 0 || !room.isLive) {
+    return null;
+  }
+  
   return (
     <Card className="room-shadow transition-all duration-200 hover:translate-y-[-4px] animate-in">
       <CardHeader className="pb-2">
