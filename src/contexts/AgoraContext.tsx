@@ -1,7 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import AgoraRTC, { IAgoraRTCClient, IAgoraRTCRemoteUser, ILocalAudioTrack } from "agora-rtc-sdk-ng";
+import AgoraRTC, { 
+  IAgoraRTCClient, 
+  IAgoraRTCRemoteUser, 
+  ILocalAudioTrack 
+} from "agora-rtc-sdk-ng";
 import { toast } from "@/components/ui/use-toast";
 
 interface AgoraContextType {
@@ -90,8 +94,11 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       // Get Agora token
       const token = await getAgoraToken(channelName, uid);
       
+      // Get Agora App ID from environment or stored configuration
+      const appId = "your_app_id"; // Will be replaced with actual App ID from Supabase secrets
+      
       // Join the channel
-      await client.join("your_app_id", channelName, token, uid);
+      await client.join(appId, channelName, token, uid);
       
       // Create and publish local audio track
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();

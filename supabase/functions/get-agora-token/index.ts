@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.22.0";
+import { RtcTokenBuilder, RtcRole } from "npm:agora-token@1.0.0";
 
 // Define CORS headers
 const corsHeaders = {
@@ -10,41 +10,7 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400", // Cache preflight response for 1 day
 };
 
-// Agora token generation function
-function generateRtcToken(
-  appId: string,
-  appCertificate: string,
-  channelName: string,
-  uid: string,
-  role: number,
-  expirationTimeInSeconds: number
-) {
-  // Current timestamp in seconds
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  
-  // Token expiration timestamp
-  const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-  
-  // Build the token using simplified approach (Actual token building would use agora-access-token)
-  // Note: This is a placeholder - in a production environment, you'd use agora-access-token
-  const tokenData = {
-    appId,
-    appCertificate,
-    channelName,
-    uid,
-    role,
-    privilegeExpiredTs
-  };
-  
-  // Create a base64 encoded token (in production, this would use proper token generation)
-  // This is just for demonstration - not a real token
-  const tokenString = JSON.stringify(tokenData);
-  const encodedToken = btoa(tokenString);
-  
-  return encodedToken;
-}
-
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
@@ -56,11 +22,6 @@ serve(async (req) => {
 
   try {
     // Create Supabase client to access secrets
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    
     // Get Agora credentials from environment variables
     const appId = Deno.env.get("AGORA_APP_ID") || "";
     const appCertificate = Deno.env.get("AGORA_APP_CERTIFICATE") || "";
@@ -77,18 +38,24 @@ serve(async (req) => {
       throw new Error("Missing required parameters: channel and uid are required");
     }
     
-    // Convert role string to numeric value (1 for publisher, 2 for subscriber)
-    const roleValue = role.toLowerCase() === "publisher" ? 1 : 2;
+    // Convert role string to numeric value
+    const roleValue = role.toLowerCase() === "publisher" ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
     
-    // Generate token
-    const token = generateRtcToken(
+    // Calculate privilege expiration time
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const privilegeExpiredTs = currentTimestamp + Number(expiry);
+    
+    // Generate token using the RtcTokenBuilder
+    const token = RtcTokenBuilder.buildTokenWithUid(
       appId,
       appCertificate,
       channel,
       uid,
       roleValue,
-      Number(expiry)
+      privilegeExpiredTs
     );
+    
+    console.log(`Token generated for channel: ${channel}, uid: ${uid}`);
     
     // Return the token
     return new Response(
@@ -96,7 +63,7 @@ serve(async (req) => {
         token,
         channel,
         uid,
-        role: roleValue === 1 ? "publisher" : "subscriber",
+        role: roleValue === RtcRole.PUBLISHER ? "publisher" : "subscriber",
         expiry: Number(expiry)
       }),
       {
