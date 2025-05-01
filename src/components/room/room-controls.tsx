@@ -26,7 +26,7 @@ interface RoomControlsProps {
   onLeaveRoom: () => void;
   onToggleHand: () => void;
   isHandRaised: boolean;
-  connectionState?: "disconnected" | "connecting" | "connected" | "disconnecting";
+  connectionState?: "disconnected" | "connecting" | "connected" | "disconnecting" | "publishing" | "reconnecting";
 }
 
 export function RoomControls({ 
@@ -70,7 +70,21 @@ export function RoomControls({
   const canUseMic = currentUser?.isSpeaker || false;
   
   // Show connecting indicator when appropriate
-  const isConnecting = connectionState === "connecting" || connectionState === "disconnecting";
+  const isTransitioning = connectionState === "connecting" || 
+                        connectionState === "disconnecting" || 
+                        connectionState === "publishing" ||
+                        connectionState === "reconnecting";
+  
+  // Generate status text based on connection state
+  const getConnectionStatusText = () => {
+    switch(connectionState) {
+      case "connecting": return "Connecting...";
+      case "disconnecting": return "Disconnecting...";
+      case "publishing": return "Setting up audio...";
+      case "reconnecting": return "Reconnecting...";
+      default: return "";
+    }
+  };
   
   return (
     <div className="w-full bg-background border-t py-3 px-4 flex items-center justify-between">
@@ -84,9 +98,9 @@ export function RoomControls({
                   size="icon" 
                   onClick={handleToggleMute}
                   className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
-                  disabled={isConnecting || connectionState === "disconnected"}
+                  disabled={isTransitioning || connectionState === "disconnected"}
                 >
-                  {isConnecting ? (
+                  {isTransitioning ? (
                     <Loader2 size={20} className="animate-spin" />
                   ) : isMuted ? (
                     <MicOff size={20} />
@@ -96,8 +110,8 @@ export function RoomControls({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isConnecting 
-                  ? "Connecting..." 
+                {isTransitioning 
+                  ? getConnectionStatusText()
                   : isMuted 
                     ? "Unmute" 
                     : "Mute"}
@@ -113,9 +127,9 @@ export function RoomControls({
                   size="icon" 
                   onClick={onToggleHand}
                   className={isHandRaised ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
-                  disabled={isConnecting}
+                  disabled={isTransitioning}
                 >
-                  {isConnecting ? (
+                  {isTransitioning ? (
                     <Loader2 size={20} className="animate-spin" />
                   ) : (
                     <Hand size={20} />
@@ -123,15 +137,15 @@ export function RoomControls({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isConnecting ? "Connecting..." : isHandRaised ? "Lower hand" : "Raise hand"}
+                {isTransitioning ? getConnectionStatusText() : isHandRaised ? "Lower hand" : "Raise hand"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
         
-        {isConnecting && (
+        {isTransitioning && (
           <span className="text-xs text-muted-foreground">
-            {connectionState === "connecting" ? "Connecting..." : "Disconnecting..."}
+            {getConnectionStatusText()}
           </span>
         )}
       </div>
@@ -194,9 +208,9 @@ export function RoomControls({
                 size="icon"
                 className="text-destructive border-destructive/20 hover:bg-destructive/10"
                 onClick={onLeaveRoom}
-                disabled={isConnecting}
+                disabled={isTransitioning}
               >
-                {isConnecting ? (
+                {isTransitioning ? (
                   <Loader2 size={20} className="animate-spin" />
                 ) : (
                   <LogOut size={20} />
@@ -204,7 +218,7 @@ export function RoomControls({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {isConnecting ? "Disconnecting..." : "Leave room"}
+              {isTransitioning ? getConnectionStatusText() : "Leave room"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

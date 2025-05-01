@@ -10,7 +10,7 @@ import type {
 import { toast } from "@/components/ui/use-toast";
 
 // Define connection states for better control
-type ConnectionState = "disconnected" | "connecting" | "connected" | "disconnecting";
+type ConnectionState = "disconnected" | "connecting" | "connected" | "disconnecting" | "publishing" | "reconnecting";
 
 interface AgoraContextType {
   client: IAgoraRTCClient | null;
@@ -47,7 +47,23 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
   // Refs to track state that doesn't need re-renders
   const currentChannelRef = useRef<string | null>(null);
   const joinRequestTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const publishAttemptTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasJoinedRef = useRef<boolean>(false);
+  const isPublishingRef = useRef<boolean>(false);
+  const retryCountRef = useRef<number>(0);
+  const maxRetries = 3;
+
+  // Clear any pending timers to prevent race conditions
+  const clearPendingTimers = () => {
+    if (joinRequestTimerRef.current) {
+      clearTimeout(joinRequestTimerRef.current);
+      joinRequestTimerRef.current = null;
+    }
+    if (publishAttemptTimerRef.current) {
+      clearTimeout(publishAttemptTimerRef.current);
+      publishAttemptTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
@@ -86,15 +102,22 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       if (state === "CONNECTED") {
         setConnectionState("connected");
         hasJoinedRef.current = true;
+        retryCountRef.current = 0; // Reset retry counter on successful connection
       } else if (state === "CONNECTING") {
         setConnectionState("connecting");
+      } else if (state === "RECONNECTING") {
+        setConnectionState("reconnecting");
       } else if (state === "DISCONNECTED" || state === "DISCONNECTING") {
         if (state === "DISCONNECTED") {
           setConnectionState("disconnected");
           hasJoinedRef.current = false;
+          isPublishingRef.current = false;
+          currentChannelRef.current = null;
         } else {
           setConnectionState("disconnecting");
         }
+        // Clear any pending timers when disconnecting
+        clearPendingTimers();
       }
     });
 
@@ -102,6 +125,7 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       // Clean up
       console.log("[Agora] Provider cleanup, removing listeners");
       agoraClient.removeAllListeners();
+      clearPendingTimers();
       
       // Ensure we're properly disconnected
       if (hasJoinedRef.current) {
@@ -109,6 +133,9 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
         agoraClient.leave().catch(err => {
           console.error("[Agora] Error during cleanup leave:", err);
         });
+        hasJoinedRef.current = false;
+        isPublishingRef.current = false;
+        currentChannelRef.current = null;
       }
     };
   }, []);
@@ -130,6 +157,69 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     }
   };
 
+  // Function to safely publish audio track with retry logic
+  const safePublishAudioTrack = async (audioTrack: ILocalAudioTrack): Promise<void> => {
+    if (!client || !hasJoinedRef.current || isPublishingRef.current) {
+      console.warn("[Agora] Cannot publish: client not ready, not joined, or already publishing");
+      return;
+    }
+
+    try {
+      // Set publishing state to prevent concurrent publish attempts
+      isPublishingRef.current = true;
+      setConnectionState("publishing");
+      
+      console.log("[Agora] Publishing local audio track");
+      await client.publish(audioTrack);
+      
+      console.log("[Agora] Audio track published successfully");
+      setLocalAudioTrack(audioTrack);
+      setConnectionState("connected");
+    } catch (error: any) {
+      console.error("[Agora] Error publishing audio track:", error);
+      
+      // Handle the PeerConnection disconnected error specifically
+      if (error.message && error.message.includes("PeerConnection already disconnected")) {
+        console.warn("[Agora] PeerConnection already disconnected, cleaning up");
+        
+        // Close the track that failed to publish
+        audioTrack.close();
+        
+        // Reset state to attempt recovery
+        if (retryCountRef.current < maxRetries && hasJoinedRef.current) {
+          retryCountRef.current++;
+          console.log(`[Agora] Retry attempt ${retryCountRef.current}/${maxRetries}`);
+          
+          // Wait before retrying
+          if (publishAttemptTimerRef.current) {
+            clearTimeout(publishAttemptTimerRef.current);
+          }
+          
+          publishAttemptTimerRef.current = setTimeout(async () => {
+            if (hasJoinedRef.current && connectionState !== "disconnecting" && connectionState !== "disconnected") {
+              console.log("[Agora] Retrying audio track creation and publish");
+              try {
+                const newAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                await safePublishAudioTrack(newAudioTrack);
+              } catch (retryError) {
+                console.error("[Agora] Retry failed:", retryError);
+                setConnectionState("connected"); // Return to connected state even if publish fails
+              }
+            }
+          }, 1000 * retryCountRef.current); // Exponential backoff
+        } else {
+          // Max retries exceeded or not joined anymore
+          console.warn("[Agora] Max retries exceeded or no longer joined");
+          if (hasJoinedRef.current) {
+            setConnectionState("connected"); // Return to connected state even if publish fails
+          }
+        }
+      }
+    } finally {
+      isPublishingRef.current = false;
+    }
+  };
+
   // Debounced join function to prevent rapid join attempts
   const joinChannel = async (channelName: string, uid?: number) => {
     if (!client) {
@@ -137,11 +227,26 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       return;
     }
     
+    // Clear any pending join requests to prevent race conditions
+    clearPendingTimers();
+    
     // Prevent concurrent join operations
-    if (connectionState === "connecting" || connectionState === "disconnecting") {
-      console.log("[Agora] Already in transition state, ignoring join request");
+    if (connectionState === "connecting" || connectionState === "disconnecting" || 
+        connectionState === "publishing" || connectionState === "reconnecting") {
+      console.log("[Agora] Already in transition state, scheduling join request");
+      
+      // Schedule a join attempt after a delay
+      joinRequestTimerRef.current = setTimeout(() => {
+        if (connectionState === "disconnected") {
+          console.log("[Agora] Executing delayed join request");
+          joinChannel(channelName, uid);
+        } else {
+          console.log("[Agora] Skipping delayed join - not in disconnected state");
+        }
+      }, 1000);
+      
       toast({
-        title: "Still connecting",
+        title: "Connection in progress",
         description: "Please wait for the current operation to complete",
       });
       return;
@@ -158,14 +263,13 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       console.log("[Agora] Connected to a different channel, leaving first");
       await leaveChannel();
       
-      // Wait a bit before joining the new channel to avoid race conditions
-      if (joinRequestTimerRef.current) {
-        clearTimeout(joinRequestTimerRef.current);
-      }
-      
+      // Wait before joining the new channel to avoid race conditions
       joinRequestTimerRef.current = setTimeout(() => {
-        joinChannel(channelName, uid);
-      }, 300);
+        if (connectionState === "disconnected") {
+          console.log("[Agora] Joining new channel after leaving previous one");
+          joinChannel(channelName, uid);
+        }
+      }, 500);
       return;
     }
 
@@ -175,6 +279,9 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     try {
       setConnectionState("connecting");
       console.log(`[Agora] Joining channel ${channelName} with uid ${numericUid}`);
+      
+      // Reset state
+      retryCountRef.current = 0;
       
       // Get Agora token
       const token = await getAgoraToken(channelName, numericUid);
@@ -196,10 +303,21 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       currentChannelRef.current = channelName;
       hasJoinedRef.current = true;
       
-      // Create and publish local audio track
-      const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-      await client.publish(audioTrack);
-      setLocalAudioTrack(audioTrack);
+      // Ensure we're in a stable state before continuing
+      setConnectionState("connected");
+      
+      // Wait a moment before trying to publish to ensure the connection is stable
+      setTimeout(async () => {
+        if (hasJoinedRef.current && connectionState === "connected") {
+          try {
+            // Create and publish local audio track
+            const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+            await safePublishAudioTrack(audioTrack);
+          } catch (publishError) {
+            console.error("[Agora] Error during delayed publish:", publishError);
+          }
+        }
+      }, 300);
       
       toast({
         title: "Joined room",
@@ -225,6 +343,9 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       return;
     }
     
+    // Clear any pending timers to prevent race conditions
+    clearPendingTimers();
+    
     // Prevent leaving if not connected or already disconnecting
     if (connectionState === "disconnected") {
       console.log("[Agora] Already disconnected");
@@ -241,9 +362,15 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       setConnectionState("disconnecting");
       
       // Unpublish and close local tracks
-      if (localAudioTrack) {
+      if (localAudioTrack && hasJoinedRef.current) {
         console.log("[Agora] Unpublishing local track");
-        await client.unpublish(localAudioTrack);
+        try {
+          await client.unpublish(localAudioTrack);
+          console.log("[Agora] Unpublished successfully");
+        } catch (unpublishError) {
+          console.error("[Agora] Error unpublishing:", unpublishError);
+          // Continue with leave even if unpublish fails
+        }
         localAudioTrack.close();
         setLocalAudioTrack(null);
       }
@@ -251,13 +378,20 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       // Leave the channel
       if (hasJoinedRef.current) {
         console.log("[Agora] Executing leave()");
-        await client.leave();
-        hasJoinedRef.current = false;
+        try {
+          await client.leave();
+          console.log("[Agora] Left channel successfully");
+        } catch (leaveError) {
+          console.error("[Agora] Error leaving channel:", leaveError);
+          // Force the state update even if leave fails
+        }
       } else {
         console.log("[Agora] No need to leave, never joined");
       }
       
       // Reset state
+      hasJoinedRef.current = false;
+      isPublishingRef.current = false;
       currentChannelRef.current = null;
       setRemoteUsers([]);
       setConnectionState("disconnected");
@@ -269,9 +403,10 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     } catch (error) {
       console.error("[Agora] Error leaving channel:", error);
       // Even on error, consider disconnected to reset state
-      setConnectionState("disconnected");
       hasJoinedRef.current = false;
+      isPublishingRef.current = false;
       currentChannelRef.current = null;
+      setConnectionState("disconnected");
       
       toast({
         title: "Error",

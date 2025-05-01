@@ -124,8 +124,13 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
     if (!roomId || !user) return;
     
     // Don't allow toggling during transitions
-    if (connectionState === "connecting" || connectionState === "disconnecting") {
-      toast.error("Please wait until you are fully connected");
+    const isTransitioning = connectionState === "connecting" || 
+                          connectionState === "disconnecting" || 
+                          connectionState === "publishing" ||
+                          connectionState === "reconnecting";
+    
+    if (isTransitioning) {
+      toast.error("Please wait until connection is stable");
       return;
     }
     
@@ -153,7 +158,12 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
   // Handle leaving the room
   const handleLeaveRoom = async () => {
     // Don't allow leaving during transitions
-    if (connectionState === "connecting" || connectionState === "disconnecting") {
+    const isTransitioning = connectionState === "connecting" || 
+                          connectionState === "disconnecting" || 
+                          connectionState === "publishing" ||
+                          connectionState === "reconnecting";
+    
+    if (isTransitioning) {
       toast.error("Please wait until the current operation completes");
       return;
     }
