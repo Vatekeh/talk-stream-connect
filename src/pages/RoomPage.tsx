@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -21,7 +22,7 @@ export default function RoomPage() {
   const { user } = useAuth();
   
   // Agora context for audio functionality
-  const { joinChannel, leaveChannel, remoteUsers, isMuted, toggleMute } = useAgora();
+  const { joinChannel, leaveChannel, remoteUsers, isMuted, toggleMute, connectionState } = useAgora();
   
   const [isChatOpen, setIsChatOpen] = useState(!isMobile);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(!isMobile);
@@ -44,13 +45,17 @@ export default function RoomPage() {
     }
   }, [isLoading, room, user, currentUserParticipant]);
   
-  // Join Agora channel when component mounts
+  // Join Agora channel when component mounts and room data is available
   useEffect(() => {
     if (roomId && !isLoading && room) {
-      joinChannel(roomId);
+      console.log("[RoomPage] Room data loaded, joining Agora channel");
+      // Using numeric uid for better stability
+      const numericUid = user?.id ? parseInt(user.id.replace(/-/g, "").substring(0, 6), 16) : undefined;
+      joinChannel(roomId, numericUid);
     }
     
     return () => {
+      console.log("[RoomPage] Component unmounting, leaving Agora channel");
       leaveChannel();
     };
   }, [roomId, isLoading, room]);
@@ -66,7 +71,7 @@ export default function RoomPage() {
           .eq('user_id', user.id);
           
         if (error) {
-          console.error("Error updating mute status:", error);
+          console.error("[RoomPage] Error updating mute status:", error);
         }
       };
       
@@ -166,6 +171,7 @@ export default function RoomPage() {
           onLeaveRoom={handleLeaveRoom}
           onToggleHand={toggleHand}
           isHandRaised={isHandRaised}
+          connectionState={connectionState}
         />
       </main>
     </div>

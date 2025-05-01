@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import type { 
@@ -9,14 +9,18 @@ import type {
 } from "agora-rtc-sdk-ng";
 import { toast } from "@/components/ui/use-toast";
 
+// Define connection states for better control
+type ConnectionState = "disconnected" | "connecting" | "connected" | "disconnecting";
+
 interface AgoraContextType {
   client: IAgoraRTCClient | null;
   localAudioTrack: ILocalAudioTrack | null;
   remoteUsers: IAgoraRTCRemoteUser[];
-  joinChannel: (channelName: string, uid?: string) => Promise<void>;
+  joinChannel: (channelName: string, uid?: number) => Promise<void>;
   leaveChannel: () => Promise<void>;
   toggleMute: () => Promise<void>;
   isMuted: boolean;
+  connectionState: ConnectionState;
 }
 
 const AgoraContext = createContext<AgoraContextType | null>(null);
@@ -38,13 +42,21 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
   const [localAudioTrack, setLocalAudioTrack] = useState<ILocalAudioTrack | null>(null);
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
   const [isMuted, setIsMuted] = useState(false);
+  const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
+  
+  // Refs to track state that doesn't need re-renders
+  const currentChannelRef = useRef<string | null>(null);
+  const joinRequestTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasJoinedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
     setClient(agoraClient);
+    console.log("[Agora] Client created");
 
     // Set up event listeners for the client
     agoraClient.on("user-published", async (user, mediaType) => {
+      console.log("[Agora] User published:", user.uid, mediaType);
       await agoraClient.subscribe(user, mediaType);
       if (mediaType === "audio") {
         user.audioTrack?.play();
@@ -58,42 +70,114 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     });
 
     agoraClient.on("user-unpublished", (user, mediaType) => {
+      console.log("[Agora] User unpublished:", user.uid, mediaType);
       if (mediaType === "audio") {
         user.audioTrack?.stop();
       }
     });
 
     agoraClient.on("user-left", (user) => {
+      console.log("[Agora] User left:", user.uid);
       setRemoteUsers((prevUsers) => prevUsers.filter((u) => u.uid !== user.uid));
+    });
+
+    agoraClient.on("connection-state-change", (state) => {
+      console.log("[Agora] Connection state changed:", state);
+      if (state === "CONNECTED") {
+        setConnectionState("connected");
+        hasJoinedRef.current = true;
+      } else if (state === "CONNECTING") {
+        setConnectionState("connecting");
+      } else if (state === "DISCONNECTED" || state === "DISCONNECTING") {
+        if (state === "DISCONNECTED") {
+          setConnectionState("disconnected");
+          hasJoinedRef.current = false;
+        } else {
+          setConnectionState("disconnecting");
+        }
+      }
     });
 
     return () => {
       // Clean up
+      console.log("[Agora] Provider cleanup, removing listeners");
       agoraClient.removeAllListeners();
+      
+      // Ensure we're properly disconnected
+      if (hasJoinedRef.current) {
+        console.log("[Agora] Force leaving channel during cleanup");
+        agoraClient.leave().catch(err => {
+          console.error("[Agora] Error during cleanup leave:", err);
+        });
+      }
     };
   }, []);
 
   // Function to get an Agora token from the edge function
-  const getAgoraToken = async (channelName: string, uid: string) => {
+  const getAgoraToken = async (channelName: string, uid: number) => {
     try {
+      console.log(`[Agora] Getting token for channel ${channelName}, uid ${uid}`);
       const { data, error } = await supabase.functions.invoke("get-agora-token", {
-        body: { channel: channelName, uid, role: "publisher" },
+        body: { channel: channelName, uid: uid.toString(), role: "publisher" },
       });
 
       if (error) throw error;
+      console.log("[Agora] Token received");
       return data.token;
     } catch (error) {
-      console.error("Error getting Agora token:", error);
+      console.error("[Agora] Error getting token:", error);
       throw error;
     }
   };
 
-  const joinChannel = async (channelName: string, uid = String(Math.floor(Math.random() * 1000000))) => {
-    if (!client) return;
+  // Debounced join function to prevent rapid join attempts
+  const joinChannel = async (channelName: string, uid?: number) => {
+    if (!client) {
+      console.error("[Agora] Client not initialized");
+      return;
+    }
+    
+    // Prevent concurrent join operations
+    if (connectionState === "connecting" || connectionState === "disconnecting") {
+      console.log("[Agora] Already in transition state, ignoring join request");
+      toast({
+        title: "Still connecting",
+        description: "Please wait for the current operation to complete",
+      });
+      return;
+    }
+
+    // If already connected to the same channel, do nothing
+    if (connectionState === "connected" && currentChannelRef.current === channelName) {
+      console.log("[Agora] Already connected to this channel");
+      return;
+    }
+    
+    // If connected to a different channel, leave first
+    if (connectionState === "connected") {
+      console.log("[Agora] Connected to a different channel, leaving first");
+      await leaveChannel();
+      
+      // Wait a bit before joining the new channel to avoid race conditions
+      if (joinRequestTimerRef.current) {
+        clearTimeout(joinRequestTimerRef.current);
+      }
+      
+      joinRequestTimerRef.current = setTimeout(() => {
+        joinChannel(channelName, uid);
+      }, 300);
+      return;
+    }
+
+    // Generate random numeric uid if not provided
+    const numericUid = uid || Math.floor(Math.random() * 1000000);
     
     try {
+      setConnectionState("connecting");
+      console.log(`[Agora] Joining channel ${channelName} with uid ${numericUid}`);
+      
       // Get Agora token
-      const token = await getAgoraToken(channelName, uid);
+      const token = await getAgoraToken(channelName, numericUid);
       
       // Get Agora App ID from environment or stored configuration
       const { data, error } = await supabase.functions.invoke("get-agora-appid", {
@@ -105,7 +189,12 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       }
       
       // Join the channel
-      await client.join(data.appId, channelName, token, uid);
+      await client.join(data.appId, channelName, token, numericUid);
+      console.log(`[Agora] Successfully joined channel ${channelName}`);
+      
+      // Store current channel
+      currentChannelRef.current = channelName;
+      hasJoinedRef.current = true;
       
       // Create and publish local audio track
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -117,7 +206,11 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
         description: `You joined ${channelName} successfully`,
       });
     } catch (error) {
-      console.error("Error joining channel:", error);
+      console.error("[Agora] Error joining channel:", error);
+      setConnectionState("disconnected");
+      hasJoinedRef.current = false;
+      currentChannelRef.current = null;
+      
       toast({
         title: "Failed to join room",
         description: "There was an error connecting to the audio room",
@@ -127,41 +220,92 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
   };
 
   const leaveChannel = async () => {
-    if (!client) return;
-    
-    // Unpublish and close local tracks
-    if (localAudioTrack) {
-      await client.unpublish(localAudioTrack);
-      localAudioTrack.close();
-      setLocalAudioTrack(null);
+    if (!client) {
+      console.log("[Agora] No client to leave channel");
+      return;
     }
     
-    // Leave the channel
-    await client.leave();
-    setRemoteUsers([]);
+    // Prevent leaving if not connected or already disconnecting
+    if (connectionState === "disconnected") {
+      console.log("[Agora] Already disconnected");
+      return;
+    }
     
-    toast({
-      title: "Left room",
-      description: "You've left the audio room",
-    });
+    if (connectionState === "disconnecting") {
+      console.log("[Agora] Already disconnecting");
+      return;
+    }
+    
+    try {
+      console.log("[Agora] Leaving channel");
+      setConnectionState("disconnecting");
+      
+      // Unpublish and close local tracks
+      if (localAudioTrack) {
+        console.log("[Agora] Unpublishing local track");
+        await client.unpublish(localAudioTrack);
+        localAudioTrack.close();
+        setLocalAudioTrack(null);
+      }
+      
+      // Leave the channel
+      if (hasJoinedRef.current) {
+        console.log("[Agora] Executing leave()");
+        await client.leave();
+        hasJoinedRef.current = false;
+      } else {
+        console.log("[Agora] No need to leave, never joined");
+      }
+      
+      // Reset state
+      currentChannelRef.current = null;
+      setRemoteUsers([]);
+      setConnectionState("disconnected");
+      
+      toast({
+        title: "Left room",
+        description: "You've left the audio room",
+      });
+    } catch (error) {
+      console.error("[Agora] Error leaving channel:", error);
+      // Even on error, consider disconnected to reset state
+      setConnectionState("disconnected");
+      hasJoinedRef.current = false;
+      currentChannelRef.current = null;
+      
+      toast({
+        title: "Error",
+        description: "There was an issue leaving the room, but your connection has been reset",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleMute = async () => {
     if (!localAudioTrack) return;
     
-    if (isMuted) {
-      await localAudioTrack.setEnabled(true);
-      setIsMuted(false);
+    try {
+      if (isMuted) {
+        await localAudioTrack.setEnabled(true);
+        setIsMuted(false);
+        toast({
+          title: "Microphone unmuted",
+          description: "Others can hear you now",
+        });
+      } else {
+        await localAudioTrack.setEnabled(false);
+        setIsMuted(true);
+        toast({
+          title: "Microphone muted",
+          description: "Others cannot hear you",
+        });
+      }
+    } catch (error) {
+      console.error("[Agora] Error toggling mute:", error);
       toast({
-        title: "Microphone unmuted",
-        description: "Others can hear you now",
-      });
-    } else {
-      await localAudioTrack.setEnabled(false);
-      setIsMuted(true);
-      toast({
-        title: "Microphone muted",
-        description: "Others cannot hear you",
+        title: "Error",
+        description: "Could not change microphone state",
+        variant: "destructive",
       });
     }
   };
@@ -174,6 +318,7 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     leaveChannel,
     toggleMute,
     isMuted,
+    connectionState,
   };
 
   return <AgoraContext.Provider value={value}>{children}</AgoraContext.Provider>;

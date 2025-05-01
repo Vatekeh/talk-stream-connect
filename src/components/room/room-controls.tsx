@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   Users, 
   X,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ interface RoomControlsProps {
   onLeaveRoom: () => void;
   onToggleHand: () => void;
   isHandRaised: boolean;
+  connectionState?: "disconnected" | "connecting" | "connected" | "disconnecting";
 }
 
 export function RoomControls({ 
@@ -36,7 +38,8 @@ export function RoomControls({
   isParticipantsOpen,
   onLeaveRoom,
   onToggleHand,
-  isHandRaised
+  isHandRaised,
+  connectionState = "disconnected"
 }: RoomControlsProps) {
   // Use Agora context for audio control
   const { toggleMute, isMuted } = useAgora();
@@ -66,6 +69,9 @@ export function RoomControls({
   // Determine if user can use mic (speakers only)
   const canUseMic = currentUser?.isSpeaker || false;
   
+  // Show connecting indicator when appropriate
+  const isConnecting = connectionState === "connecting" || connectionState === "disconnecting";
+  
   return (
     <div className="w-full bg-background border-t py-3 px-4 flex items-center justify-between">
       <div className="flex items-center space-x-2">
@@ -78,12 +84,23 @@ export function RoomControls({
                   size="icon" 
                   onClick={handleToggleMute}
                   className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
+                  disabled={isConnecting || connectionState === "disconnected"}
                 >
-                  {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                  {isConnecting ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : isMuted ? (
+                    <MicOff size={20} />
+                  ) : (
+                    <Mic size={20} />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isMuted ? "Unmute" : "Mute"}
+                {isConnecting 
+                  ? "Connecting..." 
+                  : isMuted 
+                    ? "Unmute" 
+                    : "Mute"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -96,15 +113,26 @@ export function RoomControls({
                   size="icon" 
                   onClick={onToggleHand}
                   className={isHandRaised ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
+                  disabled={isConnecting}
                 >
-                  <Hand size={20} />
+                  {isConnecting ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Hand size={20} />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isHandRaised ? "Lower hand" : "Raise hand"}
+                {isConnecting ? "Connecting..." : isHandRaised ? "Lower hand" : "Raise hand"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        )}
+        
+        {isConnecting && (
+          <span className="text-xs text-muted-foreground">
+            {connectionState === "connecting" ? "Connecting..." : "Disconnecting..."}
+          </span>
         )}
       </div>
       
@@ -166,12 +194,17 @@ export function RoomControls({
                 size="icon"
                 className="text-destructive border-destructive/20 hover:bg-destructive/10"
                 onClick={onLeaveRoom}
+                disabled={isConnecting}
               >
-                <LogOut size={20} />
+                {isConnecting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <LogOut size={20} />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              Leave room
+              {isConnecting ? "Disconnecting..." : "Leave room"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
