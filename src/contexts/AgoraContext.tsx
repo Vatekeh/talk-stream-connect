@@ -197,7 +197,11 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
           
           publishAttemptTimerRef.current = setTimeout(async () => {
             // Check if we're still in a valid state for retrying
-            if (hasJoinedRef.current && connectionState !== "disconnected" && connectionState !== "disconnecting") {
+            if (hasJoinedRef.current && 
+               (connectionState === "connected" || 
+                connectionState === "connecting" || 
+                connectionState === "publishing" || 
+                connectionState === "reconnecting")) {
               console.log("[Agora] Retrying audio track creation and publish");
               try {
                 const newAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
