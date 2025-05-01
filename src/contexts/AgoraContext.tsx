@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AgoraRTC from "agora-rtc-sdk-ng";
@@ -242,6 +241,7 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Schedule a join attempt after a delay
       joinRequestTimerRef.current = setTimeout(() => {
+        // Using string comparison instead of type comparison
         if (connectionState === "disconnected") {
           console.log("[Agora] Executing delayed join request");
           joinChannel(channelName, uid);
@@ -270,6 +270,7 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Wait before joining the new channel to avoid race conditions
       joinRequestTimerRef.current = setTimeout(() => {
+        // Using string comparison instead of type comparison
         if (connectionState === "disconnected") {
           console.log("[Agora] Joining new channel after leaving previous one");
           joinChannel(channelName, uid);
@@ -313,6 +314,7 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Wait a moment before trying to publish to ensure the connection is stable
       setTimeout(async () => {
+        // Using string comparison instead of type comparison
         if (hasJoinedRef.current && connectionState === "connected") {
           try {
             // Create and publish local audio track
