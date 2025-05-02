@@ -2,18 +2,20 @@
 import { useRef } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import type { 
-  IAgoraRTCClient
+  IAgoraRTCClient,
+  ILocalAudioTrack
 } from "agora-rtc-sdk-ng";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ConnectionState } from "./types";
 
+// Define proper MutableRefObject types for the refs
 export function useAgoraChannels(
   client: IAgoraRTCClient | null,
-  hasJoinedRef: React.RefObject<boolean>,
-  isPublishingRef: React.RefObject<boolean>,
-  connectionStateRef: React.RefObject<ConnectionState>,
-  safePublishAudioTrack: (audioTrack: any) => Promise<void>,
+  hasJoinedRef: React.MutableRefObject<boolean>,
+  isPublishingRef: React.MutableRefObject<boolean>,
+  connectionStateRef: React.MutableRefObject<ConnectionState>,
+  safePublishAudioTrack: (audioTrack: ILocalAudioTrack) => Promise<void>,
   setConnectionState: (state: ConnectionState) => void,
   cleanupAudio: () => void
 ) {

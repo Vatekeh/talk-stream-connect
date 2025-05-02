@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 
 export function useAgoraAudio(
   client: IAgoraRTCClient | null, 
-  connectionStateRef: React.RefObject<ConnectionState>
+  connectionStateRef: React.MutableRefObject<ConnectionState>
 ) {
   const [localAudioTrack, setLocalAudioTrack] = useState<ILocalAudioTrack | null>(null);
   const [isMuted, setIsMuted] = useState(false);
