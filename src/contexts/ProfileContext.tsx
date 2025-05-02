@@ -108,7 +108,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     try {
       // Create a unique file path for the avatar
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
       // Upload the file to Supabase storage
       const { error: uploadError } = await supabase
