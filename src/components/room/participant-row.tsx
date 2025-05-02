@@ -12,13 +12,15 @@ interface ParticipantRowProps {
   hostId: string;
   currentUser: User | null | undefined;
   canModerate: boolean;
+  roomId: string; // Added roomId prop
 }
 
 export function ParticipantRow({ 
   user, 
   hostId, 
   currentUser, 
-  canModerate 
+  canModerate,
+  roomId // Added roomId parameter
 }: ParticipantRowProps) {
   return (
     <div 
@@ -53,7 +55,8 @@ export function ParticipantRow({
           user={user} 
           currentUser={currentUser} 
           hostId={hostId}
-          canModerate={canModerate} 
+          canModerate={canModerate}
+          roomId={roomId} // Added roomId parameter 
         />
       </div>
     </div>

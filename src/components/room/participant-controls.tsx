@@ -15,13 +15,15 @@ interface ParticipantControlsProps {
   currentUser: User | null | undefined;
   hostId: string;
   canModerate: boolean;
+  roomId: string; // Added roomId prop
 }
 
 export function ParticipantControls({ 
   user, 
   currentUser, 
   hostId,
-  canModerate 
+  canModerate,
+  roomId // Added roomId parameter
 }: ParticipantControlsProps) {
   if (!canModerate && user.id !== currentUser?.id) return null;
   
@@ -57,7 +59,7 @@ export function ParticipantControls({
             
             <DropdownMenuItem 
               className="text-destructive"
-              onClick={() => removeParticipant(user.id)}
+              onClick={() => removeParticipant(user.id, roomId)} // Added roomId parameter
             >
               Remove from room
             </DropdownMenuItem>

@@ -42,8 +42,9 @@ export function RoomContent({
       participants={participants} 
       hostId={hostId}
       currentUser={currentUser}
+      roomId={roomId} // Pass roomId to ParticipantList
     />
-  ), [speakers, participants, hostId, currentUser]);
+  ), [speakers, participants, hostId, currentUser, roomId]);
   
   // Memoize the chat component to prevent unnecessary re-renders
   const memoizedChat = useMemo(() => (

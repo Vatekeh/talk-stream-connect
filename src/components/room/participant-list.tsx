@@ -8,13 +8,15 @@ interface ParticipantListProps {
   participants: User[];
   hostId: string;
   currentUser?: User | null;
+  roomId: string; // Added roomId prop
 }
 
 export function ParticipantList({ 
   speakers, 
   participants, 
   hostId, 
-  currentUser 
+  currentUser,
+  roomId // Added roomId parameter
 }: ParticipantListProps) {
   const isHost = currentUser?.id === hostId;
   const isModerator = currentUser?.isModerator;
@@ -41,6 +43,7 @@ export function ParticipantList({
                   hostId={hostId}
                   currentUser={currentUser}
                   canModerate={canModerate}
+                  roomId={roomId} // Added roomId parameter
                 />
               ))}
             </div>
@@ -60,6 +63,7 @@ export function ParticipantList({
                   hostId={hostId}
                   currentUser={currentUser}
                   canModerate={canModerate}
+                  roomId={roomId} // Added roomId parameter
                 />
               ))}
             </div>

@@ -60,13 +60,15 @@ export const updateParticipantStatus = async (userId: string, updates: any) => {
   }
 };
 
-// Function to remove participant from room
-export const removeParticipant = async (userId: string) => {
+// Function to remove participant from room - FIXED: Added roomId parameter
+export const removeParticipant = async (userId: string, roomId: string) => {
   try {
+    // FIXED: Added room_id filter to ensure we only remove the user from the specified room
     const { error } = await supabase
       .from('room_participants')
       .delete()
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('room_id', roomId);
       
     if (error) throw error;
     
