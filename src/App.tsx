@@ -13,8 +13,8 @@ import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
-// Import AgoraProvider
-import { AgoraProvider } from "@/contexts/AgoraContext";
+// Import AgoraProvider from new location
+import { AgoraProvider } from "@/contexts/agora";
 
 const queryClient = new QueryClient();
 
