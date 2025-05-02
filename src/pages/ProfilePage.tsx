@@ -3,20 +3,11 @@ import { UserProfileHeader } from "@/components/profile/user-profile-header";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
-import { User, Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { Save, Clip, NsfwContentLog, UserStats, UserStreak, NsfwUserInsights, NsfwContentLog as NsfwContentLogType } from "@/types";
 
-// Mock data - this would come from Supabase in a real app
-const mockUser: User = {
-  id: "1",
-  name: "Alex Johnson",
-  avatar: "/placeholder.svg",
-  pronouns: "they/them",
-  bio: "Passionate about technology and connecting with like-minded individuals.",
-  createdAt: "2023-01-15T12:00:00Z",
-  lastActive: "2023-04-17T14:30:00Z",
-  isModerator: true
-};
-
+// Mock data for the profile tabs
+// In a real implementation, this would come from Supabase
 const mockStreak: UserStreak = {
   current: 7,
   longest: 14,
@@ -91,7 +82,7 @@ const mockStats: UserStats = {
 };
 
 // Mock data for NSFW content logs
-const mockNsfwLogs: NsfwContentLog[] = [
+const mockNsfwLogs: NsfwContentLogType[] = [
   {
     id: "1",
     userId: "1",
@@ -216,12 +207,32 @@ const mockNsfwInsights: any = {
 };
 
 function ProfilePageContent() {
-  const { user, setUser, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
+  const { user, isLoading, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
+  const { user: authUser } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleUpdateProfile = (updatedUser: User) => {
-    setUser({ ...user, ...updatedUser });
-    setIsEditProfileOpen(false);
-  };
+  if (!user || !authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-bold mb-4">No Profile Found</h2>
+          <p className="text-muted-foreground mb-6">
+            We couldn't find your profile information. You may need to log in again.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -253,8 +264,6 @@ function ProfilePageContent() {
       <EditProfileDialog 
         isOpen={isEditProfileOpen} 
         onClose={() => setIsEditProfileOpen(false)}
-        user={user}
-        onSave={handleUpdateProfile}
       />
     </div>
   );
