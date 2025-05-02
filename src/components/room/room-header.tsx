@@ -37,8 +37,8 @@ export function RoomHeader({ room, participantCount, currentUserId, onExitRoom, 
           </Link>
         </Button>
         
-        {/* Only show Exit Room button if user is not the creator and onExitRoom is provided */}
-        {currentUserId && onExitRoom && !isCreator && (
+        {/* Show Exit Room button for all users */}
+        {currentUserId && onExitRoom && (
           <Button 
             variant="outline" 
             size="sm" 

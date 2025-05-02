@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -124,6 +123,67 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
     }
   };
   
+  // Function to transfer room ownership if creator is leaving
+  const transferRoomOwnership = async (userId: string, roomId: string) => {
+    try {
+      console.log("[RoomActions] Transferring room ownership");
+      
+      // Find a suitable new creator (first moderator, or oldest participant)
+      const { data: participants, error: participantsError } = await supabase
+        .from('room_participants')
+        .select('*')
+        .eq('room_id', roomId)
+        .neq('user_id', userId)
+        .order('is_moderator', { ascending: false })
+        .order('joined_at', { ascending: true });
+        
+      if (participantsError) {
+        console.error("[RoomActions] Error finding participants:", participantsError);
+        return false;
+      }
+      
+      if (!participants || participants.length === 0) {
+        console.log("[RoomActions] No participants to transfer ownership to");
+        return false;
+      }
+      
+      // Select the first participant (will be a moderator if any exist)
+      const newCreator = participants[0];
+      
+      // Update the new creator's status
+      const { error: updateParticipantError } = await supabase
+        .from('room_participants')
+        .update({ 
+          is_creator: true,
+          is_moderator: true 
+        })
+        .eq('user_id', newCreator.user_id)
+        .eq('room_id', roomId);
+        
+      if (updateParticipantError) {
+        console.error("[RoomActions] Error updating new creator:", updateParticipantError);
+        return false;
+      }
+      
+      // Update the room's host_id
+      const { error: updateRoomError } = await supabase
+        .from('rooms')
+        .update({ host_id: newCreator.user_id })
+        .eq('id', roomId);
+        
+      if (updateRoomError) {
+        console.error("[RoomActions] Error updating room host:", updateRoomError);
+        return false;
+      }
+      
+      console.log("[RoomActions] Room ownership transferred successfully");
+      return true;
+    } catch (error) {
+      console.error("[RoomActions] Error transferring ownership:", error);
+      return false;
+    }
+  };
+  
   // Function to leave the room
   const leaveRoom = async () => {
     if (!roomId || !user) return;
@@ -143,10 +203,14 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
         throw roomError;
       }
       
-      // If user is the creator, don't allow leaving
-      if (roomData.creator_id === user.id) {
-        toast.error("As the creator, you cannot leave your own room.");
-        return;
+      // If user is the creator, try to transfer ownership
+      const isCreator = roomData.creator_id === user.id;
+      if (isCreator) {
+        const transferred = await transferRoomOwnership(user.id, roomId);
+        if (transferred) {
+          toast.success("Room ownership transferred to another participant");
+        }
+        // Even if transfer fails, allow the creator to leave
       }
       
       // Remove user from participants using the utility function

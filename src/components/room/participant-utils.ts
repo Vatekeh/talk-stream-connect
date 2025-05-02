@@ -138,6 +138,51 @@ export const kickParticipant = async (roomId: string, targetUserId: string, byUs
   }
 };
 
+// New function to check if a user was previously the creator of a room
+// and restore moderator privileges if so when rejoining
+export const checkPreviousRoomStatus = async (userId: string, roomId: string) => {
+  try {
+    // Check if the room was created by this user
+    const { data: roomData, error: roomError } = await supabase
+      .from('rooms')
+      .select('creator_id')
+      .eq('id', roomId)
+      .single();
+      
+    if (roomError) {
+      console.error("Error checking room creator:", roomError);
+      return false;
+    }
+    
+    // If this user was the original creator, grant them moderator privileges
+    if (roomData.creator_id === userId) {
+      console.log("Former room creator detected, granting moderator status");
+      
+      const { error: updateError } = await supabase
+        .from('room_participants')
+        .update({ is_moderator: true })
+        .eq('user_id', userId)
+        .eq('room_id', roomId);
+        
+      if (updateError) {
+        console.error("Error updating moderator status:", updateError);
+        return false;
+      }
+      
+      toast({
+        description: "You have been granted moderator privileges as the former room creator.",
+      });
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error checking previous room status:", error);
+    return false;
+  }
+};
+
 // Helper function to get user initials
 export const getInitials = (name: string) => {
   return name

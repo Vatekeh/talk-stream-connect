@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAgora } from "@/contexts/AgoraContext";
@@ -15,7 +15,7 @@ import { useRoomData } from "@/hooks/use-room-data";
 import { useRoomActions } from "@/hooks/use-room-actions";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle } from "lucide-react";
-import { kickParticipant } from "@/components/room/participant-utils";
+import { kickParticipant, checkPreviousRoomStatus } from "@/components/room/participant-utils";
 import { toast } from "sonner";
 
 export default function RoomPage() {
@@ -28,6 +28,8 @@ export default function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Agora context for audio functionality
   const { joinChannel, leaveChannel, remoteUsers, isMuted, toggleMute, connectionState } = useAgora();
@@ -49,9 +51,37 @@ export default function RoomPage() {
   // Join room if not already joined
   useEffect(() => {
     if (!isLoading && room && user && !currentUserParticipant) {
-      joinRoom();
+      joinRoom().then(() => {
+        // Check if user was previously the room creator and restore privileges
+        checkPreviousRoomStatus(user.id, room.id);
+      });
     }
   }, [isLoading, room, user, currentUserParticipant]);
+  
+  // Handle navigation away from room page
+  useEffect(() => {
+    // Setup listener for navigation
+    const handleBeforeUnload = () => {
+      if (currentUserParticipant && roomId && user) {
+        console.log("[RoomPage] Page navigation detected, cleaning up room connection");
+        leaveChannel();
+      }
+    };
+
+    // Add event listener for page unload
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Cleanup function for when component unmounts
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      
+      // Handle component unmount (navigation to another page)
+      if (currentUserParticipant && roomId && user) {
+        console.log("[RoomPage] Navigating away, cleaning up room connection");
+        leaveChannel();
+      }
+    };
+  }, [roomId, user, currentUserParticipant]);
   
   // Join Agora channel when component mounts and room data is available
   // FIXED: Only use stableRoomId (primitive) as dependency to prevent remounting loops
@@ -178,7 +208,7 @@ export default function RoomPage() {
           room={room} 
           participantCount={participantCount} 
           currentUserId={user?.id}
-          onExitRoom={!isCreator ? handleLeaveRoom : undefined}
+          onExitRoom={handleLeaveRoom}
           isCreator={isCreator}
         />
         

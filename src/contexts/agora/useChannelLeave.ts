@@ -58,10 +58,13 @@ export function useChannelLeave(
       isPublishingRef.current = false;
       setConnectionState("disconnected");
       
-      toast({
-        title: "Left room",
-        description: "You've left the audio room",
-      });
+      // Don't show toast when the page is being unloaded
+      if (document.visibilityState !== 'hidden') {
+        toast({
+          title: "Left room",
+          description: "You've left the audio room",
+        });
+      }
     } catch (error) {
       console.error("[Agora] Error leaving channel:", error);
       // Even on error, consider disconnected to reset state
@@ -69,11 +72,14 @@ export function useChannelLeave(
       isPublishingRef.current = false;
       setConnectionState("disconnected");
       
-      toast({
-        title: "Error",
-        description: "There was an issue leaving the room, but your connection has been reset",
-        variant: "destructive",
-      });
+      // Don't show toast when the page is being unloaded
+      if (document.visibilityState !== 'hidden') {
+        toast({
+          title: "Error",
+          description: "There was an issue leaving the room, but your connection has been reset",
+          variant: "destructive",
+        });
+      }
     }
   };
 
