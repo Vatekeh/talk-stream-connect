@@ -1,3 +1,4 @@
+
 import { User } from "@/types";
 import { ParticipantList } from "./participant-list";
 import { RoomChat } from "./room-chat";
@@ -33,7 +34,7 @@ export function RoomContent({
       
       {/* Sidebar for chat and participants */}
       <div className="col-span-1 h-[calc(100vh-300px)] min-h-[500px]">
-        {isChatOpen && <RoomChat />}
+        {isChatOpen && <RoomChat roomId={roomId} />}
         
         {isParticipantsOpen && (
           <ParticipantList
