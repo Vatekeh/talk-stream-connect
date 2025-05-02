@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Room, User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,10 +9,13 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useRoomData(roomId: string | undefined) {
   const [room, setRoom] = useState<Room | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null); // Add error state
+  const [error, setError] = useState<Error | null>(null);
   const [currentUserParticipant, setCurrentUserParticipant] = useState<User | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Add a debounce timer ref to limit update frequency
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to fetch room data
   const fetchRoomData = async () => {
@@ -28,13 +31,13 @@ export function useRoomData(roomId: string | undefined) {
         
       if (roomError) {
         console.error("Error fetching room:", roomError);
-        setError(new Error(roomError.message)); // Store the error
+        setError(new Error(roomError.message));
         toast.error("Could not load room data. The room may no longer exist.");
         navigate('/');
         return;
       }
       
-      // Get room participants with profiles - REMOVED pronouns from select
+      // Get room participants with profiles
       const { data: participantsData, error: participantsError } = await supabase
         .from('room_participants')
         .select(`
@@ -45,7 +48,7 @@ export function useRoomData(roomId: string | undefined) {
         
       if (participantsError) {
         console.error("Error fetching participants:", participantsError);
-        setError(new Error(participantsError.message)); // Store the error
+        setError(new Error(participantsError.message));
         toast.error("Could not fetch participant data. Please try again later.");
         throw participantsError;
       }
@@ -64,7 +67,6 @@ export function useRoomData(roomId: string | undefined) {
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
             bio: (profile as any).bio
-            // pronouns field removed
           };
         });
         
@@ -81,7 +83,6 @@ export function useRoomData(roomId: string | undefined) {
             isMuted: p.is_muted,
             isHandRaised: p.is_hand_raised,
             bio: (profile as any).bio
-            // pronouns field removed
           };
         });
       
@@ -105,7 +106,7 @@ export function useRoomData(roomId: string | undefined) {
       };
       
       setRoom(formattedRoom);
-      setError(null); // Clear any previous errors
+      setError(null);
       
       // Check if current user is in the room
       if (user) {
@@ -126,35 +127,55 @@ export function useRoomData(roomId: string | undefined) {
     fetchRoomData();
   }, [roomId, user]);
   
-  // Set up realtime subscription to room changes
+  // Set up debounced realtime subscription to room changes
   useEffect(() => {
     if (!roomId) return;
+    
+    // Function to handle database changes with debouncing
+    const debouncedFetchRoomData = () => {
+      // Clear any pending timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      // Set a new timer
+      debounceTimerRef.current = setTimeout(() => {
+        console.log("[RoomData] Debounced data refresh triggered");
+        fetchRoomData();
+        debounceTimerRef.current = null;
+      }, 250); // 250ms debounce time
+    };
     
     const roomChannel = supabase
       .channel(`room-${roomId}`)
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, 
         () => {
-          fetchRoomData();
+          debouncedFetchRoomData();
         }
       )
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'room_participants', filter: `room_id=eq.${roomId}` }, 
         () => {
-          fetchRoomData();
+          debouncedFetchRoomData();
         }
       )
       .subscribe();
       
     return () => {
+      // Clean up timer and channel on unmount
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
       supabase.removeChannel(roomChannel);
     };
   }, [roomId]);
 
+  // No changes needed to the return statement
   return {
     room,
     isLoading,
-    error, // Return error state
+    error,
     currentUserParticipant,
     setCurrentUserParticipant
   };

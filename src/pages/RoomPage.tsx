@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -17,7 +16,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle } from "lucide-react";
 
 export default function RoomPage() {
-  console.count("RoomPage mount");
+  // Use empty deps effect to correctly count actual mounts/unmounts
+  useEffect(() => {
+    console.count("RoomPage mounted");
+    return () => console.count("RoomPage unmounted");
+  }, []);
   
   const { roomId } = useParams<{ roomId: string }>();
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -64,11 +67,6 @@ export default function RoomPage() {
       leaveChannel();
     };
   }, [stableRoomId, user?.id]); // Only depend on the stable ID values
-  
-  // For debugging unmounts
-  useEffect(() => {
-    return () => console.count("RoomPage unmount");
-  }, []);
   
   // Update mute status when Agora mute changes - in separate effect
   useEffect(() => {
