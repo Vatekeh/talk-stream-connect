@@ -95,6 +95,49 @@ export const removeParticipant = async (userId: string, roomId: string) => {
   }
 };
 
+// New function to kick a participant from a room (must be performed by a moderator)
+export const kickParticipant = async (roomId: string, targetUserId: string, byUserId: string) => {
+  try {
+    // First verify that the user performing the kick is a moderator or creator
+    const { data: moderatorData, error: moderatorError } = await supabase
+      .from('room_participants')
+      .select('is_moderator, is_creator')
+      .eq('user_id', byUserId)
+      .eq('room_id', roomId)
+      .single();
+      
+    if (moderatorError) {
+      console.error("Error checking moderator status:", moderatorError);
+      throw moderatorError;
+    }
+    
+    // Only allow kick if user is moderator or creator
+    if (!moderatorData || (!moderatorData.is_moderator && !moderatorData.is_creator)) {
+      toast({
+        variant: "destructive",
+        description: "You don't have permission to kick participants.",
+      });
+      return null;
+    }
+    
+    // Now remove the targeted participant
+    const result = await removeParticipant(targetUserId, roomId);
+    
+    toast({
+      description: "User has been kicked from the room.",
+    });
+    
+    return result;
+  } catch (error) {
+    console.error("Error kicking participant:", error);
+    toast({
+      variant: "destructive",
+      description: "Failed to kick user from room.",
+    });
+    throw error;
+  }
+};
+
 // Helper function to get user initials
 export const getInitials = (name: string) => {
   return name

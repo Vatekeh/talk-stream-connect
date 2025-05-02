@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
@@ -14,6 +15,8 @@ import { useRoomData } from "@/hooks/use-room-data";
 import { useRoomActions } from "@/hooks/use-room-actions";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle } from "lucide-react";
+import { kickParticipant } from "@/components/room/participant-utils";
+import { toast } from "sonner";
 
 export default function RoomPage() {
   // Use empty deps effect to correctly count actual mounts/unmounts
@@ -87,6 +90,18 @@ export default function RoomPage() {
     }
   }, [isMuted, roomId, user, currentUserParticipant]);
   
+  // Handle kick user functionality
+  const handleKickUser = async (userId: string) => {
+    if (!roomId || !user || !user.id) return;
+    
+    try {
+      await kickParticipant(roomId, userId, user.id);
+    } catch (error) {
+      console.error("[RoomPage] Error kicking user:", error);
+      toast.error("Failed to kick user from room");
+    }
+  };
+  
   const toggleChat = () => {
     if (isMobile) {
       setIsChatOpen(!isChatOpen);
@@ -146,6 +161,9 @@ export default function RoomPage() {
   if (!room) {
     return <RoomNotFound user={user} />;
   }
+
+  // Check if the current user is the creator of the room
+  const isCreator = user && room.hostId === user.id;
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -156,7 +174,13 @@ export default function RoomPage() {
       />
       
       <main className="flex-1 container flex flex-col py-4">
-        <RoomHeader room={room} participantCount={participantCount} />
+        <RoomHeader 
+          room={room} 
+          participantCount={participantCount} 
+          currentUserId={user?.id}
+          onExitRoom={!isCreator ? handleLeaveRoom : undefined}
+          isCreator={isCreator}
+        />
         
         <RoomContent 
           roomId={room.id}
@@ -167,6 +191,7 @@ export default function RoomPage() {
           isChatOpen={isChatOpen}
           isParticipantsOpen={isParticipantsOpen}
           remoteUsers={remoteUsers}
+          onKickUser={handleKickUser}
         />
         
         <RoomControls 

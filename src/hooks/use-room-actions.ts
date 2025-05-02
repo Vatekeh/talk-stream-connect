@@ -25,6 +25,19 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
     
     try {
       console.log("[RoomActions] Checking if user is in room");
+      
+      // First, remove the user from any other rooms they might be in
+      const { error: removeError } = await supabase
+        .from('room_participants')
+        .delete()
+        .eq('user_id', user.id)
+        .neq('room_id', roomId);
+        
+      if (removeError) {
+        console.error("[RoomActions] Error removing user from other rooms:", removeError);
+        // Continue with join process even if this fails
+      }
+      
       // Check if user is already in the room
       const { data, error: checkError } = await supabase
         .from('room_participants')

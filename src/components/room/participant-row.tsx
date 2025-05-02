@@ -6,13 +6,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { UserStatusIcon, MicStatus } from "./participant-status";
 import { ParticipantControls } from "./participant-controls";
 import { getInitials } from "./participant-utils";
+import { Button } from "@/components/ui/button";
 
 interface ParticipantRowProps {
   user: User;
   hostId: string;
   currentUser: User | null | undefined;
   canModerate: boolean;
-  roomId: string; // Added roomId prop
+  roomId: string;
+  onKickUser?: (userId: string) => void;
 }
 
 export function ParticipantRow({ 
@@ -20,8 +22,11 @@ export function ParticipantRow({
   hostId, 
   currentUser, 
   canModerate,
-  roomId // Added roomId parameter
+  roomId,
+  onKickUser
 }: ParticipantRowProps) {
+  const isCurrentUser = currentUser?.id === user.id;
+  
   return (
     <div 
       className="flex items-center justify-between p-2 rounded-lg hover:bg-accent"
@@ -51,13 +56,28 @@ export function ParticipantRow({
           </TooltipProvider>
         )}
         <MicStatus user={user} />
-        <ParticipantControls 
-          user={user} 
-          currentUser={currentUser} 
-          hostId={hostId}
-          canModerate={canModerate}
-          roomId={roomId} // Added roomId parameter 
-        />
+        
+        <div className="flex items-center gap-2">
+          {/* Add Kick button for moderators */}
+          {canModerate && !isCurrentUser && onKickUser && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onKickUser(user.id)} 
+              className="h-7 py-0 text-xs text-destructive hover:bg-destructive/10"
+            >
+              Kick
+            </Button>
+          )}
+          
+          <ParticipantControls 
+            user={user} 
+            currentUser={currentUser} 
+            hostId={hostId}
+            canModerate={canModerate}
+            roomId={roomId} 
+          />
+        </div>
       </div>
     </div>
   );

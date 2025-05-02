@@ -8,7 +8,8 @@ interface ParticipantListProps {
   participants: User[];
   hostId: string;
   currentUser?: User | null;
-  roomId: string; // Added roomId prop
+  roomId: string;
+  onKickUser?: (userId: string) => void;
 }
 
 export function ParticipantList({ 
@@ -16,7 +17,8 @@ export function ParticipantList({
   participants, 
   hostId, 
   currentUser,
-  roomId // Added roomId parameter
+  roomId,
+  onKickUser
 }: ParticipantListProps) {
   const isHost = currentUser?.id === hostId;
   const isModerator = currentUser?.isModerator;
@@ -43,7 +45,8 @@ export function ParticipantList({
                   hostId={hostId}
                   currentUser={currentUser}
                   canModerate={canModerate}
-                  roomId={roomId} // Added roomId parameter
+                  roomId={roomId}
+                  onKickUser={onKickUser}
                 />
               ))}
             </div>
@@ -63,7 +66,8 @@ export function ParticipantList({
                   hostId={hostId}
                   currentUser={currentUser}
                   canModerate={canModerate}
-                  roomId={roomId} // Added roomId parameter
+                  roomId={roomId}
+                  onKickUser={onKickUser}
                 />
               ))}
             </div>
