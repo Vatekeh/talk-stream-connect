@@ -46,11 +46,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Map Supabase profile data to our User type
+      // Note: The pronouns field doesn't exist in the profiles table,
+      // so we default it to an empty string
       const userProfile: User = {
         id: data.id,
         name: data.username || 'Anonymous',
         avatar: data.avatar_url || '/placeholder.svg',
-        pronouns: data.pronouns || '',
+        pronouns: data.pronouns || '', // Safely handle missing pronouns field
         bio: data.bio || '',
         createdAt: data.created_at,
         lastActive: data.last_activity,
@@ -71,9 +73,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Map our User type to Supabase profile structure
+      // Note: Since pronouns doesn't exist in the profiles table,
+      // we'll need to add it with a SQL migration later
       const updates = {
         username: profile.name,
-        pronouns: profile.pronouns,
         bio: profile.bio,
         avatar_url: profile.avatar,
         updated_at: new Date().toISOString()
