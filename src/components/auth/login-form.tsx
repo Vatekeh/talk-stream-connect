@@ -33,9 +33,18 @@ export function LoginForm() {
     setLoading(false);
   };
 
+  // Improved change handlers with better event management
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
   return (
     <form onSubmit={handleLogin} className="space-y-4">
-      {/* Email input field */}
+      {/* Email input field with improved event handling */}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input 
@@ -43,12 +52,12 @@ export function LoginForm() {
           type="email" 
           placeholder="your@email.com" 
           value={email} 
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
         />
       </div>
       
-      {/* Password input field with forgot password link */}
+      {/* Password input field with improved event handling */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
@@ -61,7 +70,7 @@ export function LoginForm() {
           type="password" 
           placeholder="••••••••" 
           value={password} 
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
           required
         />
       </div>

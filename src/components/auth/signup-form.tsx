@@ -29,25 +29,38 @@ export function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password);
+    await signUp(email, password, name);
     setLoading(false);
+  };
+
+  // Improved change handlers with better event management
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
 
   return (
     <form onSubmit={handleSignup} className="space-y-4">
-      {/* Name input field */}
+      {/* Name input field with improved event handling */}
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input 
           id="name" 
           placeholder="Your Name" 
           value={name} 
-          onChange={(e) => setName(e.target.value)}
+          onChange={handleNameChange}
           required
         />
       </div>
       
-      {/* Email input field */}
+      {/* Email input field with improved event handling */}
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email</Label>
         <Input 
@@ -55,12 +68,12 @@ export function SignupForm() {
           type="email" 
           placeholder="your@email.com" 
           value={email} 
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
         />
       </div>
       
-      {/* Password input field */}
+      {/* Password input field with improved event handling */}
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
         <Input 
@@ -68,7 +81,7 @@ export function SignupForm() {
           type="password" 
           placeholder="••••••••" 
           value={password} 
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
           required
         />
       </div>
