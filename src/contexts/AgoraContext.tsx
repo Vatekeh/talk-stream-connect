@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AgoraRTC from "agora-rtc-sdk-ng";
@@ -43,6 +42,14 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
   const [isMuted, setIsMuted] = useState(false);
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
+  
+  // Add ref to track latest connection state for use in async callbacks
+  const connectionStateRef = useRef<ConnectionState>("disconnected");
+  
+  // Keep the ref synchronized with the state
+  useEffect(() => {
+    connectionStateRef.current = connectionState;
+  }, [connectionState]);
   
   // Refs to track state that doesn't need re-renders
   const currentChannelRef = useRef<string | null>(null);
@@ -163,6 +170,13 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       console.warn("[Agora] Cannot publish: client not ready, not joined, or already publishing");
       return;
     }
+    
+    // Additional safety check to ensure we're still in connected state
+    if (connectionStateRef.current !== "connected") {
+      console.warn("[Agora] Skipping publish – state changed to", connectionStateRef.current);
+      audioTrack.close();
+      return;
+    }
 
     try {
       // Set publishing state to prevent concurrent publish attempts
@@ -198,10 +212,10 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
           publishAttemptTimerRef.current = setTimeout(async () => {
             // Check if we're still in a valid state for retrying
             if (hasJoinedRef.current && 
-               (connectionState === "connected" || 
-                connectionState === "connecting" || 
-                connectionState === "publishing" || 
-                connectionState === "reconnecting")) {
+               (connectionStateRef.current === "connected" || 
+                connectionStateRef.current === "connecting" || 
+                connectionStateRef.current === "publishing" || 
+                connectionStateRef.current === "reconnecting")) {
               console.log("[Agora] Retrying audio track creation and publish");
               try {
                 const newAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -242,8 +256,8 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Schedule a join attempt after a delay
       joinRequestTimerRef.current = setTimeout(() => {
-        // Fix: Use a string comparison to check the state
-        if (connectionState === "disconnected") {
+        // Use ref to check the latest connection state
+        if (connectionStateRef.current === "disconnected") {
           console.log("[Agora] Executing delayed join request");
           joinChannel(channelName, uid);
         } else {
@@ -271,8 +285,8 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Wait before joining the new channel to avoid race conditions
       joinRequestTimerRef.current = setTimeout(() => {
-        // Fix: Use a string comparison to check the state
-        if (connectionState === "disconnected") {
+        // Use ref to check the latest connection state
+        if (connectionStateRef.current === "disconnected") {
           console.log("[Agora] Joining new channel after leaving previous one");
           joinChannel(channelName, uid);
         }
@@ -315,8 +329,8 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
       
       // Wait a moment before trying to publish to ensure the connection is stable
       setTimeout(async () => {
-        // Fix: Use a string comparison to check the state
-        if (hasJoinedRef.current && connectionState === "connected") {
+        // Use ref to check the latest connection state
+        if (hasJoinedRef.current && connectionStateRef.current === "connected") {
           try {
             // Create and publish local audio track
             const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
