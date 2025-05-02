@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,13 +45,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Map Supabase profile data to our User type
-      // Note: The pronouns field doesn't exist in the profiles table,
-      // so we default it to an empty string
+      // The 'as any' casting is used to safely access pronouns which might not be in the type definition yet
       const userProfile: User = {
         id: data.id,
         name: data.username || 'Anonymous',
         avatar: data.avatar_url || '/placeholder.svg',
-        pronouns: data.pronouns || '', // Safely handle missing pronouns field
+        pronouns: (data as any).pronouns || '', // Use type assertion to avoid TypeScript error
         bio: data.bio || '',
         createdAt: data.created_at,
         lastActive: data.last_activity,
@@ -73,12 +71,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Map our User type to Supabase profile structure
-      // Note: Since pronouns doesn't exist in the profiles table,
-      // we'll need to add it with a SQL migration later
+      // Include pronouns in the update object
       const updates = {
         username: profile.name,
         bio: profile.bio,
         avatar_url: profile.avatar,
+        pronouns: profile.pronouns, // Include pronouns in the update
         updated_at: new Date().toISOString()
       };
 

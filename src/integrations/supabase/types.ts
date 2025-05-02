@@ -21,6 +21,7 @@ export type Database = {
           longest_streak: number | null
           messages_posted: number | null
           phone_number: string | null
+          pronouns: string | null
           rooms_joined: number | null
           survey_completed: boolean | null
           time_in_rooms: number | null
@@ -38,6 +39,7 @@ export type Database = {
           longest_streak?: number | null
           messages_posted?: number | null
           phone_number?: string | null
+          pronouns?: string | null
           rooms_joined?: number | null
           survey_completed?: boolean | null
           time_in_rooms?: number | null
@@ -55,6 +57,7 @@ export type Database = {
           longest_streak?: number | null
           messages_posted?: number | null
           phone_number?: string | null
+          pronouns?: string | null
           rooms_joined?: number | null
           survey_completed?: boolean | null
           time_in_rooms?: number | null
