@@ -22,6 +22,7 @@ export interface Message {
   content: string;
   timestamp: string;
   isModerator?: boolean;
+  isSystem?: boolean; // Added to support system messages
 }
 
 export interface Room {

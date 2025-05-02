@@ -11,7 +11,7 @@
  * - Exit Room button for users
  */
 import { Link } from "react-router-dom";
-import { ChevronLeft, Users, LogOut } from "lucide-react";
+import { ChevronLeft, Users, LogOut, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgePulse } from "@/components/ui/badge-pulse";
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,8 @@ export function RoomHeader({ room, participantCount, currentUserId, onExitRoom, 
           </Link>
         </Button>
         
-        {/* Show Exit Room button for all users */}
-        {currentUserId && onExitRoom && (
+        {/* Show Exit Room button for active rooms only */}
+        {currentUserId && onExitRoom && room.isLive && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -49,19 +49,31 @@ export function RoomHeader({ room, participantCount, currentUserId, onExitRoom, 
             Exit Room
           </Button>
         )}
+        
+        {/* For inactive rooms, show the inactive status */}
+        {!room.isLive && (
+          <div className="flex items-center">
+            <Clock size={16} className="text-muted-foreground mr-1" />
+            <span className="text-sm text-muted-foreground">Inactive Room</span>
+          </div>
+        )}
       </div>
       
       <div className="flex flex-wrap justify-between items-start gap-4">
         {/* Room information section */}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            {/* Live status indicator */}
-            <BadgePulse color="purple">LIVE</BadgePulse>
+            {/* Live status indicator - only show for active rooms */}
+            {room.isLive ? (
+              <BadgePulse color="purple">LIVE</BadgePulse>
+            ) : (
+              <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">INACTIVE</span>
+            )}
             
             {/* Participant count */}
             <div className="flex items-center text-sm text-muted-foreground">
               <Users size={14} className="mr-1" />
-              {participantCount} Participants
+              {participantCount} {room.isLive ? "Participants" : "Were Present"}
             </div>
           </div>
           
