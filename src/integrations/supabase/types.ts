@@ -66,6 +66,7 @@ export type Database = {
       room_participants: {
         Row: {
           id: string
+          is_creator: boolean
           is_hand_raised: boolean
           is_moderator: boolean
           is_muted: boolean
@@ -76,6 +77,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_creator?: boolean
           is_hand_raised?: boolean
           is_moderator?: boolean
           is_muted?: boolean
@@ -86,6 +88,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_creator?: boolean
           is_hand_raised?: boolean
           is_moderator?: boolean
           is_muted?: boolean
@@ -114,6 +117,7 @@ export type Database = {
       rooms: {
         Row: {
           created_at: string
+          creator_id: string
           description: string | null
           host_id: string
           id: string
@@ -124,6 +128,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          creator_id?: string
           description?: string | null
           host_id: string
           id?: string
@@ -134,6 +139,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          creator_id?: string
           description?: string | null
           host_id?: string
           id?: string

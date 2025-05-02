@@ -7,6 +7,7 @@ export interface User {
   isSpeaker?: boolean;
   isMuted?: boolean;
   isHandRaised?: boolean;
+  isCreator?: boolean; // Added is creator flag
   pronouns?: string; // Explicitly marked as optional
   bio?: string;
   createdAt?: string;
@@ -28,6 +29,7 @@ export interface Room {
   name: string;
   description?: string;
   hostId: string;
+  creatorId?: string; // Added creator ID
   hostName: string;
   hostAvatar?: string;
   speakers: User[];

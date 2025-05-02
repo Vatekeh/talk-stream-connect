@@ -43,6 +43,7 @@ export function CreateRoomDialog() {
           description: roomDescription || null,
           topic: roomTopic || null,
           host_id: user.id,
+          creator_id: user.id, // Set creator_id explicitly
           is_active: true
         })
         .select()
@@ -51,6 +52,7 @@ export function CreateRoomDialog() {
       if (error) throw error;
       
       // Join the room as a host (speaker and moderator)
+      // Also set is_creator = true to identify as room creator
       const { error: participantError } = await supabase
         .from('room_participants')
         .insert({
@@ -58,7 +60,8 @@ export function CreateRoomDialog() {
           user_id: user.id,
           is_speaker: true,
           is_moderator: true,
-          is_muted: false
+          is_muted: false,
+          is_creator: true // Mark user as creator in participants table
         });
         
       if (participantError) throw participantError;

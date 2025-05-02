@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { User } from "@/types";
 import { useAgora } from "@/contexts/AgoraContext";
+import { removeParticipant } from "@/components/room/participant-utils";
 
 export function useRoomActions(roomId: string | undefined, user: any | null, currentUserParticipant: User | null) {
   const [isHandRaised, setIsHandRaised] = useState(currentUserParticipant?.isHandRaised || false);
@@ -36,6 +37,20 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
         console.error("[RoomActions] Error checking room participation:", checkError);
         throw checkError;
       }
+      
+      // Check if user is the creator of the room
+      const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('creator_id')
+        .eq('id', roomId)
+        .single();
+        
+      if (roomError) {
+        console.error("[RoomActions] Error checking room creator:", roomError);
+        throw roomError;
+      }
+      
+      const isCreator = roomData.creator_id === user.id;
       
       // If not already in the room, add them
       if (!data) {
@@ -77,7 +92,8 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
             user_id: user.id,
             is_speaker: false,
             is_moderator: false,
-            is_muted: true
+            is_muted: true,
+            is_creator: isCreator
           });
             
         if (error) {
@@ -101,14 +117,27 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
     
     try {
       console.log("[RoomActions] Removing user from participants");
-      // Remove user from participants
-      const { error } = await supabase
-        .from('room_participants')
-        .delete()
-        .eq('room_id', roomId)
-        .eq('user_id', user.id);
+      
+      // Check if user is the creator of the room
+      const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('creator_id')
+        .eq('id', roomId)
+        .single();
         
-      if (error) throw error;
+      if (roomError) {
+        console.error("[RoomActions] Error checking room creator:", roomError);
+        throw roomError;
+      }
+      
+      // If user is the creator, don't allow leaving
+      if (roomData.creator_id === user.id) {
+        toast.error("As the creator, you cannot leave your own room.");
+        return;
+      }
+      
+      // Remove user from participants using the utility function
+      await removeParticipant(user.id, roomId);
       
       toast.success("You have left the room.");
       
@@ -116,6 +145,7 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
       navigate('/');
     } catch (error) {
       console.error("[RoomActions] Error leaving room:", error);
+      toast.error("Could not leave the room. Please try again later.");
     }
   };
   
@@ -152,6 +182,7 @@ export function useRoomActions(roomId: string | undefined, user: any | null, cur
       toast.success(newHandRaised ? "Hand raised" : "Hand lowered");
     } catch (error) {
       console.error("[RoomActions] Error toggling hand:", error);
+      toast.error("Could not update hand status. Please try again.");
     }
   };
   

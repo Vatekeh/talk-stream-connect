@@ -60,27 +60,38 @@ export const updateParticipantStatus = async (userId: string, updates: any) => {
   }
 };
 
-// Function to remove participant from room - FIXED: Added roomId parameter
+// Function to remove participant from room - Now properly uses roomId parameter
 export const removeParticipant = async (userId: string, roomId: string) => {
   try {
-    // FIXED: Added room_id filter to ensure we only remove the user from the specified room
-    const { error } = await supabase
+    console.log(`Removing participant ${userId} from room ${roomId}`);
+    
+    // Delete the participant with both user_id and room_id filters
+    const { data, error } = await supabase
       .from('room_participants')
       .delete()
       .eq('user_id', userId)
-      .eq('room_id', roomId);
+      .eq('room_id', roomId)
+      .select(); // Return the deleted row
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error removing participant:", error);
+      throw error;
+    }
+    
+    console.log("Removed participant data:", data);
     
     toast({
       description: "User has been removed from the room.",
     });
+    
+    return data;
   } catch (error) {
     console.error("Error removing participant:", error);
     toast({
       variant: "destructive",
       description: "Failed to remove user from room.",
     });
+    throw error;
   }
 };
 

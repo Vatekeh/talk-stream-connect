@@ -4,16 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { BadgePulse } from "@/components/ui/badge-pulse";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, LogOut } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { removeParticipant } from "./participant-utils";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface RoomCardProps {
   room: Room;
+  isCreated?: boolean;
 }
 
-export function RoomCard({ room }: RoomCardProps) {
+export function RoomCard({ room, isCreated = false }: RoomCardProps) {
+  const [isLeaving, setIsLeaving] = useState(false);
+  const { user } = useAuth();
+  
   // Calculate actual participant count - only count real participants
   const participantCount = room.speakers.length + room.participants.length;
   const timeSince = formatDistanceToNow(new Date(room.createdAt), { addSuffix: true });
@@ -22,6 +30,24 @@ export function RoomCard({ room }: RoomCardProps) {
   if (participantCount === 0 || !room.isLive) {
     return null;
   }
+  
+  const handleLeaveRoom = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user || isLeaving) return;
+    
+    setIsLeaving(true);
+    try {
+      await removeParticipant(user.id, room.id);
+      toast.success("You have left the room");
+    } catch (error) {
+      console.error("Error leaving room:", error);
+      toast.error("Failed to leave the room");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
   
   return (
     <Card className="room-shadow transition-all duration-200 hover:translate-y-[-4px] animate-in">
@@ -61,9 +87,26 @@ export function RoomCard({ room }: RoomCardProps) {
               <AvatarStack users={room.speakers} max={3} size="sm" />
             )}
             
-            <Button variant="default" size="sm" asChild>
-              <Link to={`/room/${room.id}`}>Join</Link>
-            </Button>
+            <div className="flex gap-2">
+              {!isCreated && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-destructive hover:text-destructive"
+                  onClick={handleLeaveRoom}
+                  disabled={isLeaving}
+                >
+                  <LogOut size={16} className="mr-1" />
+                  Leave
+                </Button>
+              )}
+              
+              <Button variant="default" size="sm" asChild>
+                <Link to={`/room/${room.id}`}>
+                  {isCreated ? "Manage" : "Join"}
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
