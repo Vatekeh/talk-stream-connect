@@ -39,7 +39,12 @@ export function useAgoraChannels(
   );
 
   // Initialize channel join functionality
-  const { joinChannel, joinRequestTimerRef: joinTimerRef, currentChannelRef } = useChannelJoin(
+  const { 
+    joinChannel, 
+    joinRequestTimerRef: joinTimerRef, 
+    currentChannelRef,
+    joinPromiseRef // Include the new ref
+  } = useChannelJoin(
     client,
     hasJoinedRef,
     connectionStateRef,
@@ -61,6 +66,7 @@ export function useAgoraChannels(
     joinChannel,
     leaveChannel,
     cleanupChannels,
-    joinRequestTimerRef
+    joinRequestTimerRef,
+    joinPromiseRef // Export the ref
   };
 }

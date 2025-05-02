@@ -46,7 +46,8 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
     joinChannel,
     leaveChannel,
     cleanupChannels,
-    joinRequestTimerRef
+    joinRequestTimerRef,
+    joinPromiseRef // Get the new ref
   } = useAgoraChannels(
     client,
     hasJoinedRef,
@@ -59,16 +60,23 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
   
   // Setup cleanup when component unmounts
   useEffect(() => {
+    // Cleanup for timer references
+    const clearAllTimers = () => {
+      if (joinRequestTimerRef.current) {
+        clearTimeout(joinRequestTimerRef.current);
+        joinRequestTimerRef.current = null;
+      }
+      if (publishAttemptTimerRef.current) {
+        clearTimeout(publishAttemptTimerRef.current);
+        publishAttemptTimerRef.current = null;
+      }
+    };
+    
     return () => {
       console.log("[Agora] Provider cleanup");
       
       // Clean up timers
-      if (joinRequestTimerRef.current) {
-        clearTimeout(joinRequestTimerRef.current);
-      }
-      if (publishAttemptTimerRef.current) {
-        clearTimeout(publishAttemptTimerRef.current);
-      }
+      clearAllTimers();
       
       // Clean up audio resources
       cleanupAudio();
@@ -84,6 +92,21 @@ export const AgoraProvider = ({ children }: AgoraProviderProps) => {
         });
         hasJoinedRef.current = false;
         isPublishingRef.current = false;
+      }
+    };
+  }, []);
+
+  // Add a separate effect just for timer cleanup on route changes
+  useEffect(() => {
+    return () => {
+      // This will run on route changes even when the provider isn't fully unmounted
+      if (joinRequestTimerRef.current) {
+        clearTimeout(joinRequestTimerRef.current);
+        joinRequestTimerRef.current = null;
+      }
+      if (publishAttemptTimerRef.current) {
+        clearTimeout(publishAttemptTimerRef.current);
+        publishAttemptTimerRef.current = null;
       }
     };
   }, []);

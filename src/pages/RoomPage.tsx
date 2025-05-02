@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle } from "lucide-react";
 
 export default function RoomPage() {
+  console.count("RoomPage mount");
+  
   const { roomId } = useParams<{ roomId: string }>();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { user } = useAuth();
@@ -46,21 +48,29 @@ export default function RoomPage() {
   }, [isLoading, room, user, currentUserParticipant]);
   
   // Join Agora channel when component mounts and room data is available
+  // FIXED: Only use stableRoomId (primitive) as dependency to prevent remounting loops
+  const stableRoomId = room?.id;
+  
   useEffect(() => {
-    if (roomId && !isLoading && room) {
-      console.log("[RoomPage] Room data loaded, joining Agora channel");
-      // Using numeric uid for better stability
-      const numericUid = user?.id ? parseInt(user.id.replace(/-/g, "").substring(0, 6), 16) : undefined;
-      joinChannel(roomId, numericUid);
-    }
+    if (!stableRoomId) return;
+    
+    console.log("[Room] Initiating Agora join for", stableRoomId);
+    // Using numeric uid for better stability
+    const numericUid = user?.id ? parseInt(user.id.replace(/-/g, "").substring(0, 6), 16) : undefined;
+    joinChannel(stableRoomId, numericUid);
     
     return () => {
-      console.log("[RoomPage] Component unmounting, leaving Agora channel");
+      console.log("[Room] Cleanup for", stableRoomId);
       leaveChannel();
     };
-  }, [roomId, isLoading, room]);
+  }, [stableRoomId, user?.id]); // Only depend on the stable ID values
   
-  // Update mute status when Agora mute changes
+  // For debugging unmounts
+  useEffect(() => {
+    return () => console.count("RoomPage unmount");
+  }, []);
+  
+  // Update mute status when Agora mute changes - in separate effect
   useEffect(() => {
     if (roomId && user && currentUserParticipant?.isSpeaker) {
       const updateMuteStatus = async () => {
