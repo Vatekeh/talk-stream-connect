@@ -1,3 +1,4 @@
+
 import * as nsfwjs from 'https://cdn.jsdelivr.net/npm/nsfwjs/dist/nsfwjs.esm.js'
 
 const THRESHOLD = 0.75
@@ -55,8 +56,10 @@ async function report(mediaUrl, detectedClass, confidence) {
   const pageUrl = location.href
   const { clutchToken } = await chrome.storage.local.get('clutchToken')
   const payload = { pageUrl, mediaUrl, detectedClass, confidence }
+  
   try {
-    await fetch(process.env.CLUTCH_API_URL, {
+    // Use the Supabase edge function endpoint instead of process.env.CLUTCH_API_URL
+    await fetch('https://ggbvhsuuwqwjghxpuapg.supabase.co/functions/v1/nsfw-detections', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

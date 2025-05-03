@@ -1,3 +1,4 @@
+
 const state = {}
 chrome.storage.local.get(['lastDetection', 'detectionEnabled'], res => {
   state.last = res.lastDetection
@@ -15,7 +16,7 @@ function render() {
       : '<p>No detections yet.</p>'}
     <button id="toggle">${state.enabled ? 'Disable' : 'Enable'} Filter</button>
     <hr/>
-    <a href="https://clutch.your-domain.com" target="_blank">Open Clutch Dashboard</a>
+    <a href="https://ggbvhsuuwqwjghxpuapg.supabase.co" target="_blank">Open Clutch Dashboard</a>
   `
   document.getElementById('toggle').onclick = () => {
     state.enabled = !state.enabled

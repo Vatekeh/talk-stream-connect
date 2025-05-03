@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      nsfw_detections: {
+        Row: {
+          confidence: number
+          detected_class: string
+          id: string
+          inserted_at: string
+          media_url: string
+          page_url: string
+          thumb_base64: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence: number
+          detected_class: string
+          id?: string
+          inserted_at?: string
+          media_url: string
+          page_url: string
+          thumb_base64?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          detected_class?: string
+          id?: string
+          inserted_at?: string
+          media_url?: string
+          page_url?: string
+          thumb_base64?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

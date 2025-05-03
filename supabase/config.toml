@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.cleanup-rooms]
 verify_jwt = true
+
+[functions.nsfw-detections]
+verify_jwt = true
