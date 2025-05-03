@@ -21,7 +21,7 @@ export function useRoomMessages(roomId: string) {
     // Fetch existing messages for this room
     const fetchMessages = async () => {
       try {
-        // Fixed query to properly join profiles table with room_messages using foreign key relationship
+        // Use a join query that properly links room_messages with profiles
         const { data, error } = await supabase
           .from('room_messages')
           .select(`
@@ -31,7 +31,7 @@ export function useRoomMessages(roomId: string) {
             is_system_message,
             room_id,
             user_id,
-            profiles:user_id(username, avatar_url, is_moderator)
+            profiles(username, avatar_url, is_moderator)
           `)
           .eq('room_id', roomId)
           .order('created_at', { ascending: true });
