@@ -21,8 +21,8 @@ export function useRoomMessages(roomId: string) {
     // Fetch existing messages for this room
     const fetchMessages = async () => {
       try {
-        // Use an explicit foreign key join to properly link room_messages with profiles
-        const { data, error } = await supabase
+        // Fetch messages first
+        const { data: messagesData, error: messagesError } = await supabase
           .from('room_messages')
           .select(`
             id, 
@@ -30,30 +30,63 @@ export function useRoomMessages(roomId: string) {
             created_at, 
             is_system_message,
             room_id,
-            user_id,
-            profiles!room_messages_user_id_fkey(username, avatar_url, is_moderator)
+            user_id
           `)
           .eq('room_id', roomId)
           .order('created_at', { ascending: true });
           
-        if (error) {
-          console.error("Error fetching messages:", error);
+        if (messagesError) {
+          console.error("Error fetching messages:", messagesError);
           toast.error("Could not load chat messages");
-        } else {
-          // Format the messages to match our Message type
-          const formattedMessages = data.map(msg => ({
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!messagesData || messagesData.length === 0) {
+          setMessages([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Extract unique user IDs from messages
+        const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url, is_moderator')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          toast.error("Could not load user profiles");
+        }
+        
+        // Create a map of profiles for easy lookup
+        const profilesMap = new Map();
+        if (profilesData) {
+          profilesData.forEach(profile => {
+            profilesMap.set(profile.id, profile);
+          });
+        }
+        
+        // Format the messages with profile data
+        const formattedMessages = messagesData.map(msg => {
+          const profile = profilesMap.get(msg.user_id);
+          
+          return {
             id: msg.id,
             userId: msg.user_id,
-            userName: msg.profiles?.username || 'Anonymous',
-            userAvatar: msg.profiles?.avatar_url,
+            userName: profile?.username || 'Anonymous',
+            userAvatar: profile?.avatar_url,
             content: msg.content,
             timestamp: msg.created_at,
-            isModerator: msg.profiles?.is_moderator || false,
+            isModerator: profile?.is_moderator || false,
             isSystem: msg.is_system_message
-          }));
-          
-          setMessages(formattedMessages);
-        }
+          };
+        });
+        
+        setMessages(formattedMessages);
       } catch (err) {
         console.error("Exception when fetching messages:", err);
         toast.error("Failed to load chat history");
