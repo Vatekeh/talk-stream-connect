@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Options</title>
+</head>
+<body>
+  <h2>Clutch Token</h2>
+  <input id="token" size="60" />
+  <button id="save">Save</button>
+  <script>
+    const $ = id => document.getElementById(id)
+    chrome.storage.local.get('clutchToken', res => {
+      if (res.clutchToken) $('token').value = res.clutchToken
+    })
+    $('save').onclick = () => {
+      chrome.storage.local.set({ clutchToken: $('token').value.trim() })
+      alert('Token saved')
+    }
+  </script>
+</body>
+</html>
