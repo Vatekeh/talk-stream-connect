@@ -4,6 +4,7 @@ import { Hand, Mic, MicOff, MessageSquare, Users, Plus, Loader2 } from "lucide-r
 import { useAgora } from "@/contexts/AgoraContext";
 import { MobileSheetRef } from "./mobile-sheet";
 import { ConnectionState } from "@/contexts/agora/types";
+import { getConnectionStatusText } from "../controls/connection-status";
 
 interface MobileRoomControlsProps {
   sheetRef: React.RefObject<MobileSheetRef>;
@@ -44,17 +45,6 @@ export function MobileRoomControls({
     }
   };
   
-  // Generate status text based on connection state
-  const getConnectionStatusText = () => {
-    switch(connectionState) {
-      case "connecting": return "Connecting...";
-      case "disconnecting": return "Disconnecting...";
-      case "publishing": return "Setting up audio...";
-      case "reconnecting": return "Reconnecting...";
-      default: return "";
-    }
-  };
-  
   return (
     <>
       {/* Floating action button */}
@@ -87,7 +77,7 @@ export function MobileRoomControls({
           </div>
           <span className="text-xs">
             {isTransitioning 
-              ? getConnectionStatusText() 
+              ? getConnectionStatusText(connectionState) 
               : canUseMic 
                 ? (isMuted ? "Unmute" : "Mute") 
                 : (isHandRaised ? "Lower" : "Raise")}
