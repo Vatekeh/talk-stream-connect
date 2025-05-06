@@ -35,7 +35,7 @@ export default function LoginPage() {
           {/* Left side: Image */}
           <div className="hidden md:block w-1/2 bg-clutch-slate">
             <img 
-              src="/lovable-uploads/19b16fc0-696a-4edd-9c31-1efe6f93c268.png" 
+              src="/lovable-uploads/f6617d82-9257-4618-bd1e-c81e35bc55fa.png" 
               alt="Clutch hands clasped together" 
               className="w-full h-full object-cover"
             />
