@@ -24,10 +24,10 @@ export function RoomChat({ roomId }: RoomChatProps) {
   };
   
   return (
-    <div className="flex flex-col h-full bg-background rounded-xl overflow-hidden border">
+    <div className="flex flex-col h-full bg-background border overflow-hidden rounded-lg">
       {/* Chat header */}
-      <div className="px-4 py-3 border-b">
-        <h3 className="font-medium">Chat</h3>
+      <div className="px-4 py-2 border-b bg-muted/30">
+        <h3 className="font-semibold text-sm">Chat</h3>
       </div>
       
       {/* Scrollable message area */}

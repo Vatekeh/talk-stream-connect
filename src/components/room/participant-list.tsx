@@ -26,15 +26,15 @@ export function ParticipantList({
   const canModerate = isHost || isModerator;
   
   return (
-    <div className="flex flex-col h-full bg-background rounded-xl overflow-hidden border">
-      <div className="px-4 py-3 border-b">
-        <h3 className="font-medium">Participants</h3>
+    <div className="flex flex-col h-full bg-background rounded-lg border overflow-hidden">
+      <div className="px-4 py-2 border-b bg-muted/30">
+        <h3 className="font-semibold text-sm">Participants</h3>
       </div>
       
       <ScrollArea className="flex-1">
         {speakers.length > 0 && (
-          <div className="p-3">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2 px-1">
+          <div className="p-2">
+            <h4 className="text-xs font-medium text-muted-foreground mb-1 px-1">
               SPEAKERS ({speakers.length})
             </h4>
             <div className="space-y-1">
@@ -54,8 +54,8 @@ export function ParticipantList({
         )}
         
         {participants.length > 0 && (
-          <div className="p-3">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2 px-1">
+          <div className="p-2">
+            <h4 className="text-xs font-medium text-muted-foreground mb-1 px-1">
               PARTICIPANTS ({participants.length})
             </h4>
             <div className="space-y-1">

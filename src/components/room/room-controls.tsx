@@ -15,6 +15,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User } from "@/types";
 import { useAgora } from "@/contexts/AgoraContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RoomControlsProps {
   roomId: string;
@@ -87,141 +88,131 @@ export function RoomControls({
   };
   
   return (
-    <div className="w-full bg-background border-t py-3 px-4 flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        {canUseMic ? (
-          <TooltipProvider delayDuration={300}>
+    <div className="w-full bg-background border-t py-3 px-4">
+      <div className="flex items-center justify-between">
+        {/* Left side controls - primary actions */}
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant="outline" 
+                  variant={canUseMic ? "outline" : "default"}
                   size="icon" 
-                  onClick={handleToggleMute}
-                  className={isMuted ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
+                  onClick={canUseMic ? handleToggleMute : onToggleHand}
+                  className={isHandRaised && !canUseMic ? "bg-amber-50 border-amber-200 text-amber-700" : 
+                             isMuted && canUseMic ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
                   disabled={isTransitioning || connectionState === "disconnected"}
                 >
                   {isTransitioning ? (
                     <Loader2 size={20} className="animate-spin" />
-                  ) : isMuted ? (
-                    <MicOff size={20} />
-                  ) : (
-                    <Mic size={20} />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isTransitioning 
-                  ? getConnectionStatusText()
-                  : isMuted 
-                    ? "Unmute" 
-                    : "Mute"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={onToggleHand}
-                  className={isHandRaised ? "bg-amber-50 border-amber-200 text-amber-700" : ""}
-                  disabled={isTransitioning}
-                >
-                  {isTransitioning ? (
-                    <Loader2 size={20} className="animate-spin" />
+                  ) : canUseMic ? (
+                    isMuted ? <MicOff size={20} /> : <Mic size={20} />
                   ) : (
                     <Hand size={20} />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isTransitioning ? getConnectionStatusText() : isHandRaised ? "Lower hand" : "Raise hand"}
+                {isTransitioning 
+                  ? getConnectionStatusText()
+                  : canUseMic 
+                    ? isMuted ? "Unmute" : "Mute"
+                    : isHandRaised ? "Lower hand" : "Raise hand"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )}
+          
+          {isTransitioning && (
+            <span className="text-xs text-muted-foreground">
+              {getConnectionStatusText()}
+            </span>
+          )}
+        </div>
         
-        {isTransitioning && (
-          <span className="text-xs text-muted-foreground">
-            {getConnectionStatusText()}
-          </span>
-        )}
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={onToggleParticipants}
-                className={isParticipantsOpen ? "bg-talkstream-purple/10 border-talkstream-purple/20 text-talkstream-purple" : ""}
-              >
-                {isParticipantsOpen && isMobile ? <X size={20} /> : <Users size={20} />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isParticipantsOpen && isMobile ? "Close participants" : "View participants"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
+        {/* Center controls - room widgets */}
+        <div className="hidden md:block">
+          <Tabs defaultValue={isChatOpen ? "chat" : "participants"} className="w-[400px]">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger 
+                value="chat" 
                 onClick={onToggleChat}
-                className={isChatOpen ? "bg-talkstream-purple/10 border-talkstream-purple/20 text-talkstream-purple" : ""}
+                className={!isChatOpen ? "text-muted-foreground" : ""}
               >
-                {isChatOpen && isMobile ? <X size={20} /> : <MessageSquare size={20} />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isChatOpen && isMobile ? "Close chat" : "Open chat"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={shareRoom}>
-                <Share2 size={20} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Share room
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="text-destructive border-destructive/20 hover:bg-destructive/10"
-                onClick={onLeaveRoom}
-                disabled={isTransitioning}
+                <MessageSquare size={16} className="mr-2" />
+                Chat
+              </TabsTrigger>
+              <TabsTrigger 
+                value="participants" 
+                onClick={onToggleParticipants}
+                className={!isParticipantsOpen ? "text-muted-foreground" : ""}
               >
-                {isTransitioning ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <LogOut size={20} />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isTransitioning ? getConnectionStatusText() : "Leave room"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+                <Users size={16} className="mr-2" />
+                Participants
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        
+        {/* Mobile tab buttons */}
+        <div className="flex md:hidden gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onToggleChat}
+            className={isChatOpen ? "bg-primary/20 text-primary border-primary/20" : ""}
+          >
+            <MessageSquare size={16} className="mr-1" />
+            Chat
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onToggleParticipants}
+            className={isParticipantsOpen ? "bg-primary/20 text-primary border-primary/20" : ""}
+          >
+            <Users size={16} className="mr-1" />
+            People
+          </Button>
+        </div>
+        
+        {/* Right side controls - secondary actions */}
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={shareRoom}>
+                  <Share2 size={20} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Share room
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                  onClick={onLeaveRoom}
+                  disabled={isTransitioning}
+                >
+                  {isTransitioning ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <LogOut size={20} />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isTransitioning ? getConnectionStatusText() : "Leave room"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     </div>
   );

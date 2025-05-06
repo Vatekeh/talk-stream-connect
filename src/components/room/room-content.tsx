@@ -2,6 +2,12 @@
 import { User } from "@/types";
 import { ParticipantList } from "./participant-list";
 import { RoomChat } from "./room-chat";
+import { RoomStage } from "./room-stage";
+import {
+  ResizablePanel,
+  ResizablePanelGroup,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 interface RoomContentProps {
   roomId: string;
@@ -27,26 +33,44 @@ export function RoomContent({
   onKickUser
 }: RoomContentProps) {
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-4 mb-4">
-      <div className="col-span-1 space-y-4">
-        {/* Main room content goes here */}
-      </div>
+    <ResizablePanelGroup 
+      direction="horizontal" 
+      className="flex-1 h-[calc(100vh-280px)] min-h-[400px] rounded-lg overflow-hidden"
+    >
+      {/* Main stage area (always visible) */}
+      <ResizablePanel defaultSize={70} minSize={40} className="bg-background">
+        <RoomStage 
+          speakers={speakers} 
+          remoteUsers={remoteUsers}
+        />
+      </ResizablePanel>
       
-      {/* Sidebar for chat and participants */}
-      <div className="col-span-1 h-[calc(100vh-300px)] min-h-[500px]">
-        {isChatOpen && <RoomChat roomId={roomId} />}
-        
-        {isParticipantsOpen && (
-          <ParticipantList
-            speakers={speakers}
-            participants={participants}
-            hostId={hostId}
-            currentUser={currentUser}
-            roomId={roomId}
-            onKickUser={onKickUser}
-          />
-        )}
-      </div>
-    </div>
+      {/* Resizable divider */}
+      <ResizableHandle withHandle />
+      
+      {/* Right sidebar for chat and participants */}
+      <ResizablePanel defaultSize={30} minSize={20} maxSize={40} className="flex flex-col">
+        <div className="flex flex-col h-full">
+          {isChatOpen && (
+            <div className={`flex-1 ${isParticipantsOpen ? 'h-1/2' : 'h-full'}`}>
+              <RoomChat roomId={roomId} />
+            </div>
+          )}
+          
+          {isParticipantsOpen && (
+            <div className={`flex-1 ${isChatOpen ? 'h-1/2' : 'h-full'}`}>
+              <ParticipantList
+                speakers={speakers}
+                participants={participants}
+                hostId={hostId}
+                currentUser={currentUser}
+                roomId={roomId}
+                onKickUser={onKickUser}
+              />
+            </div>
+          )}
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
