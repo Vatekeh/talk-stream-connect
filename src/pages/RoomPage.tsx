@@ -1,25 +1,18 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout/app-header";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useAgora } from "@/contexts/AgoraContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockMessages } from "@/lib/mock-data";
-import { RoomHeader } from "@/components/room/room-header";
-import { MobileRoomHeader } from "@/components/room/mobile/mobile-room-header";
-import { RoomContent } from "@/components/room/room-content";
-import { RoomControls } from "@/components/room/room-controls";
-import { MobileRoomControls } from "@/components/room/mobile/mobile-room-controls";
-import { MobileSheet, MobileSheetRef } from "@/components/room/mobile/mobile-sheet";
 import { RoomLoading } from "@/components/room/room-loading";
 import { RoomNotFound } from "@/components/room/room-not-found";
 import { useRoomData } from "@/hooks/use-room-data";
 import { useRoomActions } from "@/hooks/use-room-actions";
-import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle } from "lucide-react";
 import { kickParticipant, checkPreviousRoomStatus } from "@/components/room/participant-utils";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { RoomLayout } from "@/components/room/room-layout";
+import { useRoomUIState } from "@/hooks/use-room-ui-state";
+import { useRoomConnection } from "@/hooks/use-room-connection";
+import { AlertTriangle } from "lucide-react";
 
 export default function RoomPage() {
   // Use empty deps effect to correctly count actual mounts/unmounts
@@ -29,19 +22,17 @@ export default function RoomPage() {
   }, []);
   
   const { roomId } = useParams<{ roomId: string }>();
-  const isMobile = useIsMobile();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   
-  // Agora context for audio functionality
-  const { joinChannel, leaveChannel, remoteUsers, isMuted, toggleMute, connectionState } = useAgora();
-  
-  const [isChatOpen, setIsChatOpen] = useState(!isMobile);
-  const [isParticipantsOpen, setIsParticipantsOpen] = useState(!isMobile);
-  
-  // Reference for the mobile bottom sheet
-  const mobileSheetRef = useRef<MobileSheetRef>(null);
+  // Get room UI state management
+  const { 
+    isMobile, 
+    isChatOpen, 
+    isParticipantsOpen, 
+    mobileSheetRef,
+    toggleChat, 
+    toggleParticipants 
+  } = useRoomUIState();
   
   // Fetch room data using custom hook
   const { room, isLoading, error, currentUserParticipant, setCurrentUserParticipant } = useRoomData(roomId);
@@ -54,6 +45,13 @@ export default function RoomPage() {
     handleLeaveRoom 
   } = useRoomActions(roomId, user, currentUserParticipant);
   
+  // Get room connection state
+  const { 
+    remoteUsers, 
+    isTransitioning, 
+    connectionState 
+  } = useRoomConnection(room?.id, user, currentUserParticipant);
+  
   // Join room if not already joined
   useEffect(() => {
     if (!isLoading && room && user && !currentUserParticipant) {
@@ -62,69 +60,17 @@ export default function RoomPage() {
         checkPreviousRoomStatus(user.id, room.id);
       });
     }
-  }, [isLoading, room, user, currentUserParticipant]);
+  }, [isLoading, room, user, currentUserParticipant, joinRoom]);
   
-  // Handle navigation away from room page
+  // Set document title
   useEffect(() => {
-    // Setup listener for navigation
-    const handleBeforeUnload = () => {
-      if (currentUserParticipant && roomId && user) {
-        console.log("[RoomPage] Page navigation detected, cleaning up room connection");
-        leaveChannel();
-      }
-    };
-
-    // Add event listener for page unload
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    // Cleanup function for when component unmounts
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      
-      // Handle component unmount (navigation to another page)
-      if (currentUserParticipant && roomId && user) {
-        console.log("[RoomPage] Navigating away, cleaning up room connection");
-        leaveChannel();
-      }
-    };
-  }, [roomId, user, currentUserParticipant]);
-  
-  // Join Agora channel when component mounts and room data is available
-  // FIXED: Only use stableRoomId (primitive) as dependency to prevent remounting loops
-  const stableRoomId = room?.id;
-  
-  useEffect(() => {
-    if (!stableRoomId) return;
-    
-    console.log("[Room] Initiating Agora join for", stableRoomId);
-    // Using numeric uid for better stability
-    const numericUid = user?.id ? parseInt(user.id.replace(/-/g, "").substring(0, 6), 16) : undefined;
-    joinChannel(stableRoomId, numericUid);
-    
-    return () => {
-      console.log("[Room] Cleanup for", stableRoomId);
-      leaveChannel();
-    };
-  }, [stableRoomId, user?.id]); // Only depend on the stable ID values
-  
-  // Update mute status when Agora mute changes - in separate effect
-  useEffect(() => {
-    if (roomId && user && currentUserParticipant?.isSpeaker) {
-      const updateMuteStatus = async () => {
-        const { error } = await supabase
-          .from('room_participants')
-          .update({ is_muted: isMuted })
-          .eq('room_id', roomId)
-          .eq('user_id', user.id);
-          
-        if (error) {
-          console.error("[RoomPage] Error updating mute status:", error);
-        }
-      };
-      
-      updateMuteStatus();
+    if (room) {
+      document.title = `${room.name} | Audio Room`;
     }
-  }, [isMuted, roomId, user, currentUserParticipant]);
+    return () => {
+      document.title = "Audio Room";
+    };
+  }, [room?.name]);
   
   // Handle kick user functionality
   const handleKickUser = async (userId: string) => {
@@ -138,39 +84,10 @@ export default function RoomPage() {
     }
   };
   
-  // UI toggle functions
-  const toggleChat = () => {
-    if (isMobile) {
-      mobileSheetRef.current?.setTab('chat');
-      mobileSheetRef.current?.open();
-    } else {
-      setIsChatOpen(!isChatOpen);
-    }
-  };
-  
-  const toggleParticipants = () => {
-    if (isMobile) {
-      mobileSheetRef.current?.setTab('people');
-      mobileSheetRef.current?.open();
-    } else {
-      setIsParticipantsOpen(!isParticipantsOpen);
-    }
-  };
-  
   // Calculate participants including remote Agora users
   const participantCount = room 
     ? room.speakers.length + room.participants.length + remoteUsers.length
     : 0;
-  
-  // Set document title
-  useEffect(() => {
-    if (room) {
-      document.title = `${room.name} | Audio Room`;
-    }
-    return () => {
-      document.title = "Audio Room";
-    };
-  }, [room?.name]);
   
   if (isLoading) {
     return <RoomLoading user={user} />;
@@ -202,15 +119,6 @@ export default function RoomPage() {
   // Check if the current user is the creator of the room
   const isCreator = user && room.hostId === user.id;
   
-  // Determine if user can use mic (speakers only)
-  const canUseMic = currentUserParticipant?.isSpeaker || false;
-  
-  // Show connecting indicator when appropriate
-  const isTransitioning = connectionState === "connecting" || 
-                        connectionState === "disconnecting" || 
-                        connectionState === "publishing" ||
-                        connectionState === "reconnecting";
-  
   return (
     <div className="min-h-screen flex flex-col">
       <AppHeader 
@@ -219,71 +127,26 @@ export default function RoomPage() {
         isModerator={currentUserParticipant?.isModerator} 
       />
       
-      <main className="flex-1 container flex flex-col py-4 relative">
-        {isMobile ? (
-          <MobileRoomHeader 
-            room={room} 
-            participantCount={participantCount} 
-          />
-        ) : (
-          <RoomHeader 
-            room={room} 
-            participantCount={participantCount} 
-            currentUserId={user?.id}
-            onExitRoom={handleLeaveRoom}
-            isCreator={isCreator}
-          />
-        )}
-        
-        <RoomContent 
-          roomId={room.id}
-          speakers={room.speakers}
-          participants={room.participants}
-          hostId={room.hostId}
-          currentUser={currentUserParticipant}
-          isChatOpen={isChatOpen}
-          isParticipantsOpen={isParticipantsOpen}
-          remoteUsers={remoteUsers}
-          onKickUser={handleKickUser}
-        />
-        
-        {isMobile ? (
-          <>
-            <MobileRoomControls 
-              sheetRef={mobileSheetRef}
-              isHandRaised={isHandRaised}
-              onToggleHand={toggleHand}
-              canUseMic={canUseMic}
-              isTransitioning={isTransitioning}
-              connectionState={connectionState}
-              onOpenInvite={() => {/* Implement invite function */}}
-            />
-            
-            <MobileSheet 
-              ref={mobileSheetRef}
-              roomId={room.id}
-              speakers={room.speakers}
-              participants={room.participants}
-              hostId={room.hostId}
-              currentUser={currentUserParticipant}
-              onKickUser={handleKickUser}
-            />
-          </>
-        ) : (
-          <RoomControls 
-            roomId={room.id}
-            currentUser={currentUserParticipant}
-            onToggleChat={toggleChat}
-            onToggleParticipants={toggleParticipants}
-            isChatOpen={isChatOpen}
-            isParticipantsOpen={isParticipantsOpen}
-            onLeaveRoom={handleLeaveRoom}
-            onToggleHand={toggleHand}
-            isHandRaised={isHandRaised}
-            connectionState={connectionState}
-          />
-        )}
-      </main>
+      <RoomLayout
+        room={room}
+        user={user}
+        currentUserParticipant={currentUserParticipant}
+        isCreator={isCreator}
+        participantCount={participantCount}
+        isMobile={isMobile}
+        isChatOpen={isChatOpen}
+        isParticipantsOpen={isParticipantsOpen}
+        remoteUsers={remoteUsers}
+        isHandRaised={isHandRaised}
+        toggleHand={toggleHand}
+        handleLeaveRoom={handleLeaveRoom}
+        toggleChat={toggleChat}
+        toggleParticipants={toggleParticipants}
+        isTransitioning={isTransitioning}
+        connectionState={connectionState}
+        mobileSheetRef={mobileSheetRef}
+        handleKickUser={handleKickUser}
+      />
     </div>
   );
 }
