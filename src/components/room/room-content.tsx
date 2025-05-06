@@ -8,6 +8,7 @@ import {
   ResizablePanelGroup,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface RoomContentProps {
   roomId: string;
@@ -32,6 +33,19 @@ export function RoomContent({
   isParticipantsOpen,
   onKickUser
 }: RoomContentProps) {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return (
+      <div className="flex-1 h-[calc(100vh-200px)] min-h-[300px] bg-background">
+        <RoomStage 
+          speakers={speakers} 
+          remoteUsers={remoteUsers}
+        />
+      </div>
+    );
+  }
+  
   return (
     <ResizablePanelGroup 
       direction="horizontal" 
