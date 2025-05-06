@@ -9,8 +9,9 @@ interface RoomStageProps {
 }
 
 export function RoomStage({ speakers, remoteUsers }: RoomStageProps) {
-  // Extract the hostId from the first speaker if available
-  const hostId = speakers.length > 0 ? speakers.find(s => s.hostId)?.id : undefined;
+  // The error is here - hostId doesn't exist on User type
+  // Let's fix by looking for a user that is marked as a host in another way
+  const hostId = speakers.length > 0 ? speakers.find(s => s.isCreator)?.id : undefined;
   
   return (
     <div className="h-full p-6 flex flex-col">
