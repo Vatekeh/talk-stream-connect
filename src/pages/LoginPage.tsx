@@ -35,9 +35,9 @@ export default function LoginPage() {
           {/* Left side: Image */}
           <div className="hidden md:block w-1/2 bg-clutch-slate">
             <img 
-              src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
-              alt="Person working on laptop" 
-              className="w-full h-full object-cover opacity-80"
+              src="/lovable-uploads/19b16fc0-696a-4edd-9c31-1efe6f93c268.png" 
+              alt="Clutch hands clasped together" 
+              className="w-full h-full object-cover"
             />
           </div>
           
