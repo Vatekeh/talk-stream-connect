@@ -5,41 +5,25 @@
  * Handles user authentication with multiple options:
  * - Email/password login
  * - New account signup
- * - Guest/anonymous access
  * 
  * Redirects authenticated users to the homepage.
  */
 import { Navigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthHeader } from "@/components/auth/auth-header";
 import { LoginForm } from "@/components/auth/login-form";
 import { SignupForm } from "@/components/auth/signup-form";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   // Get authentication context and loading state
   const { user, isLoading } = useAuth();
-  const [loading, setLoading] = useState(false);
 
   // Redirect authenticated users to homepage
   if (user && !isLoading) {
     return <Navigate to="/" replace />;
   }
-
-  /**
-   * Handles anonymous/guest login process
-   * Currently simulates loading state for demonstration
-   */
-  const handleAnonymousLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -76,33 +60,6 @@ export default function LoginPage() {
                 </TabsContent>
               </Tabs>
             </CardContent>
-            
-            {/* Card footer with alternative login option */}
-            <CardFooter className="flex flex-col">
-              <div className="relative w-full mb-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-card px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-              
-              {/* Guest login button with loading state */}
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={handleAnonymousLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : "Continue as Guest"}
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </main>
