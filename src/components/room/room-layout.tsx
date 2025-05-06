@@ -8,6 +8,7 @@ import { RoomContent } from "@/components/room/room-content";
 import { RoomControls } from "@/components/room/room-controls";
 import { MobileRoomControls } from "@/components/room/mobile/mobile-room-controls";
 import { MobileSheet } from "@/components/room/mobile/mobile-sheet";
+import { ConnectionState } from "@/contexts/agora/types";
 
 interface RoomLayoutProps {
   room: Room;
@@ -25,7 +26,7 @@ interface RoomLayoutProps {
   toggleChat: () => void;
   toggleParticipants: () => void;
   isTransitioning: boolean;
-  connectionState: string;
+  connectionState: ConnectionState;
   mobileSheetRef: React.RefObject<MobileSheetRef>;
   handleKickUser: (userId: string) => void;
 }

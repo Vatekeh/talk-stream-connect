@@ -1,8 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Hand, Mic, MicOff, MessageSquare, Users, Plus } from "lucide-react";
+import { Hand, Mic, MicOff, MessageSquare, Users, Plus, Loader2 } from "lucide-react";
 import { useAgora } from "@/contexts/AgoraContext";
 import { MobileSheetRef } from "./mobile-sheet";
+import { ConnectionState } from "@/contexts/agora/types";
 
 interface MobileRoomControlsProps {
   sheetRef: React.RefObject<MobileSheetRef>;
@@ -10,7 +11,7 @@ interface MobileRoomControlsProps {
   onToggleHand: () => void;
   canUseMic: boolean;
   isTransitioning: boolean;
-  connectionState: string;
+  connectionState: ConnectionState;
   onOpenInvite?: () => void;
 }
 
@@ -43,6 +44,17 @@ export function MobileRoomControls({
     }
   };
   
+  // Generate status text based on connection state
+  const getConnectionStatusText = () => {
+    switch(connectionState) {
+      case "connecting": return "Connecting...";
+      case "disconnecting": return "Disconnecting...";
+      case "publishing": return "Setting up audio...";
+      case "reconnecting": return "Reconnecting...";
+      default: return "";
+    }
+  };
+  
   return (
     <>
       {/* Floating action button */}
@@ -65,13 +77,21 @@ export function MobileRoomControls({
           disabled={isTransitioning || connectionState === "disconnected"}
         >
           <div className="h-6 flex items-center justify-center">
-            {canUseMic ? (
+            {isTransitioning ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : canUseMic ? (
               isMuted ? <MicOff size={20} /> : <Mic size={20} />
             ) : (
               <Hand size={20} className={isHandRaised ? "text-amber-500" : ""} />
             )}
           </div>
-          <span className="text-xs">{canUseMic ? (isMuted ? "Unmute" : "Mute") : (isHandRaised ? "Lower" : "Raise")}</span>
+          <span className="text-xs">
+            {isTransitioning 
+              ? getConnectionStatusText() 
+              : canUseMic 
+                ? (isMuted ? "Unmute" : "Mute") 
+                : (isHandRaised ? "Lower" : "Raise")}
+          </span>
         </Button>
 
         <Button
