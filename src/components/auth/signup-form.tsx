@@ -50,19 +50,20 @@ export function SignupForm() {
     <form onSubmit={handleSignup} className="space-y-4">
       {/* Name input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name" className="text-clutch-light">Name</Label>
         <Input 
           id="name" 
           placeholder="Your Name" 
           value={name} 
           onChange={handleNameChange}
           required
+          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
         />
       </div>
       
       {/* Email input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
+        <Label htmlFor="signup-email" className="text-clutch-light">Email</Label>
         <Input 
           id="signup-email" 
           type="email" 
@@ -70,12 +71,13 @@ export function SignupForm() {
           value={email} 
           onChange={handleEmailChange}
           required
+          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
         />
       </div>
       
       {/* Password input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
+        <Label htmlFor="signup-password" className="text-clutch-light">Password</Label>
         <Input 
           id="signup-password" 
           type="password" 
@@ -83,11 +85,16 @@ export function SignupForm() {
           value={password} 
           onChange={handlePasswordChange}
           required
+          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
         />
       </div>
       
       {/* Submit button with loading state */}
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button 
+        type="submit" 
+        className="w-full bg-clutch-slate text-clutch-light hover:bg-clutch-steel" 
+        disabled={loading}
+      >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

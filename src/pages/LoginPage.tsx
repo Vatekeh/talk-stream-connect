@@ -26,41 +26,53 @@ export default function LoginPage() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-clutch-midnight">
       {/* Authentication header component */}
       <AuthHeader />
       
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <Card className="animate-in">
-            {/* Card header with title and description */}
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl">Welcome to Clutch</CardTitle>
-              <CardDescription>
-                Sign in to connect with support professionals
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              {/* Tabs for switching between login and signup forms */}
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-                
-                {/* Login form tab content */}
-                <TabsContent value="login">
-                  <LoginForm />
-                </TabsContent>
-                
-                {/* Signup form tab content */}
-                <TabsContent value="signup">
-                  <SignupForm />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+        <div className="w-full max-w-5xl flex overflow-hidden rounded-lg shadow-lg">
+          {/* Left side: Image */}
+          <div className="hidden md:block w-1/2 bg-clutch-slate">
+            <img 
+              src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
+              alt="Person working on laptop" 
+              className="w-full h-full object-cover opacity-80"
+            />
+          </div>
+          
+          {/* Right side: Authentication form */}
+          <div className="w-full md:w-1/2 bg-clutch-steel p-8">
+            <Card className="animate-in border-clutch-slate bg-clutch-steel/50 shadow-lg">
+              {/* Card header with title and description */}
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-2xl text-clutch-light">Welcome to Clutch</CardTitle>
+                <CardDescription className="text-clutch-muted">
+                  Sign in to connect with support professionals
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                {/* Tabs for switching between login and signup forms */}
+                <Tabs defaultValue="login" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-clutch-navy">
+                    <TabsTrigger value="login" className="data-[state=active]:bg-clutch-slate data-[state=active]:text-clutch-light">Login</TabsTrigger>
+                    <TabsTrigger value="signup" className="data-[state=active]:bg-clutch-slate data-[state=active]:text-clutch-light">Sign Up</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* Login form tab content */}
+                  <TabsContent value="login">
+                    <LoginForm />
+                  </TabsContent>
+                  
+                  {/* Signup form tab content */}
+                  <TabsContent value="signup">
+                    <SignupForm />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>

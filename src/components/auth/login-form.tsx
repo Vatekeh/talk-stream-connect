@@ -46,7 +46,7 @@ export function LoginForm() {
     <form onSubmit={handleLogin} className="space-y-4">
       {/* Email input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-clutch-light">Email</Label>
         <Input 
           id="email" 
           type="email" 
@@ -54,14 +54,15 @@ export function LoginForm() {
           value={email} 
           onChange={handleEmailChange}
           required
+          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
         />
       </div>
       
       {/* Password input field with improved event handling */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link to="/forgot-password" className="text-xs text-talkstream-purple hover:underline">
+          <Label htmlFor="password" className="text-clutch-light">Password</Label>
+          <Link to="/forgot-password" className="text-xs text-clutch-light hover:underline">
             Forgot?
           </Link>
         </div>
@@ -72,11 +73,16 @@ export function LoginForm() {
           value={password} 
           onChange={handlePasswordChange}
           required
+          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
         />
       </div>
       
       {/* Submit button with loading state */}
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button 
+        type="submit" 
+        className="w-full bg-clutch-slate text-clutch-light hover:bg-clutch-steel" 
+        disabled={loading}
+      >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

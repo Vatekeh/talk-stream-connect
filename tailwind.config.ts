@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -73,6 +74,14 @@ export default {
                         DEFAULT: '#F1F1F1',
                         dark: '#E5DEFF'
                     }
+                },
+                clutch: {
+                    midnight: '#0A1B2A',
+                    steel: '#1C2F46',
+                    slate: '#2D4560', 
+                    muted: '#8492A6',
+                    light: '#DCDAD5',
+                    navy: '#0F141B'
                 }
 			},
 			borderRadius: {
