@@ -26,6 +26,7 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
+otp_expiry_seconds = 900
 
 [functions]
 [functions.get-room-status]
