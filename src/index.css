@@ -82,11 +82,11 @@
   }
 
   body {
-    @apply bg-clutch-midnight text-clutch-light;
+    @apply bg-clutsh-midnight text-clutsh-light;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight text-clutch-light;
+    @apply font-medium tracking-tight text-clutsh-light;
   }
 }
 
@@ -99,7 +99,7 @@
     @apply animate-fade-in;
   }
 
-  .clutch-gradient {
+  .clutsh-gradient {
     background: linear-gradient(to bottom, #1C2F46, #0A1B2A);
   }
 }

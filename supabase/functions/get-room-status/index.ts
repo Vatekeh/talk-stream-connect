@@ -87,14 +87,14 @@ serve(async (req) => {
       
       if (!countError && peerCount && peerCount > 0) {
         activePeers = peerCount;
-        roomUrl = `https://clutch.live/room/${userId}`;
+        roomUrl = `https://clutsh.live/room/${userId}`;
         isReady = true; // There are moderators ready to help
       }
     } else {
       // We have an existing room, let's get peer count
       roomId = roomData.id;
       roomName = roomData.name;
-      roomUrl = `https://clutch.live/room/${roomData.id}`;
+      roomUrl = `https://clutsh.live/room/${roomData.id}`;
       
       // Count participants in the room
       const { count: participantCount, error: participantError } = await supabaseClient

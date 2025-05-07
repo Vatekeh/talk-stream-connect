@@ -128,11 +128,11 @@ function render() {
             : ''}
         </div>
         <button 
-          id="clutch-in" 
-          class="clutch-button ${state.isReady ? 'ready' : ''}"
+          id="clutsh-in" 
+          class="clutsh-button ${state.isReady ? 'ready' : ''}"
           ${(!state.isReady && !state.hasActiveInvite) ? 'disabled' : ''}
         >
-          Clutch In ${state.isReady || state.hasActiveInvite ? '➤' : ''}
+          Clutsh In ${state.isReady || state.hasActiveInvite ? '➤' : ''}
         </button>
       </div>
     ` 
@@ -151,7 +151,7 @@ function render() {
     ${supportButtonHtml}
     
     <hr/>
-    <a href="https://clutch.live" target="_blank">Open Clutch Dashboard</a>
+    <a href="https://clutsh.live" target="_blank">Open Clutsh Dashboard</a>
   `
   
   // Add event listeners
@@ -161,10 +161,10 @@ function render() {
     render()
   }
   
-  // Add event listener for "Clutch In" button if it exists
-  const clutchButton = document.getElementById('clutch-in')
-  if (clutchButton && (state.roomUrl || state.hasActiveInvite)) {
-    clutchButton.onclick = () => {
+  // Add event listener for "Clutsh In" button if it exists
+  const clutshButton = document.getElementById('clutsh-in')
+  if (clutshButton && (state.roomUrl || state.hasActiveInvite)) {
+    clutshButton.onclick = () => {
       if (state.hasActiveInvite && state.currentInviteId) {
         // Join the invite
         chrome.runtime.sendMessage({ 

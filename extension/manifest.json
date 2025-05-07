@@ -1,8 +1,8 @@
 
 {
   "manifest_version": 3,
-  "name": "Clutch NSFW Filter",
-  "description": "Detects and blurs NSFW media, reporting to Clutch.",
+  "name": "Clutsh NSFW Filter",
+  "description": "Detects and blurs NSFW media, reporting to Clutsh.",
   "version": "1.0.0",
   "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": ["<all_urls>"],

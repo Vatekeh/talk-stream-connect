@@ -6,9 +6,9 @@ import { getUserIdFromToken } from '../api/authService.js';
  * Updates room status and stores the result in local storage
  */
 async function updateRoomStatus() {
-  chrome.storage.local.get(['clutchToken', 'lastPeerCheck'], async (res) => {
+  chrome.storage.local.get(['clutshToken', 'lastPeerCheck'], async (res) => {
     const now = Date.now();
-    const token = res.clutchToken;
+    const token = res.clutshToken;
     const lastCheck = res.lastPeerCheck || 0;
     
     // Only check if we have a token and it's been at least 2 minutes since last check

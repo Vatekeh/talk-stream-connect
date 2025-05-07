@@ -1,3 +1,4 @@
+
 name: Release Extension
 
 on:
@@ -23,13 +24,13 @@ jobs:
       - name: Build extension
         run: npm run build:ext
         env:
-          CLUTCH_API_URL: ${{ secrets.CLUTCH_API_URL }}
+          CLUTSH_API_URL: ${{ secrets.CLUTSH_API_URL }}
           
       - name: Package extension
-        run: cd extension/dist && zip -r ../../clutch-nsfw.zip .
+        run: cd extension/dist && zip -r ../../clutsh-nsfw.zip .
         
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: clutch-nsfw
-          path: clutch-nsfw.zip
+          name: clutsh-nsfw
+          path: clutsh-nsfw.zip

@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './manifest.json'
@@ -17,6 +18,6 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env.CLUTCH_API_URL': JSON.stringify(process.env.CLUTCH_API_URL || 'https://api.your-domain.com/api/nsfw-detections')
+    'process.env.CLUTSH_API_URL': JSON.stringify(process.env.CLUTSH_API_URL || 'https://api.your-domain.com/api/nsfw-detections')
   }
 })

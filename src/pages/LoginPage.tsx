@@ -26,28 +26,28 @@ export default function LoginPage() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-clutch-midnight">
+    <div className="min-h-screen flex flex-col bg-clutsh-midnight">
       {/* Authentication header component */}
       <AuthHeader />
       
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-5xl flex overflow-hidden rounded-lg shadow-lg">
           {/* Left side: Image */}
-          <div className="hidden md:block w-1/2 bg-clutch-slate">
+          <div className="hidden md:block w-1/2 bg-clutsh-slate">
             <img 
               src="/lovable-uploads/f6617d82-9257-4618-bd1e-c81e35bc55fa.png" 
-              alt="Clutch hands clasped together" 
+              alt="Clutsh hands clasped together" 
               className="w-full h-full object-cover"
             />
           </div>
           
           {/* Right side: Authentication form */}
-          <div className="w-full md:w-1/2 bg-clutch-steel p-8">
-            <Card className="animate-in border-clutch-slate bg-clutch-steel/50 shadow-lg">
+          <div className="w-full md:w-1/2 bg-clutsh-steel p-8">
+            <Card className="animate-in border-clutsh-slate bg-clutsh-steel/50 shadow-lg">
               {/* Card header with title and description */}
               <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-2xl text-clutch-light">Welcome to Clutch</CardTitle>
-                <CardDescription className="text-clutch-muted">
+                <CardTitle className="text-2xl text-clutsh-light">Welcome to Clutsh</CardTitle>
+                <CardDescription className="text-clutsh-muted">
                   Sign in to connect with support professionals
                 </CardDescription>
               </CardHeader>
@@ -55,9 +55,9 @@ export default function LoginPage() {
               <CardContent>
                 {/* Tabs for switching between login and signup forms */}
                 <Tabs defaultValue="login" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-clutch-navy">
-                    <TabsTrigger value="login" className="data-[state=active]:bg-clutch-slate data-[state=active]:text-clutch-light">Login</TabsTrigger>
-                    <TabsTrigger value="signup" className="data-[state=active]:bg-clutch-slate data-[state=active]:text-clutch-light">Sign Up</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-clutsh-navy">
+                    <TabsTrigger value="login" className="data-[state=active]:bg-clutsh-slate data-[state=active]:text-clutsh-light">Login</TabsTrigger>
+                    <TabsTrigger value="signup" className="data-[state=active]:bg-clutsh-slate data-[state=active]:text-clutsh-light">Sign Up</TabsTrigger>
                   </TabsList>
                   
                   {/* Login form tab content */}

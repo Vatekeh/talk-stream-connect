@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Clutch NSFW Filter Options</title>
+  <title>Clutsh NSFW Filter Options</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -59,14 +59,14 @@
   </style>
 </head>
 <body>
-  <h1>Clutch NSFW Filter Settings</h1>
+  <h1>Clutsh NSFW Filter Settings</h1>
   
   <div class="form-group">
-    <label for="token">Clutch Authentication Token</label>
-    <input id="token" type="text" placeholder="Your Clutch authentication token" />
+    <label for="token">Clutsh Authentication Token</label>
+    <input id="token" type="text" placeholder="Your Clutsh authentication token" />
     <p class="description">
-      This token is used to authenticate with the Clutch API. You can get it by logging into 
-      <a href="https://clutch.live" target="_blank">Clutch</a> and visiting your profile settings.
+      This token is used to authenticate with the Clutsh API. You can get it by logging into 
+      <a href="https://clutsh.live" target="_blank">Clutsh</a> and visiting your profile settings.
     </p>
   </div>
   
@@ -99,8 +99,8 @@
     const $ = id => document.getElementById(id);
     
     // Load saved settings
-    chrome.storage.local.get(['clutchToken', 'detectionEnabled', 'supportPromptsEnabled'], res => {
-      if (res.clutchToken) $('token').value = res.clutchToken;
+    chrome.storage.local.get(['clutshToken', 'detectionEnabled', 'supportPromptsEnabled'], res => {
+      if (res.clutshToken) $('token').value = res.clutshToken;
       $('enable-detection').checked = res.detectionEnabled !== false;
       $('enable-support-prompts').checked = res.supportPromptsEnabled !== false;
     });
@@ -112,7 +112,7 @@
       const supportPromptsEnabled = $('enable-support-prompts').checked;
       
       chrome.storage.local.set({ 
-        clutchToken: token,
+        clutshToken: token,
         detectionEnabled: detectionEnabled,
         supportPromptsEnabled: supportPromptsEnabled,
         lastPeerCheck: 0 // Force refresh of peer data with new token

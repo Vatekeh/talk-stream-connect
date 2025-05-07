@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -74,7 +75,7 @@ export default {
                         dark: '#E5DEFF'
                     }
                 },
-                clutch: {
+                clutsh: {
                     midnight: '#0A1B2A',
                     steel: '#1C2F46',
                     slate: '#2D4560', 

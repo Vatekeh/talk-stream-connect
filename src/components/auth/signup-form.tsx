@@ -50,20 +50,20 @@ export function SignupForm() {
     <form onSubmit={handleSignup} className="space-y-4">
       {/* Name input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-clutch-light">Name</Label>
+        <Label htmlFor="name" className="text-clutsh-light">Name</Label>
         <Input 
           id="name" 
           placeholder="Your Name" 
           value={name} 
           onChange={handleNameChange}
           required
-          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
+          className="bg-clutsh-navy border-clutsh-slate focus-visible:ring-clutsh-light"
         />
       </div>
       
       {/* Email input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="signup-email" className="text-clutch-light">Email</Label>
+        <Label htmlFor="signup-email" className="text-clutsh-light">Email</Label>
         <Input 
           id="signup-email" 
           type="email" 
@@ -71,13 +71,13 @@ export function SignupForm() {
           value={email} 
           onChange={handleEmailChange}
           required
-          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
+          className="bg-clutsh-navy border-clutsh-slate focus-visible:ring-clutsh-light"
         />
       </div>
       
       {/* Password input field with improved event handling */}
       <div className="space-y-2">
-        <Label htmlFor="signup-password" className="text-clutch-light">Password</Label>
+        <Label htmlFor="signup-password" className="text-clutsh-light">Password</Label>
         <Input 
           id="signup-password" 
           type="password" 
@@ -85,14 +85,14 @@ export function SignupForm() {
           value={password} 
           onChange={handlePasswordChange}
           required
-          className="bg-clutch-navy border-clutch-slate focus-visible:ring-clutch-light"
+          className="bg-clutsh-navy border-clutsh-slate focus-visible:ring-clutsh-light"
         />
       </div>
       
       {/* Submit button with loading state */}
       <Button 
         type="submit" 
-        className="w-full bg-clutch-slate text-clutch-light hover:bg-clutch-steel" 
+        className="w-full bg-clutsh-slate text-clutsh-light hover:bg-clutsh-steel" 
         disabled={loading}
       >
         {loading ? (

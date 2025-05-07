@@ -73,7 +73,7 @@ function handleSuccessfulDetection(result, sendResponse) {
  * @param {Function} sendResponse - Function to send response to the caller
  */
 function processEdgingDetection(sendResponse) {
-  chrome.storage.local.get(['clutchToken', 'lastEdgingDetection'], async (res) => {
+  chrome.storage.local.get(['clutshToken', 'lastEdgingDetection'], async (res) => {
     const lastDetection = res.lastEdgingDetection || 0;
     
     // Check if we're within cooldown period
@@ -86,7 +86,7 @@ function processEdgingDetection(sendResponse) {
       return;
     }
     
-    const token = res.clutchToken;
+    const token = res.clutshToken;
     const tokenValidation = validateAuthToken(token);
     
     if (!tokenValidation.success) {
@@ -129,8 +129,8 @@ function processEdgingDetection(sendResponse) {
  * @param {Function} sendResponse - Function to send response to the caller
  */
 function processInviteJoin(inviteId, sendResponse) {
-  chrome.storage.local.get(['clutchToken'], async (res) => {
-    const token = res.clutchToken;
+  chrome.storage.local.get(['clutshToken'], async (res) => {
+    const token = res.clutshToken;
     const tokenValidation = validateAuthToken(token);
     
     if (!tokenValidation.success) {
