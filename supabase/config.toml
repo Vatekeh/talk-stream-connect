@@ -30,3 +30,9 @@ enable_signup = true
 [functions]
 [functions.get-room-status]
 verify_jwt = true
+
+[functions.on-edging-detected]
+verify_jwt = true
+
+[functions.join-invite]
+verify_jwt = true

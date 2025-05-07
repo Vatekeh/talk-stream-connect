@@ -1,135 +1,132 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Define CORS headers for browser requests
+// Set up CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    });
   }
 
-  // Get the request data
-  const { userId } = await req.json();
-  
-  if (!userId) {
-    return new Response(
-      JSON.stringify({ error: "User ID is required" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 405,
+    });
   }
 
   try {
-    // Initialize Supabase client with Deno runtime
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    );
+    // Create Supabase client with auth context from the request
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") as string;
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: req.headers.get('Authorization')! } },
+      auth: { persistSession: false },
+    });
 
-    // Find the most appropriate support room
-    // First check if there's a dedicated support room for this user
-    const { data: dedicatedRooms, error: dedicatedError } = await supabaseClient
+    // Get the current authenticated user
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    // Return error if not authenticated
+    if (authError || !user) {
+      console.error("Authentication error:", authError);
+      return new Response(JSON.stringify({ error: 'Unauthorized request' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    // Get the request body
+    const { userId } = await req.json();
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'userId is required' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    console.log(`Getting room status for user ${userId}`);
+
+    // Check if there's an active support room for this user
+    const { data: roomData, error: roomError } = await supabaseClient
       .from('rooms')
-      .select('*, room_participants(count)')
-      .eq('is_support_room', true)
-      .eq('dedicated_user_id', userId)
+      .select('id, name, is_active')
+      .eq('creator_id', userId)
       .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
 
-    if (dedicatedError && dedicatedError.code !== 'PGRST116') {
-      console.error("Error querying dedicated rooms:", dedicatedError);
+    let roomId = null;
+    let roomName = "Support Room";
+    let roomUrl = null;
+    let isReady = false;
+    let activePeers = 0;
+
+    // If there's no active room, we'll create data for a potential room but mark it as not ready
+    if (roomError || !roomData) {
+      console.log('No active room found, checking available peers');
+      
+      // Count available peers (users who could potentially join)
+      const { count: peerCount, error: countError } = await supabaseClient
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_moderator', true);
+      
+      if (!countError && peerCount && peerCount > 0) {
+        activePeers = peerCount;
+        roomUrl = `https://ggbvhsuuwqwjghxpuapg.supabase.co/room/${userId}`;
+        isReady = true; // There are moderators ready to help
+      }
+    } else {
+      // We have an existing room, let's get peer count
+      roomId = roomData.id;
+      roomName = roomData.name;
+      roomUrl = `https://ggbvhsuuwqwjghxpuapg.supabase.co/room/${roomData.id}`;
+      
+      // Count participants in the room
+      const { count: participantCount, error: participantError } = await supabaseClient
+        .from('room_participants')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', roomId);
+      
+      if (!participantError) {
+        // Subtract 1 to exclude the room creator
+        activePeers = Math.max(0, (participantCount || 0) - 1); 
+        isReady = true; // Room exists and is active
+      }
     }
 
-    // If dedicated room exists, return it
-    if (dedicatedRooms) {
-      return new Response(
-        JSON.stringify({
-          roomId: dedicatedRooms.id,
-          roomName: dedicatedRooms.name,
-          roomUrl: `https://ggbvhsuuwqwjghxpuapg.supabase.co/room/${dedicatedRooms.id}`,
-          activePeers: dedicatedRooms.room_participants?.count || 0,
-          isReady: true
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // If no dedicated room, find a general support room with available helpers
-    const { data: generalRooms, error: generalError } = await supabaseClient
-      .from('rooms')
-      .select(`
-        id, 
-        name, 
-        is_active,
-        room_participants!inner(
-          user_id,
-          is_moderator,
-          profiles:user_id(is_helper)
-        )
-      `)
-      .eq('is_support_room', true)
-      .eq('is_active', true)
-      .eq('is_private', false)
-      .order('created_at', { ascending: false });
-
-    if (generalError) {
-      throw generalError;
-    }
-
-    // Find rooms with helpers available
-    const roomsWithHelpers = generalRooms.filter(room => 
-      room.room_participants.some(p => 
-        p.is_moderator || (p.profiles && p.profiles.is_helper)
-      )
-    );
-
-    // Get the most active room with helpers
-    const bestRoom = roomsWithHelpers.length > 0 
-      ? roomsWithHelpers.reduce((prev, current) => 
-          prev.room_participants.length > current.room_participants.length ? prev : current
-        ) 
-      : null;
-
-    // If a suitable room was found
-    if (bestRoom) {
-      const helperCount = bestRoom.room_participants.filter(p => 
-        p.is_moderator || (p.profiles && p.profiles.is_helper)
-      ).length;
-
-      return new Response(
-        JSON.stringify({
-          roomId: bestRoom.id,
-          roomName: bestRoom.name,
-          roomUrl: `https://ggbvhsuuwqwjghxpuapg.supabase.co/room/${bestRoom.id}`,
-          activePeers: helperCount,
-          isReady: helperCount > 0
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // If no suitable room found, return info that no rooms are available
     return new Response(
       JSON.stringify({
-        roomId: null,
-        roomName: null,
-        roomUrl: null,
-        activePeers: 0,
-        isReady: false
+        activePeers,
+        roomUrl,
+        roomId,
+        roomName,
+        isReady
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
     );
   } catch (error) {
-    console.error("Error in get-room-status function:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal Server Error", details: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("Error in get-room-status:", error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    });
   }
 });
