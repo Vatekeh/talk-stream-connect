@@ -175,7 +175,7 @@ serve(async (req) => {
     }
 
     // 7. Return success with room URL
-    const roomUrl = `https://ggbvhsuuwqwjghxpuapg.supabase.co/room/${roomId}`;
+    const roomUrl = `https://clutch.live/room/${roomId}`;
     
     return new Response(JSON.stringify({ 
       success: true, 

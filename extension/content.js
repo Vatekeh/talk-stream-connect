@@ -205,7 +205,7 @@ function showSupportPrompt() {
           window.open(roomResponse.roomUrl, '_blank')
           promptContainer.remove()
         } else {
-          window.open('https://ggbvhsuuwqwjghxpuapg.supabase.co', '_blank')
+          window.open('https://clutch.live', '_blank')
           promptContainer.remove()
         }
       })

@@ -151,7 +151,7 @@ function render() {
     ${supportButtonHtml}
     
     <hr/>
-    <a href="https://ggbvhsuuwqwjghxpuapg.supabase.co" target="_blank">Open Clutch Dashboard</a>
+    <a href="https://clutch.live" target="_blank">Open Clutch Dashboard</a>
   `
   
   // Add event listeners
