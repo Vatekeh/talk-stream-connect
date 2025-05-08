@@ -1,3 +1,4 @@
+
 /**
  * ExtensionAuthPage
  * 
@@ -39,7 +40,7 @@ export default function ExtensionAuthPage() {
       email,
       password,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     
@@ -63,7 +64,7 @@ export default function ExtensionAuthPage() {
         data: {
           name: username || signupEmail.split('@')[0]
         },
-        redirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     
