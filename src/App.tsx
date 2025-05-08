@@ -12,6 +12,8 @@ import LoginPage from "./pages/LoginPage";
 import ModerationPage from "./pages/ModerationPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
+import ExtensionAuthPage from "./pages/ExtensionAuthPage";
+import ExtensionAuthCallback from "./pages/ExtensionAuthCallback";
 
 // Import AgoraProvider from new location
 import { AgoraProvider } from "@/contexts/agora";
@@ -32,6 +34,11 @@ const App = () => (
               <Route path="/room/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
               <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              
+              {/* Extension authentication routes */}
+              <Route path="/auth" element={<ExtensionAuthPage />} />
+              <Route path="/auth/callback" element={<ExtensionAuthCallback />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AgoraProvider>
