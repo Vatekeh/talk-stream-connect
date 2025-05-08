@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Mail, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function ExtensionSignupForm() {
   const [signupEmail, setSignupEmail] = useState("");
@@ -12,6 +13,7 @@ export function ExtensionSignupForm() {
   const [username, setUsername] = useState("");
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Handle signup with email/password
   const handleSignup = async (e: React.FormEvent) => {
@@ -38,12 +40,22 @@ export function ExtensionSignupForm() {
       }
       
       // Show a success message but keep on the page in case email verification is required
-      setSignupError("Please check your email to verify your account, then you can sign in.");
+      const successMessage = "Please check your email to verify your account, then you can sign in.";
+      setSignupError(successMessage);
+      toast({
+        title: "Account created",
+        description: successMessage
+      });
       setSignupLoading(false);
     } catch (error: any) {
       console.error("Signup error:", error);
       setSignupError(error.message);
       setSignupLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error.message || "Could not create account"
+      });
     }
   };
 

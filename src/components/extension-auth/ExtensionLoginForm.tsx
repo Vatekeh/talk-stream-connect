@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Mail, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function ExtensionLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Handle login with email/password
   const handleLogin = async (e: React.FormEvent) => {
@@ -22,11 +24,14 @@ export function ExtensionLoginForm() {
     try {
       console.log("Attempting login with:", email);
       
-      // Use the correct structure for the signInWithPassword method
-      // The redirectTo should be in options object, but not as an "options.redirectTo"
+      // Use the correct structure for signInWithPassword 
+      // The options param is a separate object
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       
       if (error) {
@@ -34,11 +39,21 @@ export function ExtensionLoginForm() {
       }
       
       console.log("Login successful, user data:", data.user?.id);
+      toast({
+        title: "Login successful",
+        description: "You are now logged in to Clutsh"
+      });
+      
       // The auth state change will trigger a redirect handled by the callback page
     } catch (error: any) {
       console.error("Authentication error:", error);
       setError(error.message);
       setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication failed",
+        description: error.message || "Login failed. Please try again."
+      });
     }
   };
 

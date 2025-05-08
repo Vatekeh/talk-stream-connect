@@ -9,15 +9,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ExtensionAuthCallback() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const completeAuth = async () => {
       try {
         console.log("Running auth callback process");
+        
         // Get the current session
         const { data, error } = await supabase.auth.getSession();
         
@@ -25,21 +28,36 @@ export default function ExtensionAuthCallback() {
           throw new Error(error?.message || "Authentication failed");
         }
 
-        console.log("Session obtained, preparing extension callback");
+        console.log("Session obtained, preparing extension callback", data.session);
+        
         // Extract the token and user ID
         const { access_token, user } = data.session;
         
         // Create the hash fragment that the extension expects
         const hash = `#token=${access_token}&userId=${user.id}`;
         
-        console.log("Redirecting to extension callback with hash fragment");
+        // Log the callback URL for debugging
+        const callbackUrl = `${window.location.origin}/auth/callback${hash}`;
+        console.log("Redirecting to extension callback URL:", callbackUrl);
+        
+        // Notify user before redirect
+        toast({
+          title: "Authentication successful",
+          description: "Connecting to extension..."
+        });
+        
         // Redirect to the extension callback URL with the hash fragment
         // This should match what the extension is listening for in background.js
-        window.location.replace(`${window.location.origin}/auth/callback${hash}`);
+        window.location.replace(callbackUrl);
       } catch (err: any) {
         console.error("Authentication callback error:", err);
         setError(err.message || "Authentication failed");
         setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Authentication failed",
+          description: err.message || "Could not complete authentication"
+        });
       }
     };
 
