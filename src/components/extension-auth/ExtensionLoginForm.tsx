@@ -22,13 +22,11 @@ export function ExtensionLoginForm() {
     try {
       console.log("Attempting login with:", email);
       
+      // Use the correct structure for the signInWithPassword method
+      // The redirectTo should be in options object, but not as an "options.redirectTo"
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          // Ensure redirect URL is properly set
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
       });
       
       if (error) {

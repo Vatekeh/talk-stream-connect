@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +29,6 @@ export function ExtensionSignupForm() {
           data: {
             name: username || signupEmail.split('@')[0]
           },
-          // Ensure redirect URL is properly set
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
