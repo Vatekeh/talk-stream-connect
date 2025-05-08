@@ -18,6 +18,7 @@ export default function ExtensionAuthCallback() {
   useEffect(() => {
     const completeAuth = async () => {
       try {
+        console.log("Running auth callback process");
         // Get the current session
         const { data, error } = await supabase.auth.getSession();
         
@@ -25,13 +26,16 @@ export default function ExtensionAuthCallback() {
           throw new Error(error?.message || "Authentication failed");
         }
 
+        console.log("Session obtained, preparing extension callback");
         // Extract the token and user ID
         const { access_token, user } = data.session;
         
         // Create the hash fragment that the extension expects
         const hash = `#token=${access_token}&userId=${user.id}`;
         
-        // Redirect to the same URL but with the hash fragment
+        console.log("Redirecting to extension callback with hash fragment");
+        // Redirect to the extension callback URL with the hash fragment
+        // This should match what the extension is listening for in background.js
         window.location.replace(`${window.location.origin}/auth/callback${hash}`);
       } catch (err: any) {
         console.error("Authentication callback error:", err);

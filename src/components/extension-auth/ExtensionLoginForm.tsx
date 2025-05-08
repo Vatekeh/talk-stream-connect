@@ -20,16 +20,23 @@ export function ExtensionLoginForm() {
     setError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with:", email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          // Ensure redirect URL is properly set
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       
       if (error) {
         throw error;
       }
       
-      // Successful login - we'll be redirected to the callback URL
+      console.log("Login successful, user data:", data.user?.id);
+      // The auth state change will trigger a redirect handled by the callback page
     } catch (error: any) {
       console.error("Authentication error:", error);
       setError(error.message);
