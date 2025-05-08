@@ -22,27 +22,49 @@ export function ExtensionLoginForm() {
     setError(null);
     
     try {
-      console.log("Attempting login with:", email);
+      console.log(`[${new Date().toISOString()}] Login attempt started for email: ${email}`);
+      console.log("[ExtensionLoginForm] Current origin:", window.location.origin);
       
       // Removed the redirectTo option which was causing the TypeScript error
+      console.log("[ExtensionLoginForm] Calling supabase.auth.signInWithPassword");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
+      });
+      
+      console.log("[ExtensionLoginForm] signInWithPassword response:", {
+        hasData: !!data,
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        error: error ? { message: error.message, code: error.code } : null
       });
       
       if (error) {
         throw error;
       }
       
-      console.log("Login successful, user data:", data.user?.id);
+      console.log(`[${new Date().toISOString()}] Login successful, user ID: ${data.user?.id}`);
+      console.log("[ExtensionLoginForm] Session object:", {
+        token: data.session?.access_token ? "Present (hidden)" : "Missing",
+        expiresAt: data.session?.expires_at,
+        userId: data.user?.id
+      });
+      
       toast({
         title: "Login successful",
         description: "You are now logged in to Clutsh"
       });
       
       // The auth state change will trigger a redirect handled by the callback page
+      console.log("[ExtensionLoginForm] Auth completed, waiting for callback handling");
     } catch (error: any) {
-      console.error("Authentication error:", error);
+      console.error(`[${new Date().toISOString()}] Authentication error:`, error);
+      console.error("[ExtensionLoginForm] Detailed error:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      
       setError(error.message);
       setLoading(false);
       toast({

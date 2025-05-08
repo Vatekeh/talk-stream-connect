@@ -8,6 +8,7 @@ const AUTH_URL_PATTERN = 'https://clutsh.live/auth/callback*';
 
 // Initialize extension settings
 chrome.runtime.onInstalled.addListener(() => {
+  console.log("[Extension] Extension installed, initializing settings");
   chrome.storage.local.set({ 
     detectionEnabled: true,
     lastPeerCheck: 0,
@@ -24,20 +25,35 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url && changeInfo.url.includes(AUTH_URL_PATTERN)) {
     try {
+      console.log("[Extension] Auth callback detected:", changeInfo.url);
+      
       // Extract token and userId from hash fragment
       const url = new URL(changeInfo.url);
+      console.log("[Extension] Auth URL parsed:", {
+        origin: url.origin,
+        pathname: url.pathname,
+        hash: url.hash ? "Present (hidden)" : "Missing",
+        hashLength: url.hash ? url.hash.length : 0
+      });
+      
       const params = new URLSearchParams(url.hash.substring(1));
+      console.log("[Extension] Auth params extracted:", {
+        hasToken: params.has('token'),
+        hasUserId: params.has('userId')
+      });
       
       const token = params.get('token');
       const userId = params.get('userId');
       
       if (token && userId) {
+        console.log("[Extension] Auth credentials found, storing credentials");
         // Store auth data in local storage
         chrome.storage.local.set({
           clutshToken: token,
           currentUserId: userId,
           authTs: Date.now()
         }, () => {
+          console.log("[Extension] Credentials stored, closing auth tab and showing notification");
           // Close the auth tab
           chrome.tabs.remove(tabId);
           
@@ -49,9 +65,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             message: 'You are now signed in to Clutsh NSFW Monitor.'
           });
         });
+      } else {
+        console.error("[Extension] Auth error: Token or userId missing");
       }
     } catch (error) {
-      console.error('Error processing auth callback:', error);
+      console.error('[Extension] Error processing auth callback:', error);
     }
   }
 });

@@ -19,27 +19,61 @@ export default function ExtensionAuthCallback() {
   useEffect(() => {
     const completeAuth = async () => {
       try {
-        console.log("Running auth callback process");
+        const startTime = new Date();
+        console.log(`[${startTime.toISOString()}] Running auth callback process`);
+        console.log("[ExtensionAuthCallback] Document URL:", window.location.href);
+        console.log("[ExtensionAuthCallback] Current origin:", window.location.origin);
         
+        // Check for hash fragments that might have been passed
+        if (window.location.hash) {
+          console.log("[ExtensionAuthCallback] Hash fragment detected:", window.location.hash);
+        }
+        
+        console.log("[ExtensionAuthCallback] Calling supabase.auth.getSession()");
         // Get the current session
         const { data, error } = await supabase.auth.getSession();
         
+        console.log("[ExtensionAuthCallback] Session data received:", {
+          hasData: !!data,
+          hasSession: !!data.session,
+          sessionExpiry: data.session?.expires_at,
+          error: error ? { message: error.message } : null
+        });
+        
         if (error || !data.session) {
-          console.error("Auth callback failed, no session:", error);
-          throw new Error(error?.message || "Authentication failed");
+          console.error("[ExtensionAuthCallback] Auth callback failed, no session:", error);
+          throw new Error(error?.message || "Authentication failed - No session available");
         }
 
-        console.log("Session obtained, preparing extension callback", data.session);
+        console.log("[ExtensionAuthCallback] Session obtained, preparing extension callback", {
+          userId: data.session.user.id,
+          hasAccessToken: !!data.session.access_token
+        });
         
         // Extract the token and user ID
         const { access_token, user } = data.session;
         
+        if (!access_token) {
+          console.error("[ExtensionAuthCallback] Missing access token in session");
+          throw new Error("Authentication failed - No access token");
+        }
+        
+        if (!user || !user.id) {
+          console.error("[ExtensionAuthCallback] Missing user ID in session");
+          throw new Error("Authentication failed - No user ID");
+        }
+        
         // Create the hash fragment that the extension expects
         const hash = `#token=${access_token}&userId=${user.id}`;
+        console.log("[ExtensionAuthCallback] Created hash fragment:", { 
+          tokenPresent: !!access_token, 
+          userIdPresent: !!user.id,
+          hashLength: hash.length 
+        });
         
         // Log the callback URL for debugging
         const callbackUrl = `${window.location.origin}/auth/callback${hash}`;
-        console.log("Redirecting to extension callback URL:", callbackUrl);
+        console.log("[ExtensionAuthCallback] Redirecting to extension callback URL:", callbackUrl);
         
         // Notify user before redirect
         toast({
@@ -47,11 +81,22 @@ export default function ExtensionAuthCallback() {
           description: "Connecting to extension..."
         });
         
-        // Redirect to the extension callback URL with the hash fragment
-        // This should match what the extension is listening for in background.js
-        window.location.replace(callbackUrl);
+        const elapsedMs = new Date().getTime() - startTime.getTime();
+        console.log(`[${new Date().toISOString()}] Auth callback completed in ${elapsedMs}ms, redirecting now`);
+        
+        // Add a slight delay before redirecting to ensure logs are captured
+        setTimeout(() => {
+          // Redirect to the extension callback URL with the hash fragment
+          // This should match what the extension is listening for in background.js
+          window.location.replace(callbackUrl);
+        }, 100);
       } catch (err: any) {
-        console.error("Authentication callback error:", err);
+        console.error(`[${new Date().toISOString()}] Authentication callback error:`, err);
+        console.error("[ExtensionAuthCallback] Detailed error:", {
+          message: err.message,
+          stack: err.stack
+        });
+        
         setError(err.message || "Authentication failed");
         setIsLoading(false);
         toast({
