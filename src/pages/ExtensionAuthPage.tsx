@@ -7,7 +7,6 @@
  */
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -19,7 +18,7 @@ export default function ExtensionAuthPage() {
     setLoading(true);
     
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'email', // Using email provider since we know it's already set up
+      provider: 'google', // Changed from 'email' to a valid OAuth provider
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
       }
@@ -65,7 +64,7 @@ export default function ExtensionAuthPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...
                 </>
-              ) : "Continue with Clutsh Account"}
+              ) : "Continue with Google Account"}
             </Button>
           </CardContent>
         </Card>
