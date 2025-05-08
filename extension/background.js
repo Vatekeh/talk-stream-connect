@@ -3,6 +3,9 @@ import { updateRoomStatus } from './services/roomStatusService.js';
 import { processEdgingDetection, processInviteJoin } from './services/edgingDetectionService.js';
 import { PEER_CHECK_INTERVAL } from './api/roomService.js';
 
+// Authentication constants
+const AUTH_URL_PATTERN = 'https://clutsh.live/auth/callback*';
+
 // Initialize extension settings
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({ 
@@ -11,9 +14,46 @@ chrome.runtime.onInstalled.addListener(() => {
     peerCount: 0,
     supportRoomUrl: null,
     supportNotificationShown: false,
-    lastEdgingDetection: 0
+    lastEdgingDetection: 0,
+    lastNudgeTs: 0
   });
   chrome.runtime.openOptionsPage();
+});
+
+// Listen for tab updates to detect auth callback
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url && changeInfo.url.includes(AUTH_URL_PATTERN)) {
+    try {
+      // Extract token and userId from hash fragment
+      const url = new URL(changeInfo.url);
+      const params = new URLSearchParams(url.hash.substring(1));
+      
+      const token = params.get('token');
+      const userId = params.get('userId');
+      
+      if (token && userId) {
+        // Store auth data in local storage
+        chrome.storage.local.set({
+          clutshToken: token,
+          currentUserId: userId,
+          authTs: Date.now()
+        }, () => {
+          // Close the auth tab
+          chrome.tabs.remove(tabId);
+          
+          // Show success notification
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icons/icon48.png',
+            title: 'Clutsh Sign-in Successful',
+            message: 'You are now signed in to Clutsh NSFW Monitor.'
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error processing auth callback:', error);
+    }
+  }
 });
 
 // Update room status when installed and then periodically
@@ -21,12 +61,31 @@ updateRoomStatus();
 setInterval(updateRoomStatus, PEER_CHECK_INTERVAL);
 
 // Handle messages from content script and popup
-chrome.runtime.onMessage.addListener((msg, _, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'toggle-filter') {
     chrome.storage.local.set({ detectionEnabled: msg.enabled });
     chrome.tabs.query({}, tabs => {
       tabs.forEach(tab => chrome.tabs.sendMessage(tab.id, msg));
     });
+  }
+  
+  // Handler to get current auth status
+  if (msg.type === 'GET_AUTH') {
+    chrome.storage.local.get(['clutshToken', 'currentUserId'], (data) => {
+      sendResponse({
+        token: data.clutshToken || null,
+        userId: data.currentUserId || null,
+        isAuthenticated: !!data.clutshToken
+      });
+    });
+    return true; // Needed for async response
+  }
+  
+  // Handler for opening support room
+  if (msg.type === 'OPEN_SUPPORT_ROOM') {
+    const url = msg.roomUrl || 'https://clutsh.live/support-room';
+    chrome.tabs.create({ url });
+    return true;
   }
   
   // Handler to get current room status

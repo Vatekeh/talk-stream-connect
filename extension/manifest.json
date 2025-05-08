@@ -4,8 +4,8 @@
   "name": "Clutsh NSFW Filter",
   "description": "Detects and blurs NSFW media, reporting to Clutsh.",
   "version": "1.0.0",
-  "permissions": ["storage", "scripting", "activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": ["storage", "scripting", "activeTab", "tabs", "notifications"],
+  "host_permissions": ["<all_urls>", "https://clutsh.live/*", "https://ggbvhsuuwqwjghxpuapg.functions.supabase.co/*"],
   "background": { 
     "service_worker": "background.js",
     "type": "module"
