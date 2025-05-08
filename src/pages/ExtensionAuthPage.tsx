@@ -1,4 +1,3 @@
-
 /**
  * ExtensionAuthPage
  * 
@@ -36,15 +35,18 @@ export default function ExtensionAuthPage() {
     setLoading(true);
     setError(null);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
       }
-    });
-    
-    if (error) {
+      
+      // Successful login - we'll be redirected to the callback URL
+    } catch (error: any) {
       console.error("Authentication error:", error);
       setError(error.message);
       setLoading(false);
@@ -57,24 +59,28 @@ export default function ExtensionAuthPage() {
     setSignupLoading(true);
     setSignupError(null);
     
-    const { error } = await supabase.auth.signUp({
-      email: signupEmail,
-      password: signupPassword,
-      options: {
-        data: {
-          name: username || signupEmail.split('@')[0]
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        options: {
+          data: {
+            name: username || signupEmail.split('@')[0]
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        throw error;
       }
-    });
-    
-    if (error) {
-      console.error("Signup error:", error);
-      setSignupError(error.message);
-      setSignupLoading(false);
-    } else {
+      
       // Show a success message but keep on the page in case email verification is required
       setSignupError("Please check your email to verify your account, then you can sign in.");
+      setSignupLoading(false);
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      setSignupError(error.message);
       setSignupLoading(false);
     }
   };
