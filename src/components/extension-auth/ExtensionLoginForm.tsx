@@ -24,14 +24,10 @@ export function ExtensionLoginForm() {
     try {
       console.log("Attempting login with:", email);
       
-      // Use the correct structure for signInWithPassword 
-      // The options param is a separate object
+      // Removed the redirectTo option which was causing the TypeScript error
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+        password
       });
       
       if (error) {

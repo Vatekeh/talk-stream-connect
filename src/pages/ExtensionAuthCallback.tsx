@@ -25,6 +25,7 @@ export default function ExtensionAuthCallback() {
         const { data, error } = await supabase.auth.getSession();
         
         if (error || !data.session) {
+          console.error("Auth callback failed, no session:", error);
           throw new Error(error?.message || "Authentication failed");
         }
 
@@ -62,7 +63,7 @@ export default function ExtensionAuthCallback() {
     };
 
     completeAuth();
-  }, []);
+  }, [toast]);
 
   // If there's an error, show it and provide a link back to login
   if (error) {
