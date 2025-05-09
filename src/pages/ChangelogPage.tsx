@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppHeader } from "@/components/layout/app-header";
@@ -15,38 +14,10 @@ import {
   Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
-
-interface ChangelogItem {
-  title?: string;
-  items: string[];
-}
-
-interface ChangelogEntry {
-  id: string;
-  version: string;
-  release_date: string;
-  is_current: boolean;
-  features: ChangelogItem[];
-  improvements: ChangelogItem[];
-  bug_fixes: ChangelogItem[];
-  created_at: string;
-  created_by: string;
-}
-
-interface SupabaseChangelogEntry {
-  id: string;
-  version: string;
-  release_date: string;
-  is_current: boolean | null;
-  features: Json;
-  improvements: Json;
-  bug_fixes: Json;
-  created_at: string | null;
-  created_by: string | null;
-}
+import { ChangelogEntry, SupabaseChangelogEntry } from "@/components/moderation/changelog/types";
+import { parseJsonField } from "@/components/moderation/changelog/utils";
 
 export default function ChangelogPage() {
   const { user } = useAuth();
@@ -57,31 +28,6 @@ export default function ChangelogPage() {
   useEffect(() => {
     fetchChangelogs();
   }, []);
-
-  // Helper function to parse JSON fields
-  const parseJsonField = (field: Json): ChangelogItem[] => {
-    if (!field) return [{ items: [] }];
-    
-    try {
-      if (typeof field === 'string') {
-        return JSON.parse(field) as ChangelogItem[];
-      }
-      // Handle the case where field is already an array (from Supabase)
-      if (Array.isArray(field)) {
-        // Ensure each item in the array conforms to ChangelogItem structure
-        return field.map((item: any) => {
-          if (typeof item === 'object' && 'items' in item) {
-            return item as ChangelogItem;
-          }
-          return { items: Array.isArray(item) ? item : [String(item)] };
-        });
-      }
-      return [{ items: [] }];
-    } catch (e) {
-      console.error('Failed to parse JSON field:', e);
-      return [{ items: [] }];
-    }
-  };
   
   const fetchChangelogs = async () => {
     try {
