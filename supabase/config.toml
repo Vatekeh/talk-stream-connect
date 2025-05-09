@@ -2,42 +2,38 @@
 project_id = "ggbvhsuuwqwjghxpuapg"
 
 [api]
+enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
 
 [db]
 port = 54322
 
 [studio]
+enabled = true
 port = 54323
+api_url = "http://localhost"
 
 [inbucket]
+enabled = true
 port = 54324
-smtp_port = 54325
-pop3_port = 54326
 
 [storage]
-file_size_limit = "50MiB"
+enabled = true
 
 [auth]
-site_url = "https://clutsh.live"
-additional_redirect_urls = ["https://localhost:3000", "https://clutsh.live"]
-jwt_expiry = 3600
-enable_signup = true
-otp_expiry_seconds = 900
-enable_hibp_check = true
+enabled = true
+site_url = "http://localhost:3000"
+
+[realtime]
+enabled = true
 
 [functions]
-[functions.get-room-status]
+[functions.create-subscription]
 verify_jwt = true
-
-[functions.on-edging-detected]
+[functions.billing-portal]
 verify_jwt = true
-
-[functions.join-invite]
+[functions.check-subscription]
 verify_jwt = true
-
-[functions.detection-logs]
-verify_jwt = true
+[functions.stripe-webhook]
+verify_jwt = false

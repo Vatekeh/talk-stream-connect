@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthHeader } from "@/components/auth/auth-header";
 import { LoginForm } from "@/components/auth/login-form";
 import { SignupForm } from "@/components/auth/signup-form";
+import { Shield } from "lucide-react";
 
 export default function LoginPage() {
   // Get authentication context and loading state
@@ -50,6 +51,17 @@ export default function LoginPage() {
                 <CardDescription className="text-clutsh-muted">
                   Sign in to connect with support professionals
                 </CardDescription>
+                
+                {/* Free trial banner */}
+                <div className="mt-2 px-3 py-2 bg-clutsh-navy border border-clutsh-slate rounded-md">
+                  <div className="flex items-center justify-center text-amber-500 gap-2">
+                    <Shield className="h-4 w-4" />
+                    <span className="text-sm font-medium">30-Day Free Trial</span>
+                  </div>
+                  <p className="text-xs text-clutsh-light mt-1">
+                    Sign up today and get full access to premium features
+                  </p>
+                </div>
               </CardHeader>
               
               <CardContent>

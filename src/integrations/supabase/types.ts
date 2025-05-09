@@ -118,6 +118,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          current_period_end: string | null
           current_streak: number | null
           id: string
           is_moderator: boolean | null
@@ -127,8 +128,12 @@ export type Database = {
           phone_number: string | null
           pronouns: string | null
           rooms_joined: number | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           survey_completed: boolean | null
           time_in_rooms: number | null
+          trial_end: string | null
           updated_at: string
           username: string | null
         }
@@ -136,6 +141,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_period_end?: string | null
           current_streak?: number | null
           id: string
           is_moderator?: boolean | null
@@ -145,8 +151,12 @@ export type Database = {
           phone_number?: string | null
           pronouns?: string | null
           rooms_joined?: number | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           survey_completed?: boolean | null
           time_in_rooms?: number | null
+          trial_end?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -154,6 +164,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_period_end?: string | null
           current_streak?: number | null
           id?: string
           is_moderator?: boolean | null
@@ -163,8 +174,12 @@ export type Database = {
           phone_number?: string | null
           pronouns?: string | null
           rooms_joined?: number | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           survey_completed?: boolean | null
           time_in_rooms?: number | null
+          trial_end?: string | null
           updated_at?: string
           username?: string | null
         }

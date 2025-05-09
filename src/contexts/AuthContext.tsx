@@ -4,6 +4,7 @@
  * 
  * Provides authentication state and functions throughout the application.
  * Handles user sessions, profile creation, and authentication actions.
+ * Also provides subscription management functionality.
  */
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
@@ -21,6 +22,16 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  
+  // Subscription-related properties and functions
+  subscriptionStatus: string | null;
+  isSubscribed: boolean;
+  isTrialing: boolean;
+  trialEnd: Date | null;
+  currentPeriodEnd: Date | null;
+  createSubscription: () => Promise<void>;
+  manageSubscription: () => Promise<void>;
+  checkSubscriptionStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // State for subscription data
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isTrialing, setIsTrialing] = useState(false);
+  const [trialEnd, setTrialEnd] = useState<Date | null>(null);
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,7 +68,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Use setTimeout to avoid Supabase deadlocks
           setTimeout(() => {
             createProfileIfNeeded(session.user);
+            // Also check subscription status on sign in
+            checkSubscriptionStatus();
           }, 0);
+        }
+        
+        // When signing out, reset subscription data
+        if (event === 'SIGNED_OUT') {
+          setSubscriptionStatus(null);
+          setIsSubscribed(false);
+          setIsTrialing(false);
+          setTrialEnd(null);
+          setCurrentPeriodEnd(null);
         }
       }
     );
@@ -60,9 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setIsLoading(false);
       
-      // If user is logged in, ensure they have a profile
+      // If user is logged in, ensure they have a profile and check subscription
       if (session?.user) {
         createProfileIfNeeded(session.user);
+        checkSubscriptionStatus();
       }
     });
 
@@ -93,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .insert({
             id: user.id,
-            username: user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+            username: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            subscription_status: 'none'
           });
           
         if (insertError) {
@@ -125,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const signUp = async (email: string, password: string, username?: string) => {
     try {
-      const { error, data } = await supabase.auth.signUp({ 
+      const { error } = await supabase.auth.signUp({ 
         email, 
         password, 
         options: {
@@ -156,9 +188,135 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success("Signed out successfully");
     }
   };
+  
+  /**
+   * Create subscription function - creates a new subscription for the user
+   * with a 30-day free trial
+   */
+  const createSubscription = async () => {
+    if (!user) {
+      toast.error("You must be logged in to subscribe");
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      toast.loading("Setting up your subscription...");
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
+      
+      const { data, error } = await supabase.functions.invoke('create-subscription', {
+        body: {},
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || "Failed to create subscription");
+      
+      // Update subscription state
+      await checkSubscriptionStatus();
+      
+      toast.dismiss();
+      toast.success("Your 30-day free trial has been activated!");
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error.message);
+      console.error("Error creating subscription:", error);
+    }
+  };
+  
+  /**
+   * Manage subscription function - redirects the user to the Stripe billing portal
+   */
+  const manageSubscription = async () => {
+    if (!user) {
+      toast.error("You must be logged in to manage your subscription");
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      toast.loading("Preparing billing portal...");
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
+      
+      const { data, error } = await supabase.functions.invoke('billing-portal', {
+        body: {},
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (error) throw new Error(error.message);
+      if (!data.url) throw new Error("Failed to create billing portal session");
+      
+      toast.dismiss();
+      
+      // Redirect to Stripe billing portal
+      window.location.href = data.url;
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error.message);
+      console.error("Error managing subscription:", error);
+    }
+  };
+  
+  /**
+   * Check subscription status - fetches current subscription data from the server
+   */
+  const checkSubscriptionStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        body: {},
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (error) {
+        console.error("Error checking subscription:", error);
+        return;
+      }
+      
+      // Update subscription state
+      setSubscriptionStatus(data.subscription_status);
+      setIsSubscribed(data.is_subscribed);
+      setIsTrialing(data.is_trialing);
+      setTrialEnd(data.trial_end ? new Date(data.trial_end) : null);
+      setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
+      
+      console.log("Subscription checked:", data);
+    } catch (error) {
+      console.error("Error checking subscription status:", error);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      signIn, 
+      signUp, 
+      signOut,
+      subscriptionStatus,
+      isSubscribed,
+      isTrialing,
+      trialEnd,
+      currentPeriodEnd,
+      createSubscription,
+      manageSubscription,
+      checkSubscriptionStatus
+    }}>
       {children}
     </AuthContext.Provider>
   );
