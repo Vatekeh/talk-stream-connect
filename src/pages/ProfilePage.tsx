@@ -8,6 +8,7 @@ import { Save, Clip } from "@/types";
 import { useDetectionLogs } from "@/hooks/useDetectionLogs";
 import { useDetectionInsights } from "@/hooks/useDetectionInsights";
 import { useUserStats } from "@/hooks/useUserStats";
+import { Button } from "@/components/ui/button";
 
 // Keep mock data for saves and clips since they're not part of this integration yet
 const mockSaves: Save[] = [
