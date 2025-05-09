@@ -64,9 +64,19 @@ export default function ChangelogPage() {
     
     try {
       if (typeof field === 'string') {
-        return JSON.parse(field);
+        return JSON.parse(field) as ChangelogItem[];
       }
-      return field as ChangelogItem[];
+      // Handle the case where field is already an array (from Supabase)
+      if (Array.isArray(field)) {
+        // Ensure each item in the array conforms to ChangelogItem structure
+        return field.map((item: any) => {
+          if (typeof item === 'object' && 'items' in item) {
+            return item as ChangelogItem;
+          }
+          return { items: Array.isArray(item) ? item : [String(item)] };
+        });
+      }
+      return [{ items: [] }];
     } catch (e) {
       console.error('Failed to parse JSON field:', e);
       return [{ items: [] }];

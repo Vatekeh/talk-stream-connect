@@ -110,6 +110,31 @@ export function ChangelogManager() {
     setEditingEntry(null);
   };
 
+  // Helper function to parse JSON fields
+  const parseJsonField = (field: Json): ChangelogItem[] => {
+    if (!field) return [{ items: [] }];
+    
+    try {
+      if (typeof field === 'string') {
+        return JSON.parse(field) as ChangelogItem[];
+      }
+      // Handle the case where field is already an array (from Supabase)
+      if (Array.isArray(field)) {
+        // Ensure each item in the array conforms to ChangelogItem structure
+        return field.map((item: any) => {
+          if (typeof item === 'object' && 'items' in item) {
+            return item as ChangelogItem;
+          }
+          return { items: Array.isArray(item) ? item : [String(item)] };
+        });
+      }
+      return [{ items: [] }];
+    } catch (e) {
+      console.error('Failed to parse JSON field:', e);
+      return [{ items: [] }];
+    }
+  };
+
   const fetchChangelogs = async () => {
     try {
       setLoading(true);
@@ -137,21 +162,6 @@ export function ChangelogManager() {
       toast.error("Failed to load changelog entries");
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Helper function to parse JSON fields
-  const parseJsonField = (field: Json): ChangelogItem[] => {
-    if (!field) return [{ items: [] }];
-    
-    try {
-      if (typeof field === 'string') {
-        return JSON.parse(field);
-      }
-      return field as ChangelogItem[];
-    } catch (e) {
-      console.error('Failed to parse JSON field:', e);
-      return [{ items: [] }];
     }
   };
 
@@ -244,16 +254,6 @@ export function ChangelogManager() {
       const improvements = parseTextareaContent(improvementsText);
       const bug_fixes = parseTextareaContent(bugFixesText);
       
-      const entryData = {
-        version,
-        release_date: releaseDate,
-        is_current: isCurrent,
-        features,
-        improvements,
-        bug_fixes,
-        created_by: user?.id || null
-      };
-      
       // If is_current is true, update all other entries to false
       if (isCurrent) {
         const { error: updateError } = await supabase
@@ -265,33 +265,33 @@ export function ChangelogManager() {
       }
       
       if (editingEntry) {
-        // Update existing entry
+        // Update existing entry - with proper type conversion
         const { error } = await supabase
           .from('changelog_entries')
           .update({
-            version: entryData.version,
-            release_date: entryData.release_date,
-            is_current: entryData.is_current,
-            features: entryData.features as Json,
-            improvements: entryData.improvements as Json,
-            bug_fixes: entryData.bug_fixes as Json
+            version: version,
+            release_date: releaseDate,
+            is_current: isCurrent,
+            features: features as unknown as Json,
+            improvements: improvements as unknown as Json,
+            bug_fixes: bug_fixes as unknown as Json
           })
           .eq('id', editingEntry.id);
           
         if (error) throw error;
         toast.success("Changelog entry updated!");
       } else {
-        // Create new entry
+        // Create new entry - with proper type conversion
         const { error } = await supabase
           .from('changelog_entries')
           .insert({
-            version: entryData.version,
-            release_date: entryData.release_date,
-            is_current: entryData.is_current,
-            features: entryData.features as Json,
-            improvements: entryData.improvements as Json,
-            bug_fixes: entryData.bug_fixes as Json,
-            created_by: entryData.created_by
+            version: version,
+            release_date: releaseDate,
+            is_current: isCurrent,
+            features: features as unknown as Json,
+            improvements: improvements as unknown as Json,
+            bug_fixes: bug_fixes as unknown as Json,
+            created_by: user?.id || null
           });
           
         if (error) throw error;
