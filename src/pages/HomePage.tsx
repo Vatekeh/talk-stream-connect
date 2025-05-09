@@ -24,11 +24,7 @@ export default function HomePage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader 
-        isAuthenticated={!!user} 
-        userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} 
-        isModerator={user?.user_metadata?.isModerator} 
-      />
+      <AppHeader />
       
       <main className="flex-1 container py-6">
         <div className="flex flex-col gap-6">

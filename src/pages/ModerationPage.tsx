@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,7 +75,7 @@ export default function ModerationPage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader isAuthenticated={true} userName="Alex Johnson" isModerator={true} />
+      <AppHeader />
       
       <main className="flex-1 container py-6">
         <div className="flex flex-col gap-6">

@@ -10,12 +10,7 @@ export default function ChangelogPage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader 
-        isAuthenticated={!!user} 
-        userName={user?.user_metadata?.name || user?.email?.split('@')[0] || "Guest User"} 
-        userAvatar={user?.user_metadata?.avatar_url}
-        isModerator={user?.user_metadata?.is_moderator}
-      />
+      <AppHeader />
       
       <div className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-4xl mx-auto">

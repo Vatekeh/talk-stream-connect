@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { UserProfileHeader } from "@/components/profile/user-profile-header";
@@ -10,12 +10,14 @@ import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { useUserStats } from "@/hooks/useUserStats";
 import { SubscriptionManagement } from "@/components/subscription/SubscriptionManagement";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 
 export default function ProfilePage() {
   const { checkSubscriptionStatus } = useAuth();
   const { logs, loading: logsLoading } = useDetectionLogs();
   const { insights, loading: insightsLoading } = useDetectionInsights();
   const { stats: userStats, streak: userStreak } = useUserStats();
+  const { isEditProfileOpen, setIsEditProfileOpen } = useProfile();
   
   // Fetch subscription status when the page loads
   useEffect(() => {
@@ -47,7 +49,10 @@ export default function ProfilePage() {
               />
             </div>
           </div>
-          <EditProfileDialog />
+          <EditProfileDialog 
+            isOpen={isEditProfileOpen} 
+            onClose={() => setIsEditProfileOpen(false)} 
+          />
         </div>
       </ProfileProvider>
     </ProtectedRoute>

@@ -96,10 +96,7 @@ export default function RoomPage() {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col">
-        <AppHeader 
-          isAuthenticated={!!user} 
-          userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} 
-        />
+        <AppHeader />
         <main className="flex-1 container flex flex-col items-center justify-center py-4">
           <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
           <h1 className="text-2xl font-bold mb-2">Error loading room</h1>
@@ -121,11 +118,7 @@ export default function RoomPage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader 
-        isAuthenticated={!!user} 
-        userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} 
-        isModerator={currentUserParticipant?.isModerator} 
-      />
+      <AppHeader />
       
       <RoomLayout
         room={room}
