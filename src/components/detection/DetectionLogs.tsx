@@ -21,7 +21,8 @@ export function DetectionLogs({ userId }: DetectionLogsProps) {
     setLoading(true);
     setError(null);
     try {
-      let url = `${supabase.functions.url}/detection-logs`;
+      // We need to use the full URL string instead of accessing the protected url property
+      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/detection-logs`;
       if (userId) {
         url += `?userId=${userId}`;
       }
@@ -154,3 +155,4 @@ export function DetectionLogs({ userId }: DetectionLogsProps) {
     </Card>
   );
 }
+
