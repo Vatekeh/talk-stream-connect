@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -96,6 +97,11 @@ export function AppHeader({
                     </Link>
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem asChild>
+                  <Link to="/privacy">
+                    <span>Privacy Policy</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogIn className="mr-2 h-4 w-4 rotate-180" />
@@ -104,9 +110,14 @@ export function AppHeader({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button size="sm" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/privacy">Privacy</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+            </div>
           )}
           
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -138,6 +149,16 @@ export function AppHeader({
                   <Link to="/profile">
                     <User className="mr-2 h-4 w-4" />
                     Profile
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className="justify-start" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Link to="/privacy">
+                    Privacy Policy
                   </Link>
                 </Button>
               </div>
