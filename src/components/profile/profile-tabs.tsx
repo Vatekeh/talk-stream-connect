@@ -4,14 +4,17 @@ import { ProfileCombinedStats } from "./profile-combined-stats";
 import { ProfileSaves } from "./profile-saves";
 import { ProfileClips } from "./profile-clips";
 import { Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } from "@/types";
+import { Loader } from "lucide-react";
 
 interface ProfileTabsProps {
   stats: UserStats;
   nsfwLogs: NsfwContentLog[];
-  nsfwInsights: NsfwUserInsights;
+  nsfwInsights: NsfwUserInsights | null;
   streak: UserStreak;
   saves: Save[];
   clips: Clip[];
+  logsLoading?: boolean;
+  insightsLoading?: boolean;
 }
 
 export function ProfileTabs({ 
@@ -20,7 +23,9 @@ export function ProfileTabs({
   nsfwInsights, 
   streak, 
   saves, 
-  clips 
+  clips,
+  logsLoading = false,
+  insightsLoading = false
 }: ProfileTabsProps) {
   return (
     <Tabs defaultValue="overview" className="w-full">
@@ -34,8 +39,6 @@ export function ProfileTabs({
       <TabsContent value="overview">
         <ProfileCombinedStats 
           stats={stats} 
-          nsfwLogs={nsfwLogs}
-          nsfwInsights={nsfwInsights}
           streak={streak}
         />
       </TabsContent>
@@ -51,8 +54,6 @@ export function ProfileTabs({
       <TabsContent value="activity">
         <ProfileCombinedStats 
           stats={stats}
-          nsfwLogs={nsfwLogs}
-          nsfwInsights={nsfwInsights}
           streak={streak}
         />
       </TabsContent>
