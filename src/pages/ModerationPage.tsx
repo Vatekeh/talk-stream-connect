@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +9,7 @@ import { Alert } from "@/types";
 import { mockRooms } from "@/lib/mock-data";
 import { Ban, Check, ExternalLink, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DetectionLogs } from "@/components/detection/DetectionLogs";
 
 export default function ModerationPage() {
   // Mock alerts - this would be fetched from Supabase
@@ -90,6 +90,7 @@ export default function ModerationPage() {
                 )}
               </TabsTrigger>
               <TabsTrigger value="resolved">Resolved</TabsTrigger>
+              <TabsTrigger value="detection-logs">Detection Logs</TabsTrigger>
             </TabsList>
             
             <TabsContent value="active" className="mt-4">
@@ -205,6 +206,10 @@ export default function ModerationPage() {
                   </p>
                 </div>
               )}
+            </TabsContent>
+            
+            <TabsContent value="detection-logs" className="mt-4">
+              <DetectionLogs />
             </TabsContent>
           </Tabs>
         </div>

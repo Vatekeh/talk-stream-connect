@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      detection_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          detection_type: string
+          id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          detection_type: string
+          id?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          detection_type?: string
+          id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detection_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nsfw_detections: {
         Row: {
           confidence: number

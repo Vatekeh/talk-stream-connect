@@ -38,3 +38,6 @@ verify_jwt = true
 
 [functions.join-invite]
 verify_jwt = true
+
+[functions.detection-logs]
+verify_jwt = true
