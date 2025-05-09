@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,11 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/types";
 import { mockRooms } from "@/lib/mock-data";
-import { Ban, Check, ExternalLink, Eye } from "lucide-react";
+import { Ban, Check, ExternalLink, Eye, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DetectionLogs } from "@/components/detection/DetectionLogs";
+import { ChangelogManager } from "@/components/moderation/ChangelogManager";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ModerationPage() {
+  const { user } = useAuth();
   // Mock alerts - this would be fetched from Supabase
   const [alerts, setAlerts] = useState<Alert[]>([
     {
@@ -91,6 +95,10 @@ export default function ModerationPage() {
               </TabsTrigger>
               <TabsTrigger value="resolved">Resolved</TabsTrigger>
               <TabsTrigger value="detection-logs">Detection Logs</TabsTrigger>
+              <TabsTrigger value="changelog" className="flex items-center gap-1">
+                <FileText size={14} />
+                Changelog
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active" className="mt-4">
@@ -210,6 +218,10 @@ export default function ModerationPage() {
             
             <TabsContent value="detection-logs" className="mt-4">
               <DetectionLogs />
+            </TabsContent>
+            
+            <TabsContent value="changelog" className="mt-4">
+              <ChangelogManager />
             </TabsContent>
           </Tabs>
         </div>

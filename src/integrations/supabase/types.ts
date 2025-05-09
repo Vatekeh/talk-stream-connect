@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      changelog_entries: {
+        Row: {
+          bug_fixes: Json | null
+          created_at: string | null
+          created_by: string | null
+          features: Json | null
+          id: string
+          improvements: Json | null
+          is_current: boolean | null
+          release_date: string
+          version: string
+        }
+        Insert: {
+          bug_fixes?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          features?: Json | null
+          id?: string
+          improvements?: Json | null
+          is_current?: boolean | null
+          release_date: string
+          version: string
+        }
+        Update: {
+          bug_fixes?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          features?: Json | null
+          id?: string
+          improvements?: Json | null
+          is_current?: boolean | null
+          release_date?: string
+          version?: string
+        }
+        Relationships: []
+      }
       detection_logs: {
         Row: {
           created_at: string
