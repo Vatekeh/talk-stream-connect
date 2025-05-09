@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogIn, Menu, ShieldAlert, User, Handshake } from "lucide-react";
+import { LogIn, Menu, ShieldAlert, User, Handshake, History } from "lucide-react";
 import { NavigationLinks } from "./navigation-links";
 import {
   DropdownMenu,
@@ -51,7 +51,7 @@ export function AppHeader({
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1D4ED8] text-white">
               <Handshake className="h-4 w-4" />
             </div>
-            <span className="font-semibold text-lg hidden sm:inline-block">Clutch</span>
+            <span className="font-semibold text-lg hidden sm:inline-block">Clutsh</span>
           </Link>
           
           <NavigationLinks 
@@ -98,6 +98,12 @@ export function AppHeader({
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
+                  <Link to="/changelog">
+                    <History className="mr-2 h-4 w-4" />
+                    <span>Changelog</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/privacy">
                     <span>Privacy Policy</span>
                   </Link>
@@ -122,6 +128,9 @@ export function AppHeader({
               <Button size="sm" variant="outline" asChild>
                 <Link to="/terms">Terms</Link>
               </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/changelog">Changelog</Link>
+              </Button>
               <Button size="sm" asChild>
                 <Link to="/login">Sign In</Link>
               </Button>
@@ -137,7 +146,7 @@ export function AppHeader({
             </SheetTrigger>
             <SheetContent side="left">
               <SheetHeader>
-                <SheetTitle>Clutch</SheetTitle>
+                <SheetTitle>Clutsh</SheetTitle>
                 <SheetDescription>
                   Live voice and chat rooms
                 </SheetDescription>
@@ -177,6 +186,17 @@ export function AppHeader({
                 >
                   <Link to="/terms">
                     Terms of Service
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className="justify-start" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Link to="/changelog">
+                    <History className="mr-2 h-4 w-4" />
+                    Changelog
                   </Link>
                 </Button>
               </div>

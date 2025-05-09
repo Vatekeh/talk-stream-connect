@@ -16,6 +16,7 @@ import ExtensionAuthPage from "./pages/ExtensionAuthPage";
 import ExtensionAuthCallback from "./pages/ExtensionAuthCallback";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import ChangelogPage from "./pages/ChangelogPage";
 
 // Import AgoraProvider from new location
 import { AgoraProvider } from "@/contexts/agora";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsOfServicePage />} />
+              <Route path="/changelog" element={<ChangelogPage />} />
               
               {/* Extension authentication routes */}
               <Route path="/auth" element={<ExtensionAuthPage />} />
