@@ -11,6 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Environment detection - can be expanded later if needed
+const PRODUCTION_DOMAIN = "https://clutsh.live";
+const isDevelopment = () => {
+  return window.location.hostname === "localhost" || 
+         window.location.hostname.includes("127.0.0.1") ||
+         window.location.hostname.includes(".lovable.dev");
+};
+
 export default function ExtensionAuthCallback() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,9 +79,16 @@ export default function ExtensionAuthCallback() {
           hashLength: hash.length 
         });
         
-        // Log the callback URL for debugging
-        const callbackUrl = `${window.location.origin}/auth/callback${hash}`;
-        console.log("[ExtensionAuthCallback] Redirecting to extension callback URL:", callbackUrl);
+        // Determine the base URL - use the production domain in production env
+        const baseUrl = isDevelopment() ? window.location.origin : PRODUCTION_DOMAIN;
+        
+        // Construct the callback URL with the exact path that the extension expects
+        const callbackUrl = `${baseUrl}/auth/callback${hash}`;
+        console.log("[ExtensionAuthCallback] Redirecting to extension callback URL:", {
+          baseUrl,
+          environment: isDevelopment() ? "development" : "production",
+          fullUrl: callbackUrl
+        });
         
         // Notify user before redirect
         toast({
@@ -87,9 +102,8 @@ export default function ExtensionAuthCallback() {
         // Add a slight delay before redirecting to ensure logs are captured
         setTimeout(() => {
           // Redirect to the extension callback URL with the hash fragment
-          // This should match what the extension is listening for in background.js
           window.location.replace(callbackUrl);
-        }, 100);
+        }, 300); // Increased timeout to ensure logs are captured
       } catch (err: any) {
         console.error(`[${new Date().toISOString()}] Authentication callback error:`, err);
         console.error("[ExtensionAuthCallback] Detailed error:", {
