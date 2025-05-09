@@ -17,10 +17,7 @@ export function RoomNotFound({ user }: RoomNotFoundProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* App header with authentication status */}
-      <AppHeader 
-        isAuthenticated={!!user} 
-        userName={user?.user_metadata?.name || "User"} 
-      />
+      <AppHeader />
       
       {/* Error message and navigation button */}
       <div className="flex-1 container flex flex-col items-center justify-center">

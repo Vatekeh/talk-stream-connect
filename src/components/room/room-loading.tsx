@@ -19,10 +19,7 @@ interface RoomLoadingProps {
 export function RoomLoading({ user }: RoomLoadingProps) {
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader 
-        isAuthenticated={!!user} 
-        userName={user?.user_metadata?.name || user?.user_metadata?.username || "User"} 
-      />
+      <AppHeader />
       <main className="flex-1 container flex flex-col py-4">
         <div className="mb-6">
           <Skeleton className="h-8 w-64 mb-2" />

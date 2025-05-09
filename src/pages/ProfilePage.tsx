@@ -13,14 +13,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
   const { checkSubscriptionStatus } = useAuth();
-  const { data: logs, isLoading: logsLoading } = useDetectionLogs();
-  const { data: insights, isLoading: insightsLoading } = useDetectionInsights();
-  const { userStats, userStreak } = useUserStats();
+  const { logs, loading: logsLoading } = useDetectionLogs();
+  const { insights, loading: insightsLoading } = useDetectionInsights();
+  const { stats: userStats, streak: userStreak } = useUserStats();
   
   // Fetch subscription status when the page loads
   useEffect(() => {
     checkSubscriptionStatus();
-  }, []);
+  }, [checkSubscriptionStatus]);
 
   return (
     <ProtectedRoute>
