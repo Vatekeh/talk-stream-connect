@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 interface ChangelogItem {
   title?: string;
@@ -31,6 +32,20 @@ interface ChangelogEntry {
   features: ChangelogItem[];
   improvements: ChangelogItem[];
   bug_fixes: ChangelogItem[];
+  created_at: string;
+  created_by: string;
+}
+
+interface SupabaseChangelogEntry {
+  id: string;
+  version: string;
+  release_date: string;
+  is_current: boolean | null;
+  features: Json;
+  improvements: Json;
+  bug_fixes: Json;
+  created_at: string | null;
+  created_by: string | null;
 }
 
 export default function ChangelogPage() {
@@ -42,6 +57,21 @@ export default function ChangelogPage() {
   useEffect(() => {
     fetchChangelogs();
   }, []);
+
+  // Helper function to parse JSON fields
+  const parseJsonField = (field: Json): ChangelogItem[] => {
+    if (!field) return [{ items: [] }];
+    
+    try {
+      if (typeof field === 'string') {
+        return JSON.parse(field);
+      }
+      return field as ChangelogItem[];
+    } catch (e) {
+      console.error('Failed to parse JSON field:', e);
+      return [{ items: [] }];
+    }
+  };
   
   const fetchChangelogs = async () => {
     try {
@@ -55,7 +85,18 @@ export default function ChangelogPage() {
       
       if (error) throw error;
       
-      setEntries(data || []);
+      // Parse JSON fields from Supabase
+      const parsedEntries: ChangelogEntry[] = (data || []).map((entry: SupabaseChangelogEntry) => ({
+        ...entry,
+        is_current: entry.is_current || false,
+        created_by: entry.created_by || '',
+        created_at: entry.created_at || '',
+        features: parseJsonField(entry.features),
+        improvements: parseJsonField(entry.improvements),
+        bug_fixes: parseJsonField(entry.bug_fixes)
+      }));
+      
+      setEntries(parsedEntries);
     } catch (err) {
       console.error("Error fetching changelog entries:", err);
       setError(true);
@@ -297,82 +338,6 @@ export default function ChangelogPage() {
                       )}
                     </div>
                   ))}
-                
-                {/* Upcoming */}
-                <div className="mb-12">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="text-blue-500 h-5 w-5" />
-                    <h2 className="text-2xl font-semibold">Upcoming (Roadmap)</h2>
-                  </div>
-                  
-                  <div className="pl-6 border-l border-border ml-2">
-                    <ul className="space-y-2">
-                      <li className="flex items-start">
-                        <div className="flex-shrink-0 h-5 w-5 rounded border border-muted-foreground flex items-center justify-center mr-2">
-                        </div>
-                        <span>Mobile and responsive dashboard design for enhanced usability.</span>
-                      </li>
-                      <li className="flex items-start">
-                        <div className="flex-shrink-0 h-5 w-5 rounded border border-muted-foreground flex items-center justify-center mr-2">
-                        </div>
-                        <span>Expanded privacy controls (data export and deletion).</span>
-                      </li>
-                      <li className="flex items-start">
-                        <div className="flex-shrink-0 h-5 w-5 rounded border border-muted-foreground flex items-center justify-center mr-2">
-                        </div>
-                        <span>Additional browser compatibility (Firefox, Edge).</span>
-                      </li>
-                      <li className="flex items-start">
-                        <div className="flex-shrink-0 h-5 w-5 rounded border border-muted-foreground flex items-center justify-center mr-2">
-                        </div>
-                        <span>Advanced AI-driven analytics and personalized behavioral insights.</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                
-                {/* Website & Documentation Updates */}
-                <div className="mb-12">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Pin className="text-gray-500 h-5 w-5" />
-                    <h2 className="text-2xl font-semibold">Website & Documentation Updates (May 2025)</h2>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-medium">Legal & Compliance</h3>
-                    </div>
-                    <div className="pl-6 border-l border-border ml-2">
-                      <ul className="list-disc pl-6 mb-3">
-                        <li className="mb-1">Added comprehensive Privacy Policy.</li>
-                        <li className="mb-1">Released detailed Terms of Service.</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-medium">User Support</h3>
-                    </div>
-                    <div className="pl-6 border-l border-border ml-2">
-                      <ul className="list-disc pl-6 mb-3">
-                        <li className="mb-1">Created a clear and thorough onboarding experience for Chrome extension installation.</li>
-                        <li className="mb-1">Published FAQ & Help Center documentation for user troubleshooting and setup.</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-medium">Security</h3>
-                    </div>
-                    <div className="pl-6 border-l border-border ml-2">
-                      <ul className="list-disc pl-6 mb-3">
-                        <li className="mb-1">Implemented detailed Security and Data Protection statements.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
                 
                 {/* User Feedback Section */}
                 <div className="mb-8 bg-muted p-6 rounded-lg">

@@ -27,6 +27,7 @@ import {
 import { Rocket, Wrench, Bug, Plus, Star, Trash2, Edit, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Json } from "@/integrations/supabase/types";
 
 interface ChangelogItem {
   title?: string;
@@ -43,6 +44,18 @@ interface ChangelogEntry {
   bug_fixes: ChangelogItem[];
   created_at: string;
   created_by: string;
+}
+
+interface SupabaseChangelogEntry {
+  id: string;
+  version: string;
+  release_date: string;
+  is_current: boolean | null;
+  features: Json;
+  improvements: Json;
+  bug_fixes: Json;
+  created_at: string | null;
+  created_by: string | null;
 }
 
 export function ChangelogManager() {
@@ -107,12 +120,38 @@ export function ChangelogManager() {
       
       if (error) throw error;
       
-      setEntries(data || []);
+      // Parse JSON fields from Supabase
+      const parsedEntries: ChangelogEntry[] = (data || []).map((entry: SupabaseChangelogEntry) => ({
+        ...entry,
+        is_current: entry.is_current || false,
+        created_by: entry.created_by || '',
+        created_at: entry.created_at || '',
+        features: parseJsonField(entry.features),
+        improvements: parseJsonField(entry.improvements),
+        bug_fixes: parseJsonField(entry.bug_fixes)
+      }));
+      
+      setEntries(parsedEntries);
     } catch (error) {
       console.error("Error fetching changelog entries:", error);
       toast.error("Failed to load changelog entries");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to parse JSON fields
+  const parseJsonField = (field: Json): ChangelogItem[] => {
+    if (!field) return [{ items: [] }];
+    
+    try {
+      if (typeof field === 'string') {
+        return JSON.parse(field);
+      }
+      return field as ChangelogItem[];
+    } catch (e) {
+      console.error('Failed to parse JSON field:', e);
+      return [{ items: [] }];
     }
   };
 
@@ -212,7 +251,7 @@ export function ChangelogManager() {
         features,
         improvements,
         bug_fixes,
-        created_by: user?.id
+        created_by: user?.id || null
       };
       
       // If is_current is true, update all other entries to false
@@ -229,7 +268,14 @@ export function ChangelogManager() {
         // Update existing entry
         const { error } = await supabase
           .from('changelog_entries')
-          .update(entryData)
+          .update({
+            version: entryData.version,
+            release_date: entryData.release_date,
+            is_current: entryData.is_current,
+            features: entryData.features as Json,
+            improvements: entryData.improvements as Json,
+            bug_fixes: entryData.bug_fixes as Json
+          })
           .eq('id', editingEntry.id);
           
         if (error) throw error;
@@ -238,7 +284,15 @@ export function ChangelogManager() {
         // Create new entry
         const { error } = await supabase
           .from('changelog_entries')
-          .insert(entryData);
+          .insert({
+            version: entryData.version,
+            release_date: entryData.release_date,
+            is_current: entryData.is_current,
+            features: entryData.features as Json,
+            improvements: entryData.improvements as Json,
+            bug_fixes: entryData.bug_fixes as Json,
+            created_by: entryData.created_by
+          });
           
         if (error) throw error;
         toast.success("Changelog entry created!");
