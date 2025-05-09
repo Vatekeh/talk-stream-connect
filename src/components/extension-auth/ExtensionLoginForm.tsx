@@ -8,6 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Environment detection - can be expanded later if needed
+const PRODUCTION_DOMAIN = "https://clutsh.live";
+const isDevelopment = () => {
+  return window.location.hostname === "localhost" || 
+         window.location.hostname.includes("127.0.0.1") ||
+         window.location.hostname.includes(".lovable.dev");
+};
+
 export function ExtensionLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,8 +63,34 @@ export function ExtensionLoginForm() {
         description: "You are now logged in to Clutsh"
       });
       
-      // The auth state change will trigger a redirect handled by the callback page
-      console.log("[ExtensionLoginForm] Auth completed, waiting for callback handling");
+      // After successful login, manually redirect to the callback page with token and userId
+      if (data.session?.access_token && data.user?.id) {
+        // Create the hash fragment that the extension expects
+        const hash = `#token=${data.session.access_token}&userId=${data.user.id}`;
+        
+        // Determine the base URL - use the production domain in production env
+        const baseUrl = isDevelopment() ? window.location.origin : PRODUCTION_DOMAIN;
+        
+        // Construct the callback URL with the exact path that the extension expects
+        const callbackUrl = `${baseUrl}/auth/callback${hash}`;
+        
+        console.log("[ExtensionLoginForm] Manually redirecting to callback URL:", {
+          baseUrl,
+          environment: isDevelopment() ? "development" : "production",
+          hashLength: hash.length,
+          fullUrl: callbackUrl
+        });
+
+        // Add a slight delay before redirecting to ensure logs are captured and toast is shown
+        setTimeout(() => {
+          // Redirect to the extension callback URL with the hash fragment
+          window.location.replace(callbackUrl);
+        }, 300);
+      } else {
+        console.error("[ExtensionLoginForm] Cannot redirect: Missing token or user ID");
+        setError("Authentication successful but session data is incomplete. Please try again.");
+        setLoading(false);
+      }
     } catch (error: any) {
       console.error(`[${new Date().toISOString()}] Authentication error:`, error);
       console.error("[ExtensionLoginForm] Detailed error:", {
