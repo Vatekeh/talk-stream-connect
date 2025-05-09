@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ChangelogEntry, SupabaseChangelogEntry } from "./types";
+import { ChangelogEntry, SupabaseChangelogEntry, ChangelogItem } from "./types";
 import { parseJsonField } from "./utils";
 import { Json } from "@/integrations/supabase/types";
 
