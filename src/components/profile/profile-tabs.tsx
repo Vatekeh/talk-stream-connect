@@ -40,6 +40,8 @@ export function ProfileTabs({
         <ProfileCombinedStats 
           stats={stats} 
           streak={streak}
+          logsLoading={logsLoading}
+          insightsLoading={insightsLoading}
         />
       </TabsContent>
       
@@ -55,6 +57,8 @@ export function ProfileTabs({
         <ProfileCombinedStats 
           stats={stats}
           streak={streak}
+          logsLoading={logsLoading}
+          insightsLoading={insightsLoading}
         />
       </TabsContent>
     </Tabs>

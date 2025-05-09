@@ -4,9 +4,10 @@ import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { Save, Clip, UserStats, UserStreak } from "@/types";
+import { Save, Clip } from "@/types";
 import { useDetectionLogs } from "@/hooks/useDetectionLogs";
 import { useDetectionInsights } from "@/hooks/useDetectionInsights";
+import { useUserStats } from "@/hooks/useUserStats";
 
 // Keep mock data for saves and clips since they're not part of this integration yet
 const mockSaves: Save[] = [
@@ -53,38 +54,8 @@ const mockClips: Clip[] = [
   }
 ];
 
-const mockStats: UserStats = {
-  timeInRooms: 320, // in minutes
-  roomsJoined: 15,
-  messagesPosted: 47,
-  weeklyActivity: [
-    { date: "2023-04-11", duration: 45 },
-    { date: "2023-04-12", duration: 30 },
-    { date: "2023-04-13", duration: 60 },
-    { date: "2023-04-14", duration: 75 },
-    { date: "2023-04-15", duration: 45 },
-    { date: "2023-04-16", duration: 20 },
-    { date: "2023-04-17", duration: 45 }
-  ],
-  monthlyActivity: [
-    { date: "2023-03-17", duration: 220 },
-    { date: "2023-03-24", duration: 180 },
-    { date: "2023-03-31", duration: 240 },
-    { date: "2023-04-07", duration: 300 },
-    { date: "2023-04-14", duration: 255 },
-    { date: "2023-04-17", duration: 65 }
-  ]
-};
-
-// Create mock streak data
-const mockStreak: UserStreak = {
-  current: 7,
-  longest: 14,
-  lastUpdated: "2023-04-16T23:59:59Z"
-};
-
 function ProfilePageContent() {
-  const { user, isLoading, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
+  const { user, isLoading: profileLoading, isEditProfileOpen, setIsEditProfileOpen } = useProfile();
   const { user: authUser } = useAuth();
   
   // Fetch real detection logs and insights
@@ -96,6 +67,12 @@ function ProfilePageContent() {
     logs,
     loading: logsLoading
   });
+
+  // Fetch user stats based on detection data
+  const { stats, streak, loading: statsLoading, error: statsError } = useUserStats(authUser?.id);
+  
+  const isLoading = profileLoading || logsLoading || insightsLoading || statsLoading;
+  const hasError = logsError || statsError;
   
   if (isLoading) {
     return (
@@ -103,6 +80,25 @@ function ProfilePageContent() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Data</h2>
+          <p className="text-muted-foreground mb-6">
+            {logsError || statsError || "An unknown error occurred"}
+          </p>
+          <Button 
+            variant="outline"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -138,12 +134,14 @@ function ProfilePageContent() {
           />
           
           <ProfileTabs 
-            stats={mockStats}
+            stats={stats || { timeInRooms: 0, roomsJoined: 0, messagesPosted: 0, weeklyActivity: [], monthlyActivity: [] }}
             nsfwLogs={logs}
             nsfwInsights={insights}
-            streak={mockStreak}
+            streak={streak || { current: 0, longest: 0, lastUpdated: new Date().toISOString() }}
             saves={mockSaves}
             clips={mockClips}
+            logsLoading={logsLoading}
+            insightsLoading={insightsLoading}
           />
         </div>
       </main>

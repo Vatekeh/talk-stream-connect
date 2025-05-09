@@ -16,24 +16,32 @@ import { useAuth } from "@/contexts/AuthContext";
 interface ProfileCombinedStatsProps {
   stats: UserStats;
   streak: UserStreak;
+  logsLoading?: boolean;
+  insightsLoading?: boolean;
 }
 
 export function ProfileCombinedStats({ 
   stats, 
-  streak 
+  streak,
+  logsLoading = false,
+  insightsLoading = false
 }: ProfileCombinedStatsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const { user } = useAuth();
   
-  const { logs, loading: logsLoading, error: logsError } = useDetectionLogs({
+  const { logs, loading: fetchLogsLoading, error: logsError } = useDetectionLogs({
     userId: user?.id
   });
   
-  const { insights, loading: insightsLoading } = useDetectionInsights({
+  const { insights, loading: fetchInsightsLoading } = useDetectionInsights({
     logs,
-    loading: logsLoading
+    loading: fetchLogsLoading
   });
+  
+  // Use passed loading states if available, otherwise use fetched loading states
+  const isLogsLoading = logsLoading || fetchLogsLoading;
+  const isInsightsLoading = insightsLoading || fetchInsightsLoading;
   
   const filteredLogs = logs.filter(log => 
     log.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,7 +100,11 @@ export function ProfileCombinedStats({
             </TabsList>
             
             <TabsContent value="overview">
-              <StreakOverview streak={streak} />
+              {isLogsLoading ? (
+                renderLoading()
+              ) : (
+                <StreakOverview streak={streak} />
+              )}
             </TabsContent>
             
             <TabsContent value="logs">
@@ -114,28 +126,38 @@ export function ProfileCombinedStats({
                 </div>
                 
                 {logsError && renderError(logsError)}
-                {logsLoading ? (
+                {isLogsLoading ? (
                   renderLoading()
-                ) : (
+                ) : filteredLogs.length > 0 ? (
                   <ContentLogTable logs={filteredLogs} />
+                ) : (
+                  <div className="text-center p-12 border rounded-md bg-background">
+                    <p className="text-muted-foreground mb-2">No content logs found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Content detection data will appear here when you use the Chrome extension.
+                    </p>
+                  </div>
                 )}
               </div>
             </TabsContent>
             
             <TabsContent value="patterns">
-              {insightsLoading ? (
+              {isInsightsLoading ? (
                 renderLoading()
-              ) : insights ? (
+              ) : insights && insights.timePatterns.some(p => p.visitCount > 0) ? (
                 <ActivityPatterns timePatterns={insights.timePatterns} />
               ) : (
-                <div className="text-center p-6">
-                  <p className="text-muted-foreground">No pattern data available</p>
+                <div className="text-center p-12 border rounded-md bg-background">
+                  <p className="text-muted-foreground mb-2">No pattern data available</p>
+                  <p className="text-sm text-muted-foreground">
+                    Usage patterns will be visualized here once you have more detection data.
+                  </p>
                 </div>
               )}
             </TabsContent>
             
             <TabsContent value="insights">
-              {insightsLoading ? (
+              {isInsightsLoading ? (
                 renderLoading()
               ) : insights ? (
                 <div className="space-y-4">
@@ -171,8 +193,11 @@ export function ProfileCombinedStats({
                   </Card>
                 </div>
               ) : (
-                <div className="text-center p-6">
-                  <p className="text-muted-foreground">No insights available</p>
+                <div className="text-center p-12 border rounded-md bg-background">
+                  <p className="text-muted-foreground mb-2">No insights available</p>
+                  <p className="text-sm text-muted-foreground">
+                    Content insights will be generated once you have more detection data.
+                  </p>
                 </div>
               )}
             </TabsContent>
