@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import ExtensionAuthPage from "./pages/ExtensionAuthPage";
 import ExtensionAuthCallback from "./pages/ExtensionAuthCallback";
 import PrivacyPage from "./pages/PrivacyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 
 // Import AgoraProvider from new location
 import { AgoraProvider } from "@/contexts/agora";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/moderation" element={<ProtectedRoute requireModerator><ModerationPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsOfServicePage />} />
               
               {/* Extension authentication routes */}
               <Route path="/auth" element={<ExtensionAuthPage />} />

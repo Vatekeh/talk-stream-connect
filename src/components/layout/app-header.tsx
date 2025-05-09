@@ -102,6 +102,11 @@ export function AppHeader({
                     <span>Privacy Policy</span>
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/terms">
+                    <span>Terms of Service</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogIn className="mr-2 h-4 w-4 rotate-180" />
@@ -113,6 +118,9 @@ export function AppHeader({
             <div className="flex items-center gap-4">
               <Button size="sm" variant="outline" asChild>
                 <Link to="/privacy">Privacy</Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/terms">Terms</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link to="/login">Sign In</Link>
@@ -159,6 +167,16 @@ export function AppHeader({
                 >
                   <Link to="/privacy">
                     Privacy Policy
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className="justify-start" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Link to="/terms">
+                    Terms of Service
                   </Link>
                 </Button>
               </div>

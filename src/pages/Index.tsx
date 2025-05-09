@@ -13,7 +13,17 @@ const Index = () => {
             <HandHelping className="w-8 h-8 text-talkstream-purple" />
             <span className="text-xl font-bold text-white">Clutch</span>
           </div>
-          <nav>
+          <nav className="flex space-x-4">
+            <Link to="/terms">
+              <Button variant="ghost" className="text-white hover:bg-white/10">
+                Terms
+              </Button>
+            </Link>
+            <Link to="/privacy">
+              <Button variant="ghost" className="text-white hover:bg-white/10">
+                Privacy
+              </Button>
+            </Link>
             <Link to="/login">
               <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
                 Sign In
@@ -60,6 +70,23 @@ const Index = () => {
             </div>
           </div>
         </main>
+        
+        {/* Footer */}
+        <footer className="mt-24 border-t border-white/10 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-white/70 text-sm mb-4 md:mb-0">
+              &copy; {new Date().getFullYear()} Clutch. All rights reserved.
+            </p>
+            <div className="flex space-x-6">
+              <Link to="/terms" className="text-white/70 hover:text-white text-sm">
+                Terms of Service
+              </Link>
+              <Link to="/privacy" className="text-white/70 hover:text-white text-sm">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
