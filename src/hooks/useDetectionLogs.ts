@@ -29,27 +29,38 @@ export function useDetectionLogs({
           url += `?userId=${userId}`;
         }
         
-        const { data: userToken } = await supabase.auth.getSession();
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.access_token) {
+          throw new Error('No authenticated session found');
+        }
+        
         const response = await fetch(url, {
           headers: {
-            'Authorization': `Bearer ${userToken?.session?.access_token}`,
+            'Authorization': `Bearer ${sessionData.session.access_token}`,
             'Content-Type': 'application/json',
           },
         });
         
         if (!response.ok) {
-          throw new Error(`Error fetching logs: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error('Error response:', response.status, errorText);
+          throw new Error(`Error fetching logs: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        
+        if (!Array.isArray(data)) {
+          console.error('Unexpected response format:', data);
+          throw new Error('Received invalid response format from server');
+        }
         
         // Transform the detection logs to NsfwContentLog format
         const transformedLogs: NsfwContentLog[] = data.map((log: any) => ({
           id: log.id,
           userId: log.user_id,
-          source: new URL(log.url).hostname || 'Unknown Source',
+          source: log.url ? new URL(log.url).hostname || 'Unknown Source' : 'Unknown Source',
           pageTitle: log.details?.pageTitle || 'Unnamed Page',
-          url: log.url,
+          url: log.url || '',
           visitTimestamp: log.created_at,
           duration: log.details?.duration || 0, // in seconds
           category: mapDetectionTypeToCategory(log.detection_type),
@@ -60,6 +71,7 @@ export function useDetectionLogs({
       } catch (err) {
         console.error('Failed to fetch detection logs:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setLogs([]); // Reset logs on error
       } finally {
         setLoading(false);
       }
@@ -73,6 +85,8 @@ export function useDetectionLogs({
 
 // Helper function to map detection_type to category
 function mapDetectionTypeToCategory(detectionType: string): "image" | "video" | "text" | "other" {
+  if (!detectionType) return 'other';
+  
   const lowerType = detectionType.toLowerCase();
   if (lowerType.includes('image') || lowerType.includes('nsfw')) {
     return 'image';

@@ -26,6 +26,7 @@ serve(async (req) => {
     // Set the auth token
     const user = await supabase.auth.getUser(token);
     if (user.error) {
+      console.error('Authentication error:', user.error);
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -34,13 +35,18 @@ serve(async (req) => {
 
     // Check if user is a moderator for GET requests that fetch all logs
     let isModerator = false;
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('is_moderator')
       .eq('id', user.data.user?.id)
       .single();
     
-    isModerator = profile?.is_moderator || false;
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      // Continue but assume not a moderator
+    } else {
+      isModerator = profile?.is_moderator || false;
+    }
 
     if (req.method === 'GET') {
       const url = new URL(req.url);
@@ -63,10 +69,11 @@ serve(async (req) => {
       const { data, error } = await query;
       
       if (error) {
+        console.error('Error fetching logs:', error);
         throw error;
       }
 
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(data || []), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -87,6 +94,7 @@ serve(async (req) => {
         .insert(payload);
       
       if (error) {
+        console.error('Error inserting log:', error);
         throw error;
       }
 

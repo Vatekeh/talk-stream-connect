@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,9 +43,9 @@ export function ProfileCombinedStats({
   const isInsightsLoading = insightsLoading || fetchInsightsLoading;
   
   const filteredLogs = logs.filter(log => 
-    log.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.pageTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.url.toLowerCase().includes(searchTerm.toLowerCase())
+    (log.source?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (log.pageTitle?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (log.url?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const renderLoading = () => (
@@ -58,7 +57,7 @@ export function ProfileCombinedStats({
 
   const renderError = (error: string) => (
     <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-4">
-      <p>Error loading data: {error}</p>
+      <p className="mb-2">Error loading data: {error}</p>
       <Button 
         variant="outline" 
         size="sm" 
@@ -102,6 +101,8 @@ export function ProfileCombinedStats({
             <TabsContent value="overview">
               {isLogsLoading ? (
                 renderLoading()
+              ) : logsError ? (
+                renderError(logsError)
               ) : (
                 <StreakOverview streak={streak} />
               )}
@@ -144,6 +145,8 @@ export function ProfileCombinedStats({
             <TabsContent value="patterns">
               {isInsightsLoading ? (
                 renderLoading()
+              ) : logsError ? (
+                renderError(logsError)
               ) : insights && insights.timePatterns.some(p => p.visitCount > 0) ? (
                 <ActivityPatterns timePatterns={insights.timePatterns} />
               ) : (
@@ -159,6 +162,8 @@ export function ProfileCombinedStats({
             <TabsContent value="insights">
               {isInsightsLoading ? (
                 renderLoading()
+              ) : logsError ? (
+                renderError(logsError)
               ) : insights ? (
                 <div className="space-y-4">
                   <Card>
