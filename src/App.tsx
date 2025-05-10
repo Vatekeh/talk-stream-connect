@@ -20,6 +20,12 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import ChangelogPage from "./pages/ChangelogPage";
 import PricingPage from "./pages/PricingPage";
 
+// Settings pages
+import SettingsPage from "./pages/SettingsPage";
+import LanguageSettingsPage from "./pages/LanguageSettingsPage";
+import AppearanceSettingsPage from "./pages/AppearanceSettingsPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+
 // Import AgoraProvider from new location
 import { AgoraProvider } from "@/contexts/agora";
 
@@ -50,6 +56,12 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/changelog" element={<ChangelogPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
+                
+                {/* Settings routes */}
+                <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                <Route path="/settings/languages" element={<ProtectedRoute><LanguageSettingsPage /></ProtectedRoute>} />
+                <Route path="/settings/appearance" element={<ProtectedRoute><AppearanceSettingsPage /></ProtectedRoute>} />
+                <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
                 
                 {/* Extension authentication routes */}
                 <Route path="/auth" element={<ExtensionAuthPage />} />
