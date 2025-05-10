@@ -5,6 +5,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { StripeElementsForm } from "./StripeElementsForm";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Initialize Stripe with the publishable key
 // This is safe to expose in client-side code
