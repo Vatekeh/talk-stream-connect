@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { CreateRoomDialog } from "@/components/room/create-room-dialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoomSearch } from "@/components/room/room-search";
 import { RoomGrid } from "@/components/room/room-grid";

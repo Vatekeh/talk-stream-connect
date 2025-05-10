@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -9,7 +8,7 @@ import { useDetectionInsights } from "@/hooks/useDetectionInsights";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { useUserStats } from "@/hooks/useUserStats";
 import { SubscriptionManagement } from "@/components/subscription/SubscriptionManagement";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 export default function ProfilePage() {
   const { checkSubscriptionStatus } = useAuth();

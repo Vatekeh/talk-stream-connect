@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { NavigationLinks } from "./navigation-links";
 import { Button } from "../ui/button";
 import { Menu, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { TrialCountdown } from "@/components/subscription/TrialCountdown";
 
 export function AppHeader() {
