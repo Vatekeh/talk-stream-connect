@@ -2,12 +2,13 @@
 import { Link } from "react-router-dom";
 import { NavigationLinks } from "./navigation-links";
 import { Button } from "../ui/button";
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { TrialCountdown } from "@/components/subscription/TrialCountdown";
+import { UserDropdown } from "./user-dropdown";
 
 export function AppHeader() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <header className="bg-clutsh-midnight sticky top-0 z-10 border-b border-clutsh-slate">
@@ -35,21 +36,7 @@ export function AppHeader() {
         {/* Auth Buttons */}
         <div className="flex items-center space-x-2">
           {user ? (
-            <>
-              <Link to="/profile">
-                <Button variant="ghost" className="text-clutsh-light hover:bg-clutsh-steel">
-                  <User className="h-5 w-5" />
-                  <span className="ml-2 hidden md:inline">Profile</span>
-                </Button>
-              </Link>
-              <Button 
-                variant="outline" 
-                className="bg-clutsh-slate text-clutsh-light hover:bg-clutsh-steel"
-                onClick={() => signOut()}
-              >
-                Sign Out
-              </Button>
-            </>
+            <UserDropdown />
           ) : (
             <Link to="/login">
               <Button 
