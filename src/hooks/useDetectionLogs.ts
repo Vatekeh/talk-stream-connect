@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { NsfwContentLog } from '@/types';
+import { toast } from 'sonner';
 
 interface UseDetectionLogsProps {
   userId?: string;
@@ -34,6 +35,7 @@ export function useDetectionLogs({
           throw new Error('No authenticated session found');
         }
         
+        console.log('Fetching detection logs from:', url);
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${sessionData.session.access_token}`,
@@ -45,6 +47,13 @@ export function useDetectionLogs({
           const errorText = await response.text();
           console.error('Error response:', response.status, errorText);
           throw new Error(`Error fetching logs: ${response.status} ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Unexpected response format. Content-Type:', contentType, 'Response:', text.substring(0, 200));
+          throw new Error('Server did not return JSON. Received: ' + contentType);
         }
         
         const data = await response.json();
@@ -72,6 +81,7 @@ export function useDetectionLogs({
         console.error('Failed to fetch detection logs:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setLogs([]); // Reset logs on error
+        toast.error('Failed to load detection logs. Please try again later.');
       } finally {
         setLoading(false);
       }
