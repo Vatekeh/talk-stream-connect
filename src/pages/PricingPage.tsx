@@ -1,6 +1,6 @@
 
 import { Sparkles, ArrowDownToDot } from "lucide-react";
-import { PricingSection } from "@/components/blocks/pricing-section";
+import { PricingSection } from "@/components/blocks/pricing";
 import { useAuth } from "@/contexts/AuthContext";
 
 const pricingTiers = [
