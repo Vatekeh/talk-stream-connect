@@ -13,8 +13,8 @@ const pricingTiers = [
     description: "For anyone getting started with Clutsh",
     icon: (
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-400/30 to-zinc-400/30 blur-2xl rounded-full" />
-        <Sparkles className="w-7 h-7 relative z-10 text-zinc-500 dark:text-zinc-400" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-400/20 to-zinc-400/20 blur-2xl rounded-full" />
+        <Sparkles className="w-7 h-7 relative z-10 text-clutsh-light" />
       </div>
     ),
     features: [
@@ -51,7 +51,8 @@ const pricingTiers = [
     badge: "Unlock Clarity",
     icon: (
       <div className="relative">
-        <ArrowDownToDot className="w-7 h-7 relative z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-clutsh-light/20 to-white/10 blur-2xl rounded-full" />
+        <ArrowDownToDot className="w-7 h-7 relative z-10 text-white" />
       </div>
     ),
     features: [

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -39,27 +40,27 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
 
   const buttonStyles = {
     default: cn(
-      "h-12 bg-white dark:bg-zinc-900",
-      "hover:bg-zinc-50 dark:hover:bg-zinc-800",
-      "text-zinc-900 dark:text-zinc-100",
-      "border border-zinc-200 dark:border-zinc-800",
-      "hover:border-zinc-300 dark:hover:border-zinc-700",
+      "h-12 bg-clutsh-steel dark:bg-zinc-800",
+      "hover:bg-clutsh-slate dark:hover:bg-zinc-700",
+      "text-clutsh-light dark:text-zinc-100",
+      "border border-clutsh-slate/30 dark:border-zinc-700",
+      "hover:border-clutsh-slate/50 dark:hover:border-zinc-600",
       "shadow-sm hover:shadow-md",
       "text-sm font-medium",
     ),
     highlight: cn(
-      "h-12 bg-clutsh-navy dark:bg-clutsh-light",
-      "hover:bg-clutsh-steel dark:hover:bg-clutsh-muted",
+      "h-12 bg-clutsh-slate dark:bg-clutsh-light",
+      "hover:bg-clutsh-steel/80 dark:hover:bg-clutsh-muted",
       "text-white dark:text-clutsh-navy",
-      "shadow-[0_1px_15px_rgba(0,0,0,0.1)]",
-      "hover:shadow-[0_1px_20px_rgba(0,0,0,0.15)]",
+      "shadow-[0_2px_15px_rgba(45,69,96,0.3)]",
+      "hover:shadow-[0_2px_20px_rgba(45,69,96,0.4)]",
       "font-semibold text-base",
     ),
   }
 
   const badgeStyles = cn(
     "px-4 py-1.5 text-sm font-medium",
-    "bg-clutsh-navy dark:bg-clutsh-light",
+    "bg-clutsh-slate dark:bg-clutsh-light",
     "text-white dark:text-clutsh-navy",
     "border-none shadow-lg",
   )
@@ -107,7 +108,7 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
           <h2 className="text-3xl font-bold text-clutsh-light">
             Simple, transparent pricing
           </h2>
-          <div className="inline-flex items-center p-1.5 bg-white dark:bg-zinc-800/50 rounded-full border border-zinc-200 dark:border-zinc-700 shadow-sm">
+          <div className="inline-flex items-center p-1.5 bg-clutsh-steel dark:bg-zinc-800/50 rounded-full border border-clutsh-slate/30 dark:border-zinc-700 shadow-sm">
             {["Monthly", "Yearly"].map((period) => (
               <button
                 key={period}
@@ -115,8 +116,8 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
                 className={cn(
                   "px-8 py-2.5 text-sm font-medium rounded-full transition-all duration-300",
                   (period === "Yearly") === isYearly
-                    ? "bg-clutsh-navy dark:bg-clutsh-light text-white dark:text-clutsh-navy shadow-lg"
-                    : "text-clutsh-muted hover:text-clutsh-light",
+                    ? "bg-clutsh-slate dark:bg-clutsh-light text-white dark:text-clutsh-navy shadow-lg"
+                    : "text-clutsh-light hover:text-white",
                 )}
               >
                 {period}
@@ -134,12 +135,12 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
                 "rounded-3xl transition-all duration-300",
                 "flex flex-col",
                 tier.highlight
-                  ? "bg-gradient-to-b from-clutsh-steel/10 to-transparent dark:from-clutsh-light/[0.15]"
-                  : "bg-white dark:bg-clutsh-navy/50",
+                  ? "bg-gradient-to-b from-clutsh-slate/20 to-clutsh-navy/60 shadow-[0_5px_30px_rgba(45,69,96,0.2)]"
+                  : "bg-clutsh-steel dark:bg-clutsh-navy",
                 "border",
                 tier.highlight
-                  ? "border-clutsh-light/20 dark:border-clutsh-light/20 shadow-xl"
-                  : "border-zinc-200 dark:border-clutsh-slate shadow-md",
+                  ? "border-clutsh-slate/30 dark:border-clutsh-light/20"
+                  : "border-clutsh-slate/20 dark:border-clutsh-slate/10",
                 "hover:translate-y-0 hover:shadow-lg",
               )}
             >
@@ -155,8 +156,8 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
                     className={cn(
                       "p-3 rounded-xl",
                       tier.highlight
-                        ? "bg-clutsh-navy/10 dark:bg-clutsh-light/10"
-                        : "bg-zinc-100 dark:bg-clutsh-navy/80",
+                        ? "bg-clutsh-slate/20 dark:bg-clutsh-light/10"
+                        : "bg-clutsh-navy/30 dark:bg-clutsh-navy/80",
                     )}
                   >
                     {tier.icon}
@@ -168,14 +169,14 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-clutsh-light">
+                    <span className="text-4xl font-bold text-white">
                       ${isYearly ? tier.price.yearly : tier.price.monthly}
                     </span>
-                    <span className="text-sm text-clutsh-muted">
+                    <span className="text-sm text-clutsh-light">
                       /{isYearly ? "year" : "month"}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-clutsh-muted">
+                  <p className="mt-2 text-sm text-clutsh-light">
                     {tier.description}
                   </p>
                 </div>
@@ -187,17 +188,17 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
                         className={cn(
                           "mt-1 p-0.5 rounded-full transition-colors duration-200",
                           feature.included
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-zinc-400 dark:text-zinc-600",
+                            ? "text-emerald-400 dark:text-emerald-300"
+                            : "text-zinc-500 dark:text-zinc-600",
                         )}
                       >
                         <CheckIcon className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-clutsh-light">
+                        <div className="text-sm font-medium text-white">
                           {feature.name}
                         </div>
-                        <div className="text-sm text-clutsh-muted">
+                        <div className="text-sm text-clutsh-light">
                           {feature.description}
                         </div>
                       </div>
