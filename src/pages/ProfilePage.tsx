@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
   const { checkSubscriptionStatus } = useAuth();
-  const { logs, loading: logsLoading } = useDetectionLogs();
+  const { logs, loading: logsLoading } = useDetectionLogs({}); // Fixed: Passing empty object as required
   const { insights, loading: insightsLoading } = useDetectionInsights();
   const { stats: userStats, streak: userStreak } = useUserStats();
   
