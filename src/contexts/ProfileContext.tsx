@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,13 +45,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
+      console.log("Fetched profile data:", data);
+
       // Map Supabase profile data to our User type
-      // The 'as any' casting is used to safely access pronouns which might not be in the type definition yet
       const userProfile: User = {
         id: data.id,
-        name: data.username || 'Anonymous',
+        name: data.username || 'Anonymous', // Map username from DB to name in UI
         avatar: data.avatar_url || '/placeholder.svg',
-        pronouns: (data as any).pronouns || '', // Use type assertion to avoid TypeScript error
+        pronouns: data.pronouns || '',
         bio: data.bio || '',
         createdAt: data.created_at,
         lastActive: data.last_activity,
@@ -70,24 +72,37 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!user || !authUser) return;
 
     try {
+      console.log("Updating profile with:", profile);
+      
+      // Validate required fields
+      if (profile.name !== undefined && !profile.name.trim()) {
+        toast.error('Display name cannot be empty');
+        return;
+      }
+      
       // Map our User type to Supabase profile structure
-      // Include pronouns in the update object
       const updates = {
-        username: profile.name,
+        username: profile.name, // Fix: Correctly map name to username
         bio: profile.bio,
         avatar_url: profile.avatar,
-        pronouns: profile.pronouns, // Include pronouns in the update
+        pronouns: profile.pronouns,
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      console.log("Sending update to Supabase:", updates);
+
+      const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (error) {
+        console.error("Supabase update error:", error);
         throw error;
       }
+
+      console.log("Update response from Supabase:", data);
 
       // Update local state with new data
       setUser({
@@ -96,9 +111,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       });
 
       toast.success('Profile updated successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error(`Failed to update profile: ${error.message || 'Unknown error'}`);
       throw error;
     }
   };

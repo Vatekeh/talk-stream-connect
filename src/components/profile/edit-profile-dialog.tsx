@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "@/types";
 import { useForm } from "react-hook-form";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
-import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -49,7 +49,14 @@ export function EditProfileDialog({ isOpen, onClose }: EditProfileDialogProps) {
   const handleSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     
+    // Validate name is not empty
+    if (!values.name.trim()) {
+      toast.error("Display name cannot be empty");
+      return;
+    }
+    
     try {
+      console.log("Submitting form values:", values);
       setIsSubmitting(true);
       
       // Upload avatar if a new one was selected
@@ -63,7 +70,7 @@ export function EditProfileDialog({ isOpen, onClose }: EditProfileDialogProps) {
       
       // Update profile with form values and new avatar
       await updateProfile({
-        name: values.name,
+        name: values.name.trim(),
         pronouns: values.pronouns,
         bio: values.bio,
         avatar: avatarUrl,
@@ -72,6 +79,7 @@ export function EditProfileDialog({ isOpen, onClose }: EditProfileDialogProps) {
       onClose();
     } catch (error) {
       console.error("Error saving profile:", error);
+      // Error is already handled in updateProfile
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +139,7 @@ export function EditProfileDialog({ isOpen, onClose }: EditProfileDialogProps) {
                 <FormItem>
                   <FormLabel>Display Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your name" {...field} />
+                    <Input placeholder="Your name" {...field} required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
