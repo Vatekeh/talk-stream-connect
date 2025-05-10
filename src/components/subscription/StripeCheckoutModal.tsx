@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -37,6 +37,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess }: StripeChe
             throw new Error("You must be logged in to subscribe");
           }
           
+          // Use supabase.functions.invoke instead of raw fetch
           const { data, error } = await supabase.functions.invoke('create-payment-intent', {
             body: {},
             headers: {

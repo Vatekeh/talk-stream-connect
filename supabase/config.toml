@@ -33,3 +33,18 @@ port = 54328
 
 [functions.detection-logs]
 verify_jwt = true
+
+[functions.create-payment-intent]
+verify_jwt = true
+
+[functions.create-subscription]
+verify_jwt = true
+
+[functions.billing-portal]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
