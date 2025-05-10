@@ -1,47 +1,71 @@
-
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileCombinedStats } from "./profile-combined-stats";
+import { ProfileStats } from "./profile-stats";
+import { ProfileStreaks } from "./profile-streaks";
+import { ProfileNsfwLog } from "./profile-nsfw-log";
 import { ProfileSaves } from "./profile-saves";
 import { ProfileClips } from "./profile-clips";
-import { Save, Clip, NsfwContentLog, NsfwUserInsights, UserStats, UserStreak } from "@/types";
-import { Loader } from "lucide-react";
+import { AnalyticsUpgradePrompt } from "./analytics-upgrade-prompt";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileTabsProps {
-  stats: UserStats;
-  nsfwLogs: NsfwContentLog[];
-  nsfwInsights: NsfwUserInsights | null;
-  streak: UserStreak;
-  saves: Save[];
-  clips: Clip[];
+  stats: any;
+  streak: any;
+  nsfwLogs: any[];
+  nsfwInsights: any;
+  saves: any[];
+  clips: any[];
   logsLoading?: boolean;
   insightsLoading?: boolean;
 }
 
-export function ProfileTabs({ 
-  stats, 
-  nsfwLogs, 
-  nsfwInsights, 
-  streak, 
-  saves, 
+export function ProfileTabs({
+  stats,
+  streak,
+  nsfwLogs,
+  nsfwInsights,
+  saves,
   clips,
-  logsLoading = false,
-  insightsLoading = false
+  logsLoading,
+  insightsLoading
 }: ProfileTabsProps) {
+  const [activeTab, setActiveTab] = useState("stats");
+  const { isSubscribed } = useAuth();
+
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid grid-cols-4 mb-6">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
+    <Tabs defaultValue="stats" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList>
+        <TabsTrigger value="stats">Stats</TabsTrigger>
+        <TabsTrigger value="streaks">Streaks</TabsTrigger>
+        <TabsTrigger value="nsfw">Content Log</TabsTrigger>
         <TabsTrigger value="saves">Saves</TabsTrigger>
         <TabsTrigger value="clips">Clips</TabsTrigger>
-        <TabsTrigger value="activity">Activity</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="overview">
-        <ProfileCombinedStats 
-          stats={stats} 
-          streak={streak}
-          logsLoading={logsLoading}
-          insightsLoading={insightsLoading}
+      <TabsContent value="stats" className="space-y-6">
+        {isSubscribed ? (
+          <ProfileStats stats={stats} />
+        ) : (
+          <AnalyticsUpgradePrompt />
+        )}
+      </TabsContent>
+      
+      <TabsContent value="streaks">
+        <div className="space-y-6">
+          {isSubscribed ? (
+            <ProfileStreaks streak={streak} />
+          ) : (
+            <AnalyticsUpgradePrompt />
+          )}
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="nsfw">
+        <ProfileNsfwLog 
+          logs={nsfwLogs}
+          insights={nsfwInsights}
+          loading={logsLoading || insightsLoading}
+          isSubscribed={isSubscribed}
         />
       </TabsContent>
       
@@ -51,15 +75,6 @@ export function ProfileTabs({
       
       <TabsContent value="clips">
         <ProfileClips clips={clips} />
-      </TabsContent>
-      
-      <TabsContent value="activity">
-        <ProfileCombinedStats 
-          stats={stats}
-          streak={streak}
-          logsLoading={logsLoading}
-          insightsLoading={insightsLoading}
-        />
       </TabsContent>
     </Tabs>
   );
