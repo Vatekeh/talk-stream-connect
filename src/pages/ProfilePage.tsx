@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function ProfilePage() {
   const { checkSubscriptionStatus } = useAuth();
   const { logs, loading: logsLoading } = useDetectionLogs({}); // Fixed: Passing empty object as required
-  const { insights, loading: insightsLoading } = useDetectionInsights();
+  const { insights, loading: insightsLoading } = useDetectionInsights({ logs, loading: logsLoading }); // Fixed: Passing required arguments
   const { stats: userStats, streak: userStreak } = useUserStats();
   
   // Fetch subscription status when the page loads
