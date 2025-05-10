@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { ShieldAlert, History, DollarSign } from "lucide-react";
+import { ShieldAlert, History } from "lucide-react";
 
 interface NavigationLinksProps {
   isModerator?: boolean;
@@ -21,14 +21,6 @@ export function NavigationLinks({
         onClick={onClickLink}
       >
         Home
-      </Link>
-      <Link 
-        to="/pricing" 
-        className="text-sm font-medium flex items-center gap-1"
-        onClick={onClickLink}
-      >
-        <DollarSign size={14} />
-        Pricing
       </Link>
       {isModerator && (
         <Link 
