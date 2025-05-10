@@ -1,10 +1,13 @@
-import { useAuth } from "@/contexts/AuthContext";
+
+import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { PricingTier } from "./types";
+import { useState } from "react";
 
 export function usePricingActions() {
   const { isSubscribed, createSubscription, manageSubscription } = useAuth();
   const navigate = useNavigate();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const handlePricingAction = (tier: PricingTier) => {
     if (tier.name === "Free") {
@@ -18,8 +21,8 @@ export function usePricingActions() {
       // If already subscribed, go to subscription management
       manageSubscription();
     } else {
-      // Otherwise create a new subscription
-      createSubscription();
+      // Open the checkout modal for new subscriptions
+      setIsCheckoutOpen(true);
     }
   };
 
@@ -38,5 +41,7 @@ export function usePricingActions() {
   return {
     handlePricingAction,
     getButtonText,
+    isCheckoutOpen,
+    setIsCheckoutOpen
   };
 }

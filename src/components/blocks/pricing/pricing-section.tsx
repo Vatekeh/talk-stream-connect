@@ -7,10 +7,11 @@ import { PricingSectionProps } from "./types"
 import { PricingToggle } from "./pricing-toggle"
 import { PricingCard } from "./pricing-card"
 import { usePricingActions } from "./use-pricing-actions"
+import { StripeCheckoutModal } from "@/components/subscription/StripeCheckoutModal"
 
 function PricingSection({ tiers, className }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false)
-  const { handlePricingAction, getButtonText } = usePricingActions()
+  const { handlePricingAction, getButtonText, isCheckoutOpen, setIsCheckoutOpen } = usePricingActions()
 
   return (
     <section
@@ -41,6 +42,12 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
           ))}
         </div>
       </div>
+      
+      {/* Stripe Checkout Modal */}
+      <StripeCheckoutModal 
+        open={isCheckoutOpen} 
+        onOpenChange={setIsCheckoutOpen} 
+      />
     </section>
   )
 }
