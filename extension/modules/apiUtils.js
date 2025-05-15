@@ -17,6 +17,12 @@ async function safePostToApi(endpoint, data, token) {
       body: JSON.stringify(data)
     });
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error (${response.status}):`, errorText);
+      return { error: `Request failed with status ${response.status}` };
+    }
+    
     return await response.json();
   } catch (error) {
     console.error(`API request to ${endpoint} failed:`, error);

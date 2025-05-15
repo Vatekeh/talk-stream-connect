@@ -1,7 +1,7 @@
 
 // Room service module - handles all room-related API calls
 
-const BASE_API_URL = 'https://ggbvhsuuwqwjghxpuapg.supabase.co/functions/v1';
+const BASE_API_URL = 'https://ggbvhsuuwqwjghxpuapg.functions.supabase.co';
 
 // Cache support room data (update every 2 minutes)
 const PEER_CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutes in milliseconds

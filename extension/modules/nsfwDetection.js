@@ -83,7 +83,7 @@ async function report(mediaUrl, detectedClass, confidence) {
   
   try {
     // Use the Supabase edge function endpoint
-    await fetch('https://ggbvhsuuwqwjghxpuapg.supabase.co/functions/v1/nsfw-detections', {
+    await fetch('https://ggbvhsuuwqwjghxpuapg.functions.supabase.co/nsfw-detections', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,8 +92,8 @@ async function report(mediaUrl, detectedClass, confidence) {
       body: JSON.stringify(payload)
     });
     chrome.storage.local.set({ lastDetection: payload });
-  } catch {
-    /* network error */
+  } catch (error) {
+    console.error('Error reporting NSFW content:', error);
   }
 }
 
