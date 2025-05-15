@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,7 +62,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-                talkstream: {
+                clutsh: {
                     purple: {
                         light: '#9b87f5',
                         DEFAULT: '#8B5CF6',
@@ -73,9 +72,7 @@ export default {
                         light: '#F6F6F7',
                         DEFAULT: '#F1F1F1',
                         dark: '#E5DEFF'
-                    }
-                },
-                clutsh: {
+                    },
                     midnight: '#0A1B2A',
                     steel: '#1C2F46',
                     slate: '#2D4560', 

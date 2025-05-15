@@ -10,8 +10,8 @@ const Index = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-12">
           <div className="flex items-center space-x-2">
-            <HandHelping className="w-8 h-8 text-talkstream-purple" />
-            <span className="text-xl font-bold text-white">Clutch</span>
+            <HandHelping className="w-8 h-8 text-clutsh-purple" />
+            <span className="text-xl font-bold text-white">Clutsh</span>
           </div>
           <nav className="flex space-x-4">
             <Link to="/terms">
@@ -39,14 +39,14 @@ const Index = () => {
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
                 When You Need a
-                <span className="text-talkstream-purple"> Helping Hand</span>
+                <span className="text-clutsh-purple"> Helping Hand</span>
               </h1>
               <p className="text-gray-300 text-lg mb-8 max-w-xl">
                 Connect with professionals who are ready to support you through your journey. 
                 Experience personalized guidance and unwavering support.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button className="bg-talkstream-purple hover:bg-talkstream-purple/90 text-white px-8">
+                <Button className="bg-clutsh-purple hover:bg-clutsh-purple/90 text-white px-8">
                   Get Started
                 </Button>
                 <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
@@ -75,7 +75,7 @@ const Index = () => {
         <footer className="mt-24 border-t border-white/10 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-white/70 text-sm mb-4 md:mb-0">
-              &copy; {new Date().getFullYear()} Clutch. All rights reserved.
+              &copy; {new Date().getFullYear()} Clutsh. All rights reserved.
             </p>
             <div className="flex space-x-6">
               <Link to="/terms" className="text-white/70 hover:text-white text-sm">

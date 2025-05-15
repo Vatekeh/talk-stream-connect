@@ -14,7 +14,7 @@ export function BadgePulse({
 }: BadgePulseProps) {
   const colorClasses = {
     default: "bg-slate-100 text-slate-800",
-    purple: "bg-talkstream-purple/10 text-talkstream-purple",
+    purple: "bg-clutsh-purple/10 text-clutsh-purple",
     red: "bg-red-100 text-red-800",
     green: "bg-green-100 text-green-800"
   };
@@ -29,14 +29,14 @@ export function BadgePulse({
         <span className={cn(
           "animate-pulse-light absolute inline-flex h-full w-full rounded-full opacity-75",
           color === "default" ? "bg-slate-400" : 
-          color === "purple" ? "bg-talkstream-purple" : 
+          color === "purple" ? "bg-clutsh-purple" : 
           color === "red" ? "bg-red-400" : 
           "bg-green-400"
         )}></span>
         <span className={cn(
           "relative inline-flex rounded-full h-2 w-2",
           color === "default" ? "bg-slate-500" : 
-          color === "purple" ? "bg-talkstream-purple-dark" : 
+          color === "purple" ? "bg-clutsh-purple-dark" : 
           color === "red" ? "bg-red-500" : 
           "bg-green-500"
         )}></span>

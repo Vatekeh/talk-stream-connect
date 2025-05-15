@@ -11,13 +11,13 @@ interface BaseSettingsItemProps {
 interface SettingsLinkItemProps extends BaseSettingsItemProps {
   to: string;
   onClick?: never;
-  external?: boolean;  // Explicitly define the external property here
+  external?: boolean;
 }
 
 interface SettingsButtonItemProps extends BaseSettingsItemProps {
   to?: never;
   onClick: () => void;
-  external?: never;  // Make it clear this prop doesn't apply to button items
+  external?: never;
 }
 
 type SettingsItemProps = SettingsLinkItemProps | SettingsButtonItemProps;
