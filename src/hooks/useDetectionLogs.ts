@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { NsfwContentLog } from '@/types';
 import { toast } from 'sonner';
+import { safePostToApi } from '@/integrations/supabase/api-utils';
 
 interface UseDetectionLogsProps {
   userId?: string;
@@ -24,18 +25,18 @@ export function useDetectionLogs({
       setLoading(true);
       setError(null);
       try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        let url = `${supabaseUrl}/functions/v1/detection-logs`;
-        if (userId) {
-          url += `?userId=${userId}`;
-        }
-        
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData?.session?.access_token) {
           throw new Error('No authenticated session found');
         }
         
-        console.log('Fetching detection logs from:', url);
+        // Use the full Supabase function URL with project ID
+        const functionUrl = 'https://ggbvhsuuwqwjghxpuapg.functions.supabase.co/detection-logs';
+        console.log('Fetching detection logs from:', functionUrl);
+        
+        // Add userId as a query parameter if provided
+        const url = userId ? `${functionUrl}?userId=${userId}` : functionUrl;
+        
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${sessionData.session.access_token}`,
