@@ -1,5 +1,6 @@
 
 import * as nsfwjs from 'https://cdn.jsdelivr.net/npm/nsfwjs/dist/nsfwjs.esm.js';
+import { safePostToApi } from './apiUtils.js';
 
 // Configuration
 const THRESHOLD = 0.75;
@@ -82,16 +83,15 @@ async function report(mediaUrl, detectedClass, confidence) {
   };
   
   try {
-    // Use the Supabase edge function endpoint
-    await fetch('https://ggbvhsuuwqwjghxpuapg.functions.supabase.co/nsfw-detections', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${clutchToken}`
-      },
-      body: JSON.stringify(payload)
-    });
+    // Use the safePostToApi utility for consistent error handling
+    const response = await safePostToApi('/nsfw-detections', payload, clutchToken);
+    
+    // Store last detection regardless of API response success
     chrome.storage.local.set({ lastDetection: payload });
+    
+    if (response.error) {
+      console.error('Error reporting NSFW content:', response.error);
+    }
   } catch (error) {
     console.error('Error reporting NSFW content:', error);
   }

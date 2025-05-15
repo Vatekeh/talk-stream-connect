@@ -24,10 +24,16 @@ async function fetchRoomStatus(token, userId) {
       body: JSON.stringify({ userId })
     });
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Room status API error (${response.status}):`, errorText);
+      return { error: `Request failed with status ${response.status}` };
+    }
+    
     return await response.json();
   } catch (error) {
     console.error('Error fetching room status:', error);
-    throw error;
+    return { error: error.message || 'Network error occurred' };
   }
 }
 
@@ -49,10 +55,16 @@ async function handleEdgingDetection(token, userId) {
       body: JSON.stringify({ userId })
     });
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Edging detection API error (${response.status}):`, errorText);
+      return { error: `Request failed with status ${response.status}` };
+    }
+    
     return await response.json();
   } catch (error) {
     console.error('Error handling edging detection:', error);
-    throw error;
+    return { error: error.message || 'Network error occurred' };
   }
 }
 
@@ -74,10 +86,16 @@ async function joinInvite(token, inviteId) {
       body: JSON.stringify({ inviteId })
     });
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Join invite API error (${response.status}):`, errorText);
+      return { error: `Request failed with status ${response.status}` };
+    }
+    
     return await response.json();
   } catch (error) {
     console.error('Error joining invite:', error);
-    throw error;
+    return { error: error.message || 'Network error occurred' };
   }
 }
 
