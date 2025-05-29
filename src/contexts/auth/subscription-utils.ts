@@ -1,104 +1,134 @@
 
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /**
- * Create subscription function - creates a new subscription for the user
- * with a 30-day free trial
+ * Create a new subscription for the user
  */
-export const createSubscription = async (userId: string | undefined) => {
+export const createSubscription = async (userId?: string) => {
   if (!userId) {
-    toast.error("You must be logged in to subscribe");
+    toast.error("User not authenticated");
     return;
   }
-  
+
   try {
-    toast.loading("Setting up your subscription...");
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("No active session");
-    
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      toast.error("No authenticated session found");
+      return;
+    }
+
+    console.log("Creating subscription for user:", userId);
     const { data, error } = await supabase.functions.invoke('create-subscription', {
-      body: {},
       headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+      body: JSON.stringify({})
     });
-    
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || "Failed to create subscription");
-    
-    toast.dismiss();
-    toast.success("Your 30-day free trial has been activated!");
-    
-    return data;
-  } catch (error: any) {
-    toast.dismiss();
-    toast.error(error.message);
+
+    if (error) {
+      console.error("Error creating subscription:", error);
+      toast.error(`Failed to create subscription: ${error.message}`);
+      return;
+    }
+
+    if (data?.error) {
+      console.error("Subscription creation error:", data.error);
+      toast.error(`Subscription error: ${data.error}`);
+      return;
+    }
+
+    if (data?.success) {
+      toast.success("Subscription created successfully! Your 30-day trial has started.");
+      return data;
+    }
+
+    console.error("Unexpected response:", data);
+    toast.error("Unexpected response from subscription service");
+  } catch (error) {
     console.error("Error creating subscription:", error);
-    return null;
+    toast.error("Failed to create subscription. Please try again.");
   }
 };
 
 /**
- * Manage subscription function - redirects the user to the Stripe billing portal
+ * Open the Stripe billing portal for subscription management
  */
-export const manageSubscription = async (userId: string | undefined) => {
+export const manageSubscription = async (userId?: string) => {
   if (!userId) {
-    toast.error("You must be logged in to manage your subscription");
+    toast.error("User not authenticated");
     return;
   }
-  
+
   try {
-    toast.loading("Preparing billing portal...");
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("No active session");
-    
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      toast.error("No authenticated session found");
+      return;
+    }
+
+    console.log("Opening billing portal for user:", userId);
     const { data, error } = await supabase.functions.invoke('billing-portal', {
-      body: {},
       headers: {
-        Authorization: `Bearer ${session.access_token}`
+        Authorization: `Bearer ${sessionData.session.access_token}`,
       }
     });
-    
-    if (error) throw new Error(error.message);
-    if (!data.url) throw new Error("Failed to create billing portal session");
-    
-    toast.dismiss();
-    
-    // Redirect to Stripe billing portal
-    window.location.href = data.url;
-  } catch (error: any) {
-    toast.dismiss();
-    toast.error(error.message);
-    console.error("Error managing subscription:", error);
+
+    if (error) {
+      console.error("Error accessing billing portal:", error);
+      toast.error(`Failed to open billing portal: ${error.message}`);
+      return;
+    }
+
+    if (data?.error) {
+      console.error("Billing portal error:", data.error);
+      toast.error(`Billing portal error: ${data.error}`);
+      return;
+    }
+
+    if (data?.url) {
+      // Open billing portal in new tab
+      window.open(data.url, '_blank');
+      return;
+    }
+
+    console.error("No URL received from billing portal:", data);
+    toast.error("Failed to get billing portal URL");
+  } catch (error) {
+    console.error("Error opening billing portal:", error);
+    toast.error("Failed to open billing portal. Please try again.");
   }
 };
 
 /**
- * Check subscription status - fetches current subscription data from the server
+ * Check the current subscription status
  */
-export const checkSubscriptionStatus = async (userId: string | undefined) => {
-  if (!userId) return null;
-  
+export const checkSubscriptionStatus = async (userId: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
-    
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.access_token) {
+      console.error("No authenticated session found");
+      return null;
+    }
+
+    console.log("Checking subscription status for user:", userId);
     const { data, error } = await supabase.functions.invoke('check-subscription', {
-      body: {},
       headers: {
-        Authorization: `Bearer ${session.access_token}`
+        Authorization: `Bearer ${sessionData.session.access_token}`,
       }
     });
-    
+
     if (error) {
       console.error("Error checking subscription:", error);
       return null;
     }
-    
-    console.log("Subscription checked:", data);
+
+    if (data?.error) {
+      console.error("Subscription check error:", data.error);
+      return null;
+    }
+
+    console.log("Subscription status data:", data);
     return data;
   } catch (error) {
     console.error("Error checking subscription status:", error);

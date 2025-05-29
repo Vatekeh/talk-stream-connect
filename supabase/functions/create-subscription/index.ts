@@ -25,7 +25,14 @@ serve(async (req) => {
 
     // Initialize Stripe with the secret key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      const error = "STRIPE_SECRET_KEY is not set in environment variables";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     logStep("Stripe initialized");
 
@@ -39,13 +46,36 @@ serve(async (req) => {
 
     // Verify authentication
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      const error = "No authorization header provided";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      const error = `Authentication error: ${userError.message}`;
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    if (!user?.email) {
+      const error = "User not authenticated or email not available";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get user profile from database
     const { data: profile, error: profileError } = await supabaseClient
@@ -54,7 +84,14 @@ serve(async (req) => {
       .eq("id", user.id)
       .single();
       
-    if (profileError) throw new Error(`Error fetching profile: ${profileError.message}`);
+    if (profileError) {
+      const error = `Error fetching profile: ${profileError.message}`;
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     logStep("User profile fetched", { profileId: profile.id });
 
     // If user has an active subscription, return it
@@ -73,6 +110,29 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
+
+    // Parse request body for price_id
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      logStep("No request body provided, using default price");
+      requestBody = {};
+    }
+
+    // Use provided price_id or default
+    // TODO: Replace this with your actual Stripe price ID from your dashboard
+    const priceId = requestBody.price_id || 'price_1RMsRa2eLXgO7GQNGrcT0Cv6';
+    
+    if (!priceId) {
+      const error = "No price_id provided and no default price configured";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+    logStep("Using price ID", { priceId });
 
     // Create or retrieve a Stripe customer
     let customerId = profile.stripe_customer_id;
@@ -95,7 +155,7 @@ serve(async (req) => {
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [
-        { price: 'price_1RMsRa2eLXgO7GQNGrcT0Cv6' }, // Replace with your actual price ID
+        { price: priceId },
       ],
       trial_period_days: 30,
       metadata: {
@@ -126,7 +186,14 @@ serve(async (req) => {
       })
       .eq("id", user.id);
 
-    if (updateError) throw new Error(`Error updating profile: ${updateError.message}`);
+    if (updateError) {
+      const error = `Error updating profile: ${updateError.message}`;
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     logStep("User profile updated with subscription data");
 
     // Return success response with subscription details
@@ -146,10 +213,10 @@ serve(async (req) => {
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[CREATE-SUBSCRIPTION] Error: ${errorMessage}`);
+    logStep("ERROR in create-subscription", { error: errorMessage, stack: error.stack });
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      JSON.stringify({ error: `Subscription creation failed: ${errorMessage}` }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });

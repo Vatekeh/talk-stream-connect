@@ -25,7 +25,14 @@ serve(async (req) => {
 
     // Initialize Stripe with the secret key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      const error = "STRIPE_SECRET_KEY is not set in environment variables";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     logStep("Stripe initialized");
 
@@ -39,74 +46,120 @@ serve(async (req) => {
 
     // Verify authentication
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      const error = "No authorization header provided";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      const error = `Authentication error: ${userError.message}`;
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    if (!user?.email) {
+      const error = "User not authenticated or email not available";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Get user profile from database
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-      
-    if (profileError) throw new Error(`Error fetching profile: ${profileError.message}`);
-    logStep("User profile fetched", { profileId: profile.id });
+    // Parse request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      const error = "Invalid JSON in request body";
+      logStep("ERROR", { error, parseError: parseError.message });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
 
-    // Create or retrieve a Stripe customer
-    let customerId = profile.stripe_customer_id;
-    if (!customerId) {
-      logStep("Creating new Stripe customer");
-      const customer = await stripe.customers.create({
+    const { amount, currency = "usd" } = requestBody;
+    
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      const error = "Valid amount in cents is required";
+      logStep("ERROR", { error, receivedAmount: amount });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+    logStep("Request validated", { amount, currency });
+
+    // Get or create Stripe customer
+    let customer;
+    const existingCustomers = await stripe.customers.list({
+      email: user.email,
+      limit: 1
+    });
+
+    if (existingCustomers.data.length > 0) {
+      customer = existingCustomers.data[0];
+      logStep("Found existing customer", { customerId: customer.id });
+    } else {
+      customer = await stripe.customers.create({
         email: user.email,
         metadata: {
           userId: user.id
         }
       });
-      customerId = customer.id;
-      logStep("Stripe customer created", { customerId });
-      
+      logStep("Created new customer", { customerId: customer.id });
+
       // Update profile with customer ID
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from("profiles")
-        .update({ stripe_customer_id: customerId })
+        .update({ stripe_customer_id: customer.id })
         .eq("id", user.id);
-      
-      logStep("Profile updated with customer ID");
-    } else {
-      logStep("Using existing Stripe customer", { customerId });
+
+      if (updateError) {
+        logStep("Warning: Could not update profile with customer ID", { error: updateError.message });
+      } else {
+        logStep("Updated profile with customer ID");
+      }
     }
 
-    // Create a PaymentIntent or SetupIntent
-    // For subscriptions, we'll use a SetupIntent since the actual charging happens later
-    const setupIntent = await stripe.setupIntents.create({
-      customer: customerId,
-      payment_method_types: ['card'],
+    // Create payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      customer: customer.id,
+      setup_future_usage: 'off_session',
       metadata: {
         userId: user.id
       }
     });
-    logStep("Setup intent created", { setupIntentId: setupIntent.id });
+    logStep("Payment intent created", { paymentIntentId: paymentIntent.id });
 
-    // Return success response with the client secret
     return new Response(
-      JSON.stringify({
-        clientSecret: setupIntent.client_secret,
-        customerId: customerId
+      JSON.stringify({ 
+        client_secret: paymentIntent.client_secret,
+        payment_intent_id: paymentIntent.id
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
-    
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[CREATE-PAYMENT-INTENT] Error: ${errorMessage}`);
+    logStep("ERROR in create-payment-intent", { error: errorMessage, stack: error.stack });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      JSON.stringify({ error: `Payment intent creation failed: ${errorMessage}` }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
