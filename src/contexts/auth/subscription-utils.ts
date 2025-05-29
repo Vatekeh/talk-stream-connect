@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
- * Create a new subscription for the user
+ * Create a new subscription for the user (now handled by StripeCheckoutModal)
+ * This function is kept for compatibility but the main flow now uses the modal
  */
 export const createSubscription = async (userId?: string) => {
   if (!userId) {
@@ -39,8 +40,14 @@ export const createSubscription = async (userId?: string) => {
     }
 
     if (data?.success) {
-      toast.success("Subscription created successfully! Your 30-day trial has started.");
-      return data;
+      // For direct subscription creation, we get a client secret back
+      if (data.clientSecret) {
+        toast.info("Subscription created! Please complete payment to activate.");
+        return data;
+      } else {
+        toast.success("Subscription created successfully! Your 30-day trial has started.");
+        return data;
+      }
     }
 
     console.error("Unexpected response:", data);

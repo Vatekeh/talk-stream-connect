@@ -1,17 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 
 interface StripeElementsFormProps {
   onSuccess: () => void;
+  subscriptionId?: string | null;
 }
 
-export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
+export function StripeElementsForm({ onSuccess, subscriptionId }: StripeElementsFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const { checkSubscriptionStatus } = useAuth();
@@ -31,7 +31,9 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
     setMessage(null);
 
     try {
-      // Confirm the payment
+      console.log("Confirming payment for subscription...");
+      
+      // Confirm the payment for the subscription
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -41,31 +43,12 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
       });
 
       if (stripeError) {
+        console.error("Stripe payment error:", stripeError);
         setMessage(stripeError.message || "An unexpected error occurred");
         return;
       }
       
-      // Payment successful, now create subscription in our backend
-      toast.loading("Finalizing your subscription...");
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Session expired, please log in again");
-      }
-      
-      // Call our create-subscription function
-      const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: {},
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-      
-      if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || "Failed to create subscription");
-      
-      toast.dismiss();
+      console.log("Payment confirmed successfully");
       toast.success("Your subscription has been activated!");
       
       // Update subscription status in context
@@ -78,7 +61,6 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
       
     } catch (error: any) {
       console.error("Payment error:", error);
-      toast.dismiss();
       toast.error(error.message || "Failed to process payment");
       setMessage(error.message || "Something went wrong");
     } finally {
@@ -91,7 +73,7 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
       <div className="flex flex-col items-center justify-center py-8 space-y-4 text-clutsh-light">
         <CheckCircle className="h-12 w-12 text-green-500 animate-scale-in" />
         <p>Payment successful!</p>
-        <p className="text-sm text-clutsh-muted">Redirecting...</p>
+        <p className="text-sm text-clutsh-muted">Your subscription is now active!</p>
       </div>
     );
   }
@@ -112,7 +94,7 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
       
       {/* Terms and conditions */}
       <div className="text-xs text-clutsh-muted">
-        By subscribing, you agree to our <a href="/terms" className="text-clutsh-light hover:underline">Terms of Service</a> and authorize Clutsh to charge your card until you cancel.
+        By subscribing, you agree to our <a href="/terms" className="text-clutsh-light hover:underline">Terms of Service</a> and authorize Clutsh to charge your card until you cancel. Your 30-day free trial starts immediately.
       </div>
       
       {/* Submit button */}
@@ -126,7 +108,7 @@ export function StripeElementsForm({ onSuccess }: StripeElementsFormProps) {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
           </>
-        ) : "Subscribe Now"}
+        ) : "Start Free Trial"}
       </Button>
     </form>
   );

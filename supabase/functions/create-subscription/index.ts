@@ -120,12 +120,12 @@ serve(async (req) => {
       requestBody = {};
     }
 
-    // Use provided price_id or default
-    // TODO: Replace this with your actual Stripe price ID from your dashboard
-    const priceId = requestBody.price_id || 'price_1RMsRa2eLXgO7GQNGrcT0Cv6';
+    // PLACEHOLDER: Replace this with your actual Stripe price ID from your dashboard
+    // To get this: Go to Stripe Dashboard → Products → Create a $19.99/month product → Copy the price ID
+    const priceId = requestBody.price_id || 'REPLACE_WITH_YOUR_REAL_STRIPE_PRICE_ID';
     
-    if (!priceId) {
-      const error = "No price_id provided and no default price configured";
+    if (priceId === 'REPLACE_WITH_YOUR_REAL_STRIPE_PRICE_ID') {
+      const error = "Please replace the placeholder price_id with your actual Stripe price ID";
       logStep("ERROR", { error });
       return new Response(
         JSON.stringify({ error }),
@@ -146,23 +146,45 @@ serve(async (req) => {
       });
       customerId = customer.id;
       logStep("Stripe customer created", { customerId });
+
+      // Update profile with customer ID
+      const { error: updateError } = await supabaseClient
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+
+      if (updateError) {
+        logStep("Warning: Could not update profile with customer ID", { error: updateError.message });
+      }
     } else {
       logStep("Using existing Stripe customer", { customerId });
     }
 
-    // Create a subscription with a 30-day trial
-    logStep("Creating subscription with 30-day trial");
+    // Create a subscription with incomplete payment behavior to get client_secret
+    logStep("Creating subscription with incomplete payment behavior");
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      items: [
-        { price: priceId },
-      ],
+      items: [{ price: priceId }],
+      payment_behavior: 'default_incomplete',
+      payment_settings: { save_default_payment_method: 'on_subscription' },
+      expand: ['latest_invoice.payment_intent'],
       trial_period_days: 30,
       metadata: {
         userId: user.id
       }
     });
     logStep("Subscription created", { subscriptionId: subscription.id });
+
+    // Get the client secret from the payment intent
+    const clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
+    if (!clientSecret) {
+      const error = "No client secret found in subscription payment intent";
+      logStep("ERROR", { error });
+      return new Response(
+        JSON.stringify({ error }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
 
     // Calculate trial end date and current period end
     const trialEnd = subscription.trial_end 
@@ -196,11 +218,12 @@ serve(async (req) => {
     }
     logStep("User profile updated with subscription data");
 
-    // Return success response with subscription details
+    // Return success response with client secret for payment confirmation
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Subscription created successfully",
+        clientSecret: clientSecret,
+        subscriptionId: subscription.id,
         subscription: {
           id: subscription.id,
           status: subscription.status,
