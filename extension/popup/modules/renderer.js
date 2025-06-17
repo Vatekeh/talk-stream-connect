@@ -35,6 +35,28 @@ export function renderPopup(state) {
     </div>
   `;
   
+  // Build subscription section HTML
+  const subscriptionSectionHtml = state.isAuthenticated ? `
+    <div class="subscription-section">
+      <div class="subscription-status ${state.isSubscribed ? 'pro' : 'free'}">
+        ${state.isSubscribed 
+          ? `<p><strong>✨ Clutsh Pro</strong></p>
+             <p>Premium features unlocked</p>`
+          : `<p><strong>Free Plan</strong></p>
+             <p>Upgrade to unlock premium features</p>`
+        }
+      </div>
+      ${state.isSubscribed 
+        ? `<button id="manage-subscription" class="subscription-button secondary">
+            Manage Subscription
+          </button>`
+        : `<button id="subscription-button" class="subscription-button success">
+            Upgrade to Pro
+          </button>`
+      }
+    </div>
+  ` : '';
+  
   // Build support button HTML based on status
   const supportButtonHtml = `
     <div class="support-section">
@@ -67,6 +89,8 @@ export function renderPopup(state) {
   
   app.innerHTML = `
     ${authSectionHtml}
+    
+    ${subscriptionSectionHtml}
     
     <h1>${state.enabled ? '✅ Enabled' : '⛔️ Disabled'}</h1>
     ${state.last

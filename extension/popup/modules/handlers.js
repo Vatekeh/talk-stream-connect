@@ -1,7 +1,7 @@
 
 // Event Handlers module
 import { getState, toggleFilter } from './state.js';
-import { handleAuth, joinSupportRoom } from './api.js';
+import { handleAuth, joinSupportRoom, createSubscription, openBillingPortal } from './api.js';
 import { renderPopup } from './renderer.js';
 
 /**
@@ -24,6 +24,18 @@ export function attachEventHandlers() {
   const clutshButton = document.getElementById('clutsh-in');
   if (clutshButton) {
     clutshButton.onclick = handleSupportRoomClick;
+  }
+  
+  // Handle subscription button click
+  const subscriptionButton = document.getElementById('subscription-button');
+  if (subscriptionButton) {
+    subscriptionButton.onclick = handleSubscriptionClick;
+  }
+  
+  // Handle manage subscription button click
+  const manageButton = document.getElementById('manage-subscription');
+  if (manageButton) {
+    manageButton.onclick = handleManageSubscriptionClick;
   }
 }
 
@@ -65,5 +77,86 @@ async function handleSupportRoomClick() {
   } catch (error) {
     console.error('Support room error:', error);
     alert(error.message);
+  }
+}
+
+/**
+ * Handle subscription button click
+ */
+async function handleSubscriptionClick() {
+  const state = getState();
+  
+  if (!state.isAuthenticated) {
+    alert('Please sign in to subscribe');
+    return;
+  }
+  
+  try {
+    // Show loading state
+    const button = document.getElementById('subscription-button');
+    if (button) {
+      button.textContent = 'Creating...';
+      button.disabled = true;
+      button.classList.add('loading');
+    }
+    
+    const result = await createSubscription(); // Use default price
+    
+    if (result.success) {
+      // Success message will be shown by the background script opening checkout
+      console.log('Subscription creation initiated successfully');
+    } else {
+      throw new Error(result.error || 'Failed to create subscription');
+    }
+  } catch (error) {
+    console.error('Subscription error:', error);
+    alert(error.message || 'Failed to create subscription');
+  } finally {
+    // Reset button state
+    const button = document.getElementById('subscription-button');
+    if (button) {
+      button.disabled = false;
+      button.classList.remove('loading');
+      renderPopup(getState()); // Re-render to restore proper button text
+    }
+  }
+}
+
+/**
+ * Handle manage subscription button click
+ */
+async function handleManageSubscriptionClick() {
+  const state = getState();
+  
+  if (!state.isAuthenticated) {
+    alert('Please sign in to manage your subscription');
+    return;
+  }
+  
+  try {
+    // Show loading state
+    const button = document.getElementById('manage-subscription');
+    if (button) {
+      button.textContent = 'Opening...';
+      button.disabled = true;
+      button.classList.add('loading');
+    }
+    
+    const result = await openBillingPortal();
+    
+    if (!result.success && result.error) {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Billing portal error:', error);
+    alert(error.message || 'Failed to open billing portal');
+  } finally {
+    // Reset button state
+    const button = document.getElementById('manage-subscription');
+    if (button) {
+      button.disabled = false;
+      button.classList.remove('loading');
+      renderPopup(getState()); // Re-render to restore proper button text
+    }
   }
 }

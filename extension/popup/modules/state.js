@@ -12,7 +12,8 @@ const initialState = {
   inviteTimeRemaining: 0,
   currentInviteId: null,
   isAuthenticated: false,
-  userId: null
+  userId: null,
+  isSubscribed: false
 };
 
 let state = { ...initialState };
@@ -23,7 +24,7 @@ export function loadState() {
     chrome.storage.local.get(
       ['lastDetection', 'detectionEnabled', 'peerCount', 'supportRoomUrl', 
       'supportRoomName', 'supportRoomReady', 'currentInviteId', 'inviteExpiresAt',
-      'clutshToken', 'currentUserId'], 
+      'clutshToken', 'currentUserId', 'isSubscribed'], 
       res => {
         state.last = res.lastDetection;
         state.enabled = res.detectionEnabled !== false;
@@ -33,6 +34,7 @@ export function loadState() {
         state.isReady = res.supportRoomReady === true;
         state.isAuthenticated = !!res.clutshToken;
         state.userId = res.currentUserId || null;
+        state.isSubscribed = res.isSubscribed === true;
         
         // Check for active invite
         if (res.currentInviteId && res.inviteExpiresAt) {
