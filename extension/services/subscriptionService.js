@@ -14,7 +14,8 @@ async function createSubscription(token, priceId = null) {
   try {
     console.log('[SUBSCRIPTION] Creating subscription...', { price_id: priceId });
     
-    const requestBody = priceId ? { price_id: priceId } : {};
+    // Always send price_id field, even if null (for auto-create logic)
+    const requestBody = { price_id: priceId };
     
     const response = await fetch(`${BASE_API_URL}/create-subscription`, {
       method: 'POST',
