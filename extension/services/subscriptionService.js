@@ -12,7 +12,7 @@ const BASE_API_URL = 'https://ggbvhsuuwqwjghxpuapg.functions.supabase.co';
  */
 async function createSubscription(token, priceId = null) {
   try {
-    console.log('[SUBSCRIPTION] Creating subscription...', { priceId });
+    console.log('[SUBSCRIPTION] Creating subscription...', { price_id: priceId });
     
     const requestBody = priceId ? { price_id: priceId } : {};
     

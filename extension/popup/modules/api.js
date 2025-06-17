@@ -19,10 +19,13 @@ export function fetchAuthStatus() {
 // Create subscription
 export function createSubscription(priceId = null) {
   return new Promise((resolve) => {
+    console.log('[POPUP-API] Creating subscription with price_id:', priceId);
+    
     chrome.runtime.sendMessage({ 
       type: 'CREATE_SUBSCRIPTION',
-      priceId: priceId 
+      price_id: priceId  // Use snake_case to match the API
     }, response => {
+      console.log('[POPUP-API] Subscription response:', response);
       resolve(response || { error: 'No response from background script' });
     });
   });

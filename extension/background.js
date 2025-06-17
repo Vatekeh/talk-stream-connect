@@ -129,7 +129,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       
       try {
-        const result = await createSubscription(data.clutshToken, msg.priceId);
+        console.log('[BACKGROUND] Creating subscription with token and price_id:', { 
+          hasToken: !!data.clutshToken,
+          price_id: msg.price_id 
+        });
+        
+        const result = await createSubscription(data.clutshToken, msg.price_id);
+        
         if (result.success && result.clientSecret) {
           // Store the client secret for the checkout process
           chrome.storage.local.set({ 
@@ -145,10 +151,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           chrome.tabs.create({ url: checkoutUrl });
           sendResponse({ success: true });
         } else {
+          console.error('[BACKGROUND] Subscription creation failed:', result);
           sendResponse(result);
         }
       } catch (error) {
-        sendResponse({ error: error.message });
+        console.error('[BACKGROUND] Error in subscription creation:', error);
+        sendResponse({ error: error.message || 'Failed to create subscription' });
       }
     });
     return true; // Needed for async response
