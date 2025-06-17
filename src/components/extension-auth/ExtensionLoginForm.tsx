@@ -8,12 +8,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Environment detection - can be expanded later if needed
-const PRODUCTION_DOMAIN = "https://clutsh.live";
-const isDevelopment = () => {
-  return window.location.hostname === "localhost" || 
-         window.location.hostname.includes("127.0.0.1") ||
-         window.location.hostname.includes(".lovable.dev");
+// Environment detection - improved to handle all scenarios
+const getEnvironmentConfig = () => {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port;
+  
+  // Development environments
+  if (hostname === "localhost" || hostname.includes("127.0.0.1")) {
+    return {
+      baseUrl: `${protocol}//${hostname}${port ? ':' + port : ''}`,
+      environment: "development"
+    };
+  }
+  
+  // Lovable preview environments
+  if (hostname.includes(".lovable.app") || hostname.includes(".lovable.dev")) {
+    return {
+      baseUrl: `${protocol}//${hostname}`,
+      environment: "preview"
+    };
+  }
+  
+  // Production environment
+  return {
+    baseUrl: "https://clutsh.live",
+    environment: "production"
+  };
 };
 
 export function ExtensionLoginForm() {
@@ -31,9 +52,10 @@ export function ExtensionLoginForm() {
     
     try {
       console.log(`[${new Date().toISOString()}] Login attempt started for email: ${email}`);
-      console.log("[ExtensionLoginForm] Current origin:", window.location.origin);
       
-      // Removed the redirectTo option which was causing the TypeScript error
+      const envConfig = getEnvironmentConfig();
+      console.log("[ExtensionLoginForm] Environment config:", envConfig);
+      
       console.log("[ExtensionLoginForm] Calling supabase.auth.signInWithPassword");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -52,11 +74,6 @@ export function ExtensionLoginForm() {
       }
       
       console.log(`[${new Date().toISOString()}] Login successful, user ID: ${data.user?.id}`);
-      console.log("[ExtensionLoginForm] Session object:", {
-        token: data.session?.access_token ? "Present (hidden)" : "Missing",
-        expiresAt: data.session?.expires_at,
-        userId: data.user?.id
-      });
       
       toast({
         title: "Login successful",
@@ -68,15 +85,12 @@ export function ExtensionLoginForm() {
         // Create the hash fragment that the extension expects
         const hash = `#token=${data.session.access_token}&userId=${data.user.id}`;
         
-        // Determine the base URL - use the production domain in production env
-        const baseUrl = isDevelopment() ? window.location.origin : PRODUCTION_DOMAIN;
+        // Use environment-detected base URL
+        const callbackUrl = `${envConfig.baseUrl}/auth/callback${hash}`;
         
-        // Construct the callback URL with the exact path that the extension expects
-        const callbackUrl = `${baseUrl}/auth/callback${hash}`;
-        
-        console.log("[ExtensionLoginForm] Manually redirecting to callback URL:", {
-          baseUrl,
-          environment: isDevelopment() ? "development" : "production",
+        console.log("[ExtensionLoginForm] Redirecting to callback URL:", {
+          baseUrl: envConfig.baseUrl,
+          environment: envConfig.environment,
           hashLength: hash.length,
           fullUrl: callbackUrl
         });
@@ -93,11 +107,6 @@ export function ExtensionLoginForm() {
       }
     } catch (error: any) {
       console.error(`[${new Date().toISOString()}] Authentication error:`, error);
-      console.error("[ExtensionLoginForm] Detailed error:", {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       
       setError(error.message);
       setLoading(false);

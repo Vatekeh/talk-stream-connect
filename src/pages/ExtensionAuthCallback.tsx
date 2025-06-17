@@ -11,12 +11,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Environment detection - can be expanded later if needed
-const PRODUCTION_DOMAIN = "https://clutsh.live";
-const isDevelopment = () => {
-  return window.location.hostname === "localhost" || 
-         window.location.hostname.includes("127.0.0.1") ||
-         window.location.hostname.includes(".lovable.dev");
+// Environment detection - improved to handle all scenarios
+const getEnvironmentConfig = () => {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port;
+  
+  // Development environments
+  if (hostname === "localhost" || hostname.includes("127.0.0.1")) {
+    return {
+      baseUrl: `${protocol}//${hostname}${port ? ':' + port : ''}`,
+      environment: "development"
+    };
+  }
+  
+  // Lovable preview environments
+  if (hostname.includes(".lovable.app") || hostname.includes(".lovable.dev")) {
+    return {
+      baseUrl: `${protocol}//${hostname}`,
+      environment: "preview"
+    };
+  }
+  
+  // Production environment
+  return {
+    baseUrl: "https://clutsh.live",
+    environment: "production"
+  };
 };
 
 export default function ExtensionAuthCallback() {
@@ -31,6 +52,9 @@ export default function ExtensionAuthCallback() {
         console.log(`[${startTime.toISOString()}] Running auth callback process`);
         console.log("[ExtensionAuthCallback] Document URL:", window.location.href);
         console.log("[ExtensionAuthCallback] Current origin:", window.location.origin);
+        
+        const envConfig = getEnvironmentConfig();
+        console.log("[ExtensionAuthCallback] Environment config:", envConfig);
         
         // Check for hash fragments that might have been passed
         if (window.location.hash) {
@@ -79,14 +103,11 @@ export default function ExtensionAuthCallback() {
           hashLength: hash.length 
         });
         
-        // Determine the base URL - use the production domain in production env
-        const baseUrl = isDevelopment() ? window.location.origin : PRODUCTION_DOMAIN;
-        
         // Construct the callback URL with the exact path that the extension expects
-        const callbackUrl = `${baseUrl}/auth/callback${hash}`;
+        const callbackUrl = `${envConfig.baseUrl}/auth/callback${hash}`;
         console.log("[ExtensionAuthCallback] Redirecting to extension callback URL:", {
-          baseUrl,
-          environment: isDevelopment() ? "development" : "production",
+          baseUrl: envConfig.baseUrl,
+          environment: envConfig.environment,
           fullUrl: callbackUrl
         });
         
@@ -103,7 +124,7 @@ export default function ExtensionAuthCallback() {
         setTimeout(() => {
           // Redirect to the extension callback URL with the hash fragment
           window.location.replace(callbackUrl);
-        }, 300); // Increased timeout to ensure logs are captured
+        }, 300);
       } catch (err: any) {
         console.error(`[${new Date().toISOString()}] Authentication callback error:`, err);
         console.error("[ExtensionAuthCallback] Detailed error:", {

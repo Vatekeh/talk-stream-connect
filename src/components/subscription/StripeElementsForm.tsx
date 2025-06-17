@@ -33,11 +33,15 @@ export function StripeElementsForm({ onSuccess, subscriptionId }: StripeElements
     try {
       console.log("Confirming payment for subscription...");
       
+      // Get the current URL for return_url
+      const currentUrl = new URL(window.location.href);
+      const returnUrl = `${currentUrl.origin}/profile`;
+      
       // Confirm the payment for the subscription
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.origin + "/profile", // Fallback if client-side processing fails
+          return_url: returnUrl, // Use dynamic return URL
         },
         redirect: 'if_required', // Only redirect when 3D Secure is required
       });

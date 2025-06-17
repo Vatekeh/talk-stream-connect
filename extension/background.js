@@ -1,10 +1,22 @@
-
 import { updateRoomStatus } from './services/roomStatusService.js';
 import { processEdgingDetection, processInviteJoin } from './services/edgingDetectionService.js';
 import { PEER_CHECK_INTERVAL } from './api/roomService.js';
 
-// Authentication constants
-const AUTH_URL_PATTERN = 'https://clutsh.live/auth/callback*';
+// Authentication constants - support both development and production
+const getAuthUrlPattern = () => {
+  // Check if we're in development by looking at the extension's origin
+  const isDevelopment = chrome.runtime.getURL('').includes('chrome-extension://');
+  
+  // Support multiple domains for auth callback
+  return [
+    'https://clutsh.live/auth/callback*',
+    'https://*.lovable.app/auth/callback*',
+    'http://localhost:*/auth/callback*',
+    'https://localhost:*/auth/callback*'
+  ];
+};
+
+const AUTH_URL_PATTERNS = getAuthUrlPattern();
 
 // Initialize extension settings
 chrome.runtime.onInstalled.addListener(() => {
@@ -23,53 +35,61 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Listen for tab updates to detect auth callback
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url && changeInfo.url.includes(AUTH_URL_PATTERN)) {
-    try {
-      console.log("[Extension] Auth callback detected:", changeInfo.url);
-      
-      // Extract token and userId from hash fragment
-      const url = new URL(changeInfo.url);
-      console.log("[Extension] Auth URL parsed:", {
-        origin: url.origin,
-        pathname: url.pathname,
-        hash: url.hash ? "Present (hidden)" : "Missing",
-        hashLength: url.hash ? url.hash.length : 0
-      });
-      
-      const params = new URLSearchParams(url.hash.substring(1));
-      console.log("[Extension] Auth params extracted:", {
-        hasToken: params.has('token'),
-        hasUserId: params.has('userId')
-      });
-      
-      const token = params.get('token');
-      const userId = params.get('userId');
-      
-      if (token && userId) {
-        console.log("[Extension] Auth credentials found, storing credentials");
-        // Store auth data in local storage
-        chrome.storage.local.set({
-          clutshToken: token,
-          currentUserId: userId,
-          authTs: Date.now()
-        }, () => {
-          console.log("[Extension] Credentials stored, closing auth tab and showing notification");
-          // Close the auth tab
-          chrome.tabs.remove(tabId);
-          
-          // Show success notification
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icons/icon48.png',
-            title: 'Clutsh Sign-in Successful',
-            message: 'You are now signed in to Clutsh NSFW Monitor.'
-          });
+  if (changeInfo.url) {
+    // Check if the URL matches any of our auth patterns
+    const isAuthCallback = AUTH_URL_PATTERNS.some(pattern => {
+      const regex = new RegExp(pattern.replace('*', '.*'));
+      return regex.test(changeInfo.url);
+    });
+    
+    if (isAuthCallback) {
+      try {
+        console.log("[Extension] Auth callback detected:", changeInfo.url);
+        
+        // Extract token and userId from hash fragment
+        const url = new URL(changeInfo.url);
+        console.log("[Extension] Auth URL parsed:", {
+          origin: url.origin,
+          pathname: url.pathname,
+          hash: url.hash ? "Present (hidden)" : "Missing",
+          hashLength: url.hash ? url.hash.length : 0
         });
-      } else {
-        console.error("[Extension] Auth error: Token or userId missing");
+        
+        const params = new URLSearchParams(url.hash.substring(1));
+        console.log("[Extension] Auth params extracted:", {
+          hasToken: params.has('token'),
+          hasUserId: params.has('userId')
+        });
+        
+        const token = params.get('token');
+        const userId = params.get('userId');
+        
+        if (token && userId) {
+          console.log("[Extension] Auth credentials found, storing credentials");
+          // Store auth data in local storage
+          chrome.storage.local.set({
+            clutshToken: token,
+            currentUserId: userId,
+            authTs: Date.now()
+          }, () => {
+            console.log("[Extension] Credentials stored, closing auth tab and showing notification");
+            // Close the auth tab
+            chrome.tabs.remove(tabId);
+            
+            // Show success notification
+            chrome.notifications.create({
+              type: 'basic',
+              iconUrl: 'icons/icon48.png',
+              title: 'Clutsh Sign-in Successful',
+              message: 'You are now signed in to Clutsh NSFW Monitor.'
+            });
+          });
+        } else {
+          console.error("[Extension] Auth error: Token or userId missing");
+        }
+      } catch (error) {
+        console.error('[Extension] Error processing auth callback:', error);
       }
-    } catch (error) {
-      console.error('[Extension] Error processing auth callback:', error);
     }
   }
 });
