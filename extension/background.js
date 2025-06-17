@@ -1,5 +1,6 @@
 import { updateRoomStatus } from './services/roomStatusService.js';
 import { processEdgingDetection, processInviteJoin } from './services/edgingDetectionService.js';
+import { createSubscription, openBillingPortal } from './services/subscriptionService.js';
 import { PEER_CHECK_INTERVAL } from './api/roomService.js';
 
 // Authentication constants - support both development and production
@@ -115,6 +116,58 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         userId: data.currentUserId || null,
         isAuthenticated: !!data.clutshToken
       });
+    });
+    return true; // Needed for async response
+  }
+  
+  // Handler for creating subscription
+  if (msg.type === 'CREATE_SUBSCRIPTION') {
+    chrome.storage.local.get(['clutshToken'], async (data) => {
+      if (!data.clutshToken) {
+        sendResponse({ error: 'User not authenticated' });
+        return;
+      }
+      
+      try {
+        const result = await createSubscription(data.clutshToken, msg.priceId);
+        if (result.success && result.clientSecret) {
+          // Store the client secret for the checkout process
+          chrome.storage.local.set({ 
+            pendingSubscription: {
+              clientSecret: result.clientSecret,
+              subscriptionId: result.subscriptionId,
+              createdAt: Date.now()
+            }
+          });
+          
+          // Open the web app's subscription checkout page
+          const checkoutUrl = `https://clutsh.live/pricing?checkout=true&client_secret=${result.clientSecret}`;
+          chrome.tabs.create({ url: checkoutUrl });
+          sendResponse({ success: true });
+        } else {
+          sendResponse(result);
+        }
+      } catch (error) {
+        sendResponse({ error: error.message });
+      }
+    });
+    return true; // Needed for async response
+  }
+  
+  // Handler for opening billing portal
+  if (msg.type === 'OPEN_BILLING_PORTAL') {
+    chrome.storage.local.get(['clutshToken'], async (data) => {
+      if (!data.clutshToken) {
+        sendResponse({ error: 'User not authenticated' });
+        return;
+      }
+      
+      try {
+        const result = await openBillingPortal(data.clutshToken);
+        sendResponse(result);
+      } catch (error) {
+        sendResponse({ error: error.message });
+      }
     });
     return true; // Needed for async response
   }

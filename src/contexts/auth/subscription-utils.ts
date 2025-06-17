@@ -3,10 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
- * Create a new subscription for the user (now handled by StripeCheckoutModal)
- * This function is kept for compatibility but the main flow now uses the modal
+ * Create a new subscription for the user with proper price_id handling
  */
-export const createSubscription = async (userId?: string) => {
+export const createSubscription = async (userId?: string, priceId?: string) => {
   if (!userId) {
     toast.error("User not authenticated");
     return;
@@ -19,12 +18,18 @@ export const createSubscription = async (userId?: string) => {
       return;
     }
 
-    console.log("Creating subscription for user:", userId);
+    console.log("Creating subscription for user:", userId, { priceId });
+    
+    const requestBody: any = {};
+    if (priceId) {
+      requestBody.price_id = priceId;
+    }
+    
     const { data, error } = await supabase.functions.invoke('create-subscription', {
       headers: {
         Authorization: `Bearer ${sessionData.session.access_token}`,
       },
-      body: JSON.stringify({})
+      body: JSON.stringify(requestBody)
     });
 
     if (error) {

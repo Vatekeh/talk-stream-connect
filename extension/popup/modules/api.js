@@ -1,4 +1,3 @@
-
 // API module for communicating with background script
 
 // Get current auth status
@@ -13,6 +12,27 @@ export function fetchAuthStatus() {
       } else {
         resolve({ isAuthenticated: false, userId: null });
       }
+    });
+  });
+}
+
+// Create subscription
+export function createSubscription(priceId = null) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ 
+      type: 'CREATE_SUBSCRIPTION',
+      priceId: priceId 
+    }, response => {
+      resolve(response || { error: 'No response from background script' });
+    });
+  });
+}
+
+// Open billing portal for subscription management
+export function openBillingPortal() {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'OPEN_BILLING_PORTAL' }, response => {
+      resolve(response || { error: 'No response from background script' });
     });
   });
 }

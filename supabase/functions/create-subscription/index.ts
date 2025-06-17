@@ -115,23 +115,56 @@ serve(async (req) => {
     let requestBody;
     try {
       requestBody = await req.json();
+      logStep("Request body parsed", { bodyKeys: Object.keys(requestBody) });
     } catch (parseError) {
-      logStep("No request body provided, using default price");
+      logStep("No request body provided, using defaults");
       requestBody = {};
     }
 
-    // PLACEHOLDER: Replace this with your actual Stripe price ID from your dashboard
-    // To get this: Go to Stripe Dashboard → Products → Create a $19.99/month product → Copy the price ID
-    const priceId = requestBody.price_id || 'REPLACE_WITH_YOUR_REAL_STRIPE_PRICE_ID';
+    // Create a Stripe product and price if we don't have one
+    let priceId = requestBody.price_id;
     
-    if (priceId === 'REPLACE_WITH_YOUR_REAL_STRIPE_PRICE_ID') {
-      const error = "Please replace the placeholder price_id with your actual Stripe price ID";
-      logStep("ERROR", { error });
-      return new Response(
-        JSON.stringify({ error }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+    if (!priceId) {
+      logStep("No price_id provided, creating default Clutsh Pro subscription");
+      
+      // Create or get the Clutsh Pro product
+      const products = await stripe.products.list({ limit: 10 });
+      let product = products.data.find(p => p.name === "Clutsh Pro");
+      
+      if (!product) {
+        product = await stripe.products.create({
+          name: "Clutsh Pro",
+          description: "Unlock advanced analytics and full control",
+        });
+        logStep("Created new Stripe product", { productId: product.id });
+      }
+      
+      // Create or get the price
+      const prices = await stripe.prices.list({ 
+        product: product.id,
+        active: true,
+        limit: 10 
+      });
+      
+      let price = prices.data.find(p => 
+        p.unit_amount === 1999 && 
+        p.currency === 'usd' && 
+        p.recurring?.interval === 'month'
       );
+      
+      if (!price) {
+        price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: 1999, // $19.99
+          currency: 'usd',
+          recurring: { interval: 'month' },
+        });
+        logStep("Created new Stripe price", { priceId: price.id, amount: price.unit_amount });
+      }
+      
+      priceId = price.id;
     }
+    
     logStep("Using price ID", { priceId });
 
     // Create or retrieve a Stripe customer

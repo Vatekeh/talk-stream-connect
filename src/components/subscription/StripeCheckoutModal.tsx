@@ -14,9 +14,10 @@ interface StripeCheckoutModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  priceId?: string; // Allow passing a specific price ID
 }
 
-export function StripeCheckoutModal({ open, onOpenChange, onSuccess }: StripeCheckoutModalProps) {
+export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId }: StripeCheckoutModalProps) {
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
@@ -37,11 +38,15 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess }: StripeChe
             throw new Error("You must be logged in to subscribe");
           }
           
-          console.log("Creating subscription...");
+          console.log("Creating subscription...", { priceId });
+          
+          const requestBody: any = {};
+          if (priceId) {
+            requestBody.price_id = priceId;
+          }
+          
           const { data, error } = await supabase.functions.invoke('create-subscription', {
-            body: {
-              // The price_id will be handled by the backend with the placeholder
-            },
+            body: requestBody,
             headers: {
               Authorization: `Bearer ${session.access_token}`
             }
@@ -77,7 +82,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess }: StripeChe
       setSubscriptionId(null);
       setError(null);
     }
-  }, [open, clientSecret, loading]);
+  }, [open, clientSecret, loading, priceId]);
 
   const handleSuccess = () => {
     onOpenChange(false);
