@@ -9,9 +9,10 @@ import { useAuth } from "@/contexts/auth";
 interface StripeElementsFormProps {
   onSuccess: () => void;
   subscriptionId?: string | null;
+  clientSecret?: string | null;
 }
 
-export function StripeElementsForm({ onSuccess, subscriptionId }: StripeElementsFormProps) {
+export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret }: StripeElementsFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const { checkSubscriptionStatus } = useAuth();
@@ -33,17 +34,18 @@ export function StripeElementsForm({ onSuccess, subscriptionId }: StripeElements
     try {
       console.log("Confirming payment for subscription...");
       
-      // Get the current URL for return_url
+      // Build a return URL that allows resuming the checkout in case of 3DS redirect
       const currentUrl = new URL(window.location.href);
-      const returnUrl = `${currentUrl.origin}/profile`;
+      const baseReturn = `${currentUrl.origin}/pricing`;
+      const resumeUrl = clientSecret ? `${baseReturn}?client_secret=${encodeURIComponent(clientSecret)}` : baseReturn;
       
       // Confirm the payment for the subscription
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: returnUrl, // Use dynamic return URL
+          return_url: resumeUrl,
         },
-        redirect: 'if_required', // Only redirect when 3D Secure is required
+        redirect: 'if_required',
       });
 
       if (stripeError) {

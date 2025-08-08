@@ -31,6 +31,7 @@ import { AgoraProvider } from "@/contexts/agora";
 
 // For the Stripe integration
 import { loadStripe } from '@stripe/stripe-js';
+import { ResumePaymentBanner } from "@/components/subscription/ResumePaymentBanner";
 
 // Pre-load Stripe to improve performance
 loadStripe("pk_test_51RMsRa2eLXgO7GQNGfjlsLK9FnzGNrhVuKPsWnjkswOf5YcPLsOLiuiCjo5CWBAddyynKjs8V480FhZhi7oWYUOP003goPRVuq");
@@ -46,6 +47,7 @@ const App = () => (
             <AgoraProvider>
               <Toaster />
               <Sonner />
+              <ResumePaymentBanner />
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

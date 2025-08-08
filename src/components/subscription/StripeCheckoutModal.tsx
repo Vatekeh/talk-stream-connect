@@ -128,6 +128,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
             <StripeElementsForm 
               onSuccess={handleSuccess} 
               subscriptionId={subscriptionId}
+              clientSecret={clientSecret}
             />
           </Elements>
         ) : (
