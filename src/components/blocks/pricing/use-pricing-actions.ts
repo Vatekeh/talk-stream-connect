@@ -2,14 +2,14 @@
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { PricingTier } from "./types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function usePricingActions() {
   const { isSubscribed, createSubscription, manageSubscription } = useAuth();
   const navigate = useNavigate();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedPriceId, setSelectedPriceId] = useState<string | undefined>();
-
+const [selectedPriceId, setSelectedPriceId] = useState<string | undefined>();
+const [initialClientSecret, setInitialClientSecret] = useState<string | undefined>();
   const handlePricingAction = (tier: PricingTier) => {
     if (tier.name === "Free") {
       // If they're on the free plan, redirect to home
@@ -31,6 +31,20 @@ export function usePricingActions() {
     }
   };
 
+  // Auto-open checkout if a client_secret is present in the URL (e.g., from extension)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cs = params.get('client_secret');
+    if (cs) {
+      setInitialClientSecret(cs);
+      setIsCheckoutOpen(true);
+      // Clean the URL
+      params.delete('client_secret');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+
   const getButtonText = (tier: PricingTier) => {
     if (tier.name === "Free") {
       return "Start your journey";
@@ -48,6 +62,7 @@ export function usePricingActions() {
     getButtonText,
     isCheckoutOpen,
     setIsCheckoutOpen,
-    selectedPriceId
+    selectedPriceId,
+    initialClientSecret,
   };
 }

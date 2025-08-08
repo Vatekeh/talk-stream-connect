@@ -15,9 +15,10 @@ interface StripeCheckoutModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   priceId?: string; // Allow passing a specific price ID
+  initialClientSecret?: string | null; // Support pre-provided client secret
 }
 
-export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId }: StripeCheckoutModalProps) {
+export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, initialClientSecret }: StripeCheckoutModalProps) {
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
@@ -29,6 +30,13 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId }: 
     if (open && !clientSecret && !loading) {
       setLoading(true);
       setError(null);
+
+      // If we have a pre-provided client secret (e.g., via query param), use it directly
+      if (initialClientSecret) {
+        setClientSecret(initialClientSecret);
+        setLoading(false);
+        return;
+      }
       
       const createSubscriptionIntent = async () => {
         try {
@@ -40,10 +48,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId }: 
           
           console.log("Creating subscription...", { priceId });
           
-          const requestBody: any = {};
-          if (priceId) {
-            requestBody.price_id = priceId;
-          }
+          const requestBody: any = { price_id: priceId ?? null };
           
           const { data, error } = await supabase.functions.invoke('create-subscription', {
             body: requestBody,
@@ -82,7 +87,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId }: 
       setSubscriptionId(null);
       setError(null);
     }
-  }, [open, clientSecret, loading, priceId]);
+  }, [open, clientSecret, loading, priceId, initialClientSecret]);
 
   const handleSuccess = () => {
     onOpenChange(false);

@@ -20,16 +20,13 @@ export const createSubscription = async (userId?: string, priceId?: string) => {
 
     console.log("Creating subscription for user:", userId, { priceId });
     
-    const requestBody: any = {};
-    if (priceId) {
-      requestBody.price_id = priceId;
-    }
+    const requestBody: any = { price_id: priceId ?? null };
     
     const { data, error } = await supabase.functions.invoke('create-subscription', {
       headers: {
         Authorization: `Bearer ${sessionData.session.access_token}`,
       },
-      body: JSON.stringify(requestBody)
+      body: requestBody
     });
 
     if (error) {

@@ -77,22 +77,40 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Get user profile from database
-    const { data: profile, error: profileError } = await supabaseClient
+    // Get or create user profile in database
+    const { data: profileData, error: fetchError } = await supabaseClient
       .from("profiles")
-      .select("*")
+      .select("id, stripe_customer_id, subscription_status, trial_end, current_period_end")
       .eq("id", user.id)
-      .single();
-      
-    if (profileError) {
-      const error = `Error fetching profile: ${profileError.message}`;
-      logStep("ERROR", { error });
-      return new Response(
-        JSON.stringify({ error }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+      .maybeSingle();
+
+    if (fetchError) {
+      logStep("Warning: error fetching profile (will attempt create if missing)", { error: fetchError.message });
     }
-    logStep("User profile fetched", { profileId: profile.id });
+
+    let profile = profileData as any | null;
+
+    if (!profile) {
+      logStep("No profile found, creating one");
+      const defaultUsername = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+      const { data: newProfile, error: insertError } = await supabaseClient
+        .from("profiles")
+        .insert({ id: user.id, username: defaultUsername, subscription_status: 'none' })
+        .select("id, stripe_customer_id, subscription_status, trial_end, current_period_end")
+        .single();
+
+      if (insertError) {
+        const error = `Error creating profile: ${insertError.message}`;
+        logStep("ERROR", { error });
+        return new Response(
+          JSON.stringify({ error }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+      profile = newProfile as any;
+    }
+
+    logStep("User profile ready", { profileId: profile.id });
 
     // If user has an active subscription, return it
     if (profile.subscription_status === "active" || profile.subscription_status === "trialing") {
