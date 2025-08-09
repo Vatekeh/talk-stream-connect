@@ -10,9 +10,10 @@ interface StripeElementsFormProps {
   onSuccess: () => void;
   subscriptionId?: string | null;
   clientSecret?: string | null;
+  mode?: 'payment' | 'setup';
 }
 
-export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret }: StripeElementsFormProps) {
+export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret, mode }: StripeElementsFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const { checkSubscriptionStatus } = useAuth();
@@ -32,29 +33,48 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret }: 
     setMessage(null);
 
     try {
-      console.log("Confirming payment for subscription...");
-      
-      // Build a return URL that allows resuming the checkout in case of 3DS redirect
+      console.log("Confirming Stripe action...", { mode });
+      // Build a return URL that allows resuming the flow in case of 3DS redirect
       const currentUrl = new URL(window.location.href);
       const baseReturn = `${currentUrl.origin}/pricing`;
       const resumeUrl = clientSecret ? `${baseReturn}?client_secret=${encodeURIComponent(clientSecret)}` : baseReturn;
-      
-      // Confirm the payment for the subscription
-      const { error: stripeError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: resumeUrl,
-        },
-        redirect: 'if_required',
-      });
+
+      let stripeError: any | null = null;
+
+      if (mode === 'setup') {
+        const { error } = await stripe.confirmSetup({
+          elements,
+          confirmParams: { return_url: resumeUrl },
+          redirect: 'if_required',
+        });
+        stripeError = error ?? null;
+      } else {
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: { return_url: resumeUrl },
+          redirect: 'if_required',
+        });
+        stripeError = error ?? null;
+
+        // Fallback: if mode is unknown and payment confirmation fails, try setup
+        if (stripeError && !mode) {
+          console.warn('Payment confirmation failed, attempting setup confirmation fallback...', stripeError);
+          const { error: setupErr } = await stripe.confirmSetup({
+            elements,
+            confirmParams: { return_url: resumeUrl },
+            redirect: 'if_required',
+          });
+          stripeError = setupErr ?? null;
+        }
+      }
 
       if (stripeError) {
-        console.error("Stripe payment error:", stripeError);
+        console.error("Stripe confirmation error:", stripeError);
         setMessage(stripeError.message || "An unexpected error occurred");
         return;
       }
       
-      console.log("Payment confirmed successfully");
+      console.log("Stripe confirmation successful");
       toast.success("Your subscription has been activated!");
       
       // Update subscription status in context
@@ -63,10 +83,10 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret }: 
       setSucceeded(true);
       setTimeout(() => {
         onSuccess();
-      }, 1500); // Short delay to show success message
+      }, 1500);
       
     } catch (error: any) {
-      console.error("Payment error:", error);
+      console.error("Stripe Elements submit error:", error);
       toast.error(error.message || "Failed to process payment");
       setMessage(error.message || "Something went wrong");
     } finally {

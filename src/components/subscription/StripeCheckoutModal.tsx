@@ -23,6 +23,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'payment' | 'setup' | null>(null);
   const { user, checkSubscriptionStatus } = useAuth();
 
   // When the modal opens, create a subscription with incomplete payment
@@ -34,6 +35,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
       // If we have a pre-provided client secret (e.g., via query param), use it directly
       if (initialClientSecret) {
         setClientSecret(initialClientSecret);
+        setMode(null);
         setLoading(false);
         return;
       }
@@ -71,6 +73,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
             console.log("Subscription ready, received clientSecret");
             setClientSecret(data.clientSecret);
             setSubscriptionId(data.subscriptionId ?? null);
+            setMode(data.mode ?? 'payment');
           } else {
             console.log("Subscription already active; closing checkout.");
             onOpenChange(false);
@@ -98,6 +101,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
       setSubscriptionId(null);
       setError(null);
       setLoading(false);
+      setMode(null);
     }
   }, [open]);
 
@@ -141,6 +145,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
               onSuccess={handleSuccess} 
               subscriptionId={subscriptionId}
               clientSecret={clientSecret}
+              mode={mode ?? undefined}
             />
           </Elements>
         ) : (

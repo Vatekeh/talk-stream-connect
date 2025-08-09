@@ -112,22 +112,9 @@ serve(async (req) => {
 
     logStep("User profile ready", { profileId: profile.id });
 
-    // If user has an active subscription, return it
-    if (profile.subscription_status === "active" || profile.subscription_status === "trialing") {
-      logStep("User already has an active subscription", { status: profile.subscription_status });
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Subscription already active",
-          subscription: {
-            status: profile.subscription_status,
-            trial_end: profile.trial_end,
-            current_period_end: profile.current_period_end
-          }
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
+    // Note: Do not early return solely based on profile flags; verify with Stripe
+    // We'll continue to inspect actual Stripe subscriptions to determine the next action
+    logStep("Profile subscription status (informational)", { status: profile.subscription_status });
 
     // Parse request body for price_id
     let requestBody;
@@ -225,7 +212,7 @@ serve(async (req) => {
       const trialEnd = activeOrTrialing.trial_end ? new Date(activeOrTrialing.trial_end * 1000).toISOString() : null;
       const currentPeriodEnd = activeOrTrialing.current_period_end ? new Date(activeOrTrialing.current_period_end * 1000).toISOString() : null;
 
-      // Sync profile and return without creating anything new
+      // Sync profile
       await supabaseClient.from('profiles').update({
         stripe_customer_id: customerId,
         stripe_subscription_id: activeOrTrialing.id,
@@ -234,10 +221,39 @@ serve(async (req) => {
         current_period_end: currentPeriodEnd,
       }).eq('id', user.id);
 
+      // Check if customer has a default payment method; if not, create a SetupIntent so user can add one now
+      const customerObj = await stripe.customers.retrieve(customerId);
+      // invoice_settings.default_payment_method can be string or object
+      // @ts-ignore - dynamic shape from Stripe SDK
+      const dpm = (customerObj as any)?.invoice_settings?.default_payment_method;
+      const hasDefaultPM = !!(typeof dpm === 'string' ? dpm : dpm?.id);
+
+      if (!hasDefaultPM) {
+        logStep('No default payment method on customer; creating SetupIntent');
+        const setupIntent = await stripe.setupIntents.create({ customer: customerId, usage: 'off_session' });
+        return new Response(
+          JSON.stringify({
+            success: true,
+            mode: 'setup',
+            clientSecret: setupIntent.client_secret,
+            subscriptionId: activeOrTrialing.id,
+            subscription: {
+              id: activeOrTrialing.id,
+              status: activeOrTrialing.status,
+              trial_end: trialEnd,
+              current_period_end: currentPeriodEnd,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+        );
+      }
+
+      // Has default PM; nothing to collect. Let frontend close modal and refresh.
       return new Response(
         JSON.stringify({
           success: true,
           message: 'Subscription already active',
+          active: true,
           subscriptionId: activeOrTrialing.id,
           subscription: {
             id: activeOrTrialing.id,
@@ -268,6 +284,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: true,
+            mode: 'payment',
             clientSecret: existingClientSecret,
             subscriptionId: incompleteSub.id,
             subscription: {
@@ -294,14 +311,44 @@ serve(async (req) => {
     }, { idempotencyKey });
     logStep("Subscription created", { subscriptionId: subscription.id });
 
-    // Get the client secret from the payment intent
     const clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
     if (!clientSecret) {
-      const error = "No client secret found in subscription payment intent";
-      logStep("ERROR", { error });
+      // Likely trialing without upfront payment. Create a SetupIntent so the user can add a payment method now.
+      const trialEnd = subscription.trial_end 
+        ? new Date(subscription.trial_end * 1000).toISOString() 
+        : null;
+      const currentPeriodEnd = subscription.current_period_end 
+        ? new Date(subscription.current_period_end * 1000).toISOString() 
+        : null;
+
+      // Sync profile with subscription info
+      await supabaseClient
+        .from("profiles")
+        .update({
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscription.id,
+          subscription_status: subscription.status,
+          trial_end: trialEnd,
+          current_period_end: currentPeriodEnd
+        })
+        .eq("id", user.id);
+
+      logStep('No PaymentIntent client secret; creating SetupIntent');
+      const setupIntent = await stripe.setupIntents.create({ customer: customerId, usage: 'off_session' });
       return new Response(
-        JSON.stringify({ error }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        JSON.stringify({
+          success: true,
+          mode: 'setup',
+          clientSecret: setupIntent.client_secret,
+          subscriptionId: subscription.id,
+          subscription: {
+            id: subscription.id,
+            status: subscription.status,
+            trial_end: trialEnd,
+            current_period_end: currentPeriodEnd,
+          }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
@@ -341,6 +388,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        mode: 'payment',
         clientSecret: clientSecret,
         subscriptionId: subscription.id,
         subscription: {
