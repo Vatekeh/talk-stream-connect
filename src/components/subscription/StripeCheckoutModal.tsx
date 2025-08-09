@@ -23,7 +23,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, checkSubscriptionStatus } = useAuth();
 
   // When the modal opens, create a subscription with incomplete payment
   React.useEffect(() => {
@@ -74,6 +74,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
           } else {
             console.log("Subscription already active; closing checkout.");
             onOpenChange(false);
+            checkSubscriptionStatus?.().catch((e: any) => console.error("checkSubscriptionStatus error:", e));
             onSuccess?.();
           }
         } catch (err: any) {
@@ -90,11 +91,21 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
     // Keep clientSecret/subscriptionId across open/close to avoid duplicate subscriptions
   }, [open, clientSecret, loading, priceId, initialClientSecret]);
 
-  const handleSuccess = () => {
-    onOpenChange(false);
-    if (onSuccess) {
-      onSuccess();
+  // Reset modal state when closing to avoid stale clientSecret/loops
+  React.useEffect(() => {
+    if (!open) {
+      setClientSecret(null);
+      setSubscriptionId(null);
+      setError(null);
+      setLoading(false);
     }
+  }, [open]);
+
+  const handleSuccess = () => {
+    // Refresh subscription status, then close
+    checkSubscriptionStatus?.().catch((e: any) => console.error("checkSubscriptionStatus error:", e));
+    onOpenChange(false);
+    onSuccess?.();
   };
 
   return (

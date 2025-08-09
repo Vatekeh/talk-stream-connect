@@ -1,17 +1,26 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { PricingSectionProps } from "./types"
 import { PricingToggle } from "./pricing-toggle"
 import { PricingCard } from "./pricing-card"
 import { usePricingActions } from "./use-pricing-actions"
 import { StripeCheckoutModal } from "@/components/subscription/StripeCheckoutModal"
+import { useAuth } from "@/contexts/auth"
 
 function PricingSection({ tiers, className }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false)
   const { handlePricingAction, getButtonText, isCheckoutOpen, setIsCheckoutOpen, selectedPriceId, initialClientSecret } = usePricingActions()
+  const { checkSubscriptionStatus } = useAuth()
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    if (wasOpen.current && !isCheckoutOpen) {
+      checkSubscriptionStatus?.()
+    }
+    wasOpen.current = isCheckoutOpen
+  }, [isCheckoutOpen, checkSubscriptionStatus])
 
   return (
     <section
@@ -43,12 +52,12 @@ function PricingSection({ tiers, className }: PricingSectionProps) {
         </div>
       </div>
       
-      {/* Stripe Checkout Modal */}
       <StripeCheckoutModal 
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen}
         priceId={selectedPriceId}
         initialClientSecret={initialClientSecret}
+        onSuccess={() => checkSubscriptionStatus?.()}
       />
     </section>
   )
