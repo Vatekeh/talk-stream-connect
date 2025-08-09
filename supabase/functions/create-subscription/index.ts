@@ -211,8 +211,78 @@ serve(async (req) => {
       logStep("Using existing Stripe customer", { customerId });
     }
 
-    // Create a subscription with incomplete payment behavior to get client_secret
+    // Before creating a new subscription, check for existing ones to avoid duplicates
+    logStep("Checking existing subscriptions for customer");
+    const existingSubs = await stripe.subscriptions.list({
+      customer: customerId,
+      limit: 100,
+      expand: ['data.latest_invoice.payment_intent'],
+    });
+
+    const activeOrTrialing = existingSubs.data.find((s) => s.status === 'active' || s.status === 'trialing');
+    if (activeOrTrialing) {
+      logStep("Existing active/trialing subscription found", { subscriptionId: activeOrTrialing.id, status: activeOrTrialing.status });
+      const trialEnd = activeOrTrialing.trial_end ? new Date(activeOrTrialing.trial_end * 1000).toISOString() : null;
+      const currentPeriodEnd = activeOrTrialing.current_period_end ? new Date(activeOrTrialing.current_period_end * 1000).toISOString() : null;
+
+      // Sync profile and return without creating anything new
+      await supabaseClient.from('profiles').update({
+        stripe_customer_id: customerId,
+        stripe_subscription_id: activeOrTrialing.id,
+        subscription_status: activeOrTrialing.status,
+        trial_end: trialEnd,
+        current_period_end: currentPeriodEnd,
+      }).eq('id', user.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Subscription already active',
+          subscriptionId: activeOrTrialing.id,
+          subscription: {
+            id: activeOrTrialing.id,
+            status: activeOrTrialing.status,
+            trial_end: trialEnd,
+            current_period_end: currentPeriodEnd,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+      );
+    }
+
+    const incompleteSub = existingSubs.data.find((s) => s.status === 'incomplete');
+    if (incompleteSub) {
+      const existingClientSecret = (incompleteSub.latest_invoice as any)?.payment_intent?.client_secret;
+      logStep('Existing incomplete subscription found', { subscriptionId: incompleteSub.id, hasClientSecret: Boolean(existingClientSecret) });
+
+      // Ensure profile is synced
+      await supabaseClient.from('profiles').update({
+        stripe_customer_id: customerId,
+        stripe_subscription_id: incompleteSub.id,
+        subscription_status: incompleteSub.status,
+        trial_end: incompleteSub.trial_end ? new Date(incompleteSub.trial_end * 1000).toISOString() : null,
+        current_period_end: incompleteSub.current_period_end ? new Date(incompleteSub.current_period_end * 1000).toISOString() : null,
+      }).eq('id', user.id);
+
+      if (existingClientSecret) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            clientSecret: existingClientSecret,
+            subscriptionId: incompleteSub.id,
+            subscription: {
+              id: incompleteSub.id,
+              status: incompleteSub.status,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+        );
+      }
+    }
+
+    // No suitable existing subscription, create a new one (idempotent)
     logStep("Creating subscription with incomplete payment behavior");
+    const idempotencyKey = `sub_${user.id}_${priceId}`;
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -220,10 +290,8 @@ serve(async (req) => {
       payment_settings: { save_default_payment_method: 'on_subscription' },
       expand: ['latest_invoice.payment_intent'],
       trial_period_days: 30,
-      metadata: {
-        userId: user.id
-      }
-    });
+      metadata: { userId: user.id },
+    }, { idempotencyKey });
     logStep("Subscription created", { subscriptionId: subscription.id });
 
     // Get the client secret from the payment intent

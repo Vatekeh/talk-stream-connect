@@ -62,14 +62,20 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
             throw new Error(error.message);
           }
           
-          if (!data.success || !data.clientSecret) {
+          if (!data?.success) {
             console.error("Invalid subscription response:", data);
-            throw new Error(data.error || "Failed to create subscription");
+            throw new Error(data?.error || "Failed to create subscription");
           }
           
-          console.log("Subscription created successfully:", data);
-          setClientSecret(data.clientSecret);
-          setSubscriptionId(data.subscriptionId);
+          if (data.clientSecret) {
+            console.log("Subscription ready, received clientSecret");
+            setClientSecret(data.clientSecret);
+            setSubscriptionId(data.subscriptionId ?? null);
+          } else {
+            console.log("Subscription already active; closing checkout.");
+            onOpenChange(false);
+            onSuccess?.();
+          }
         } catch (err: any) {
           console.error("Error creating subscription:", err);
           setError(err.message || "Failed to initialize subscription");
@@ -81,12 +87,7 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
       createSubscriptionIntent();
     }
     
-    // Reset state when modal closes
-    if (!open) {
-      setClientSecret(null);
-      setSubscriptionId(null);
-      setError(null);
-    }
+    // Keep clientSecret/subscriptionId across open/close to avoid duplicate subscriptions
   }, [open, clientSecret, loading, priceId, initialClientSecret]);
 
   const handleSuccess = () => {
