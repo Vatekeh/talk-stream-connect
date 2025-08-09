@@ -21,6 +21,7 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret, mo
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
+  const [isElementReady, setIsElementReady] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,8 +40,15 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret, mo
       const baseReturn = `${currentUrl.origin}/pricing`;
       const resumeUrl = clientSecret ? `${baseReturn}?client_secret=${encodeURIComponent(clientSecret)}` : baseReturn;
 
-      let stripeError: any | null = null;
+      // Ensure the Payment Element is mounted and validated before confirming
+      const submitRes = await elements.submit();
+      if (submitRes.error) {
+        console.warn('Elements submit validation error', submitRes.error);
+        setMessage(submitRes.error.message || "Please complete your payment details");
+        return;
+      }
 
+      let stripeError: any | null = null;
       if (mode === 'setup') {
         const { error } = await stripe.confirmSetup({
           elements,
@@ -108,7 +116,7 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret, mo
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Element Container */}
       <div className="bg-clutsh-steel/10 rounded-md p-3 border border-clutsh-slate/30">
-        <PaymentElement />
+        <PaymentElement onReady={() => setIsElementReady(true)} options={{ layout: 'tabs' }} />
       </div>
       
       {/* Error message */}
@@ -126,7 +134,7 @@ export function StripeElementsForm({ onSuccess, subscriptionId, clientSecret, mo
       {/* Submit button */}
       <Button 
         type="submit" 
-        disabled={!stripe || loading} 
+        disabled={!stripe || loading || !isElementReady} 
         className="w-full bg-clutsh-purple hover:bg-clutsh-purple/80 text-white"
       >
         {loading ? (
