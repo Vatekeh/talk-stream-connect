@@ -7,8 +7,7 @@ import { StripeElementsForm } from "./StripeElementsForm";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
-// Initialize Stripe with the publishable key
-const stripePromise = loadStripe("pk_test_51RMsRa2eLXgO7GQNGfjlsLK9FnzGNrhVuKPsWnjkswOf5YcPLsOLiuiCjo5CWBAddyynKjs8V480FhZhi7oWYUOP003goPRVuq");
+// Stripe publishable key is loaded dynamically via edge function at runtime
 
 interface StripeCheckoutModalProps {
   open: boolean;
@@ -25,6 +24,23 @@ export function StripeCheckoutModal({ open, onOpenChange, onSuccess, priceId, in
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'payment' | 'setup' | null>(null);
   const { user, checkSubscriptionStatus } = useAuth();
+  const [stripePromise, setStripePromise] = useState<any>(null);
+
+  // Load Stripe publishable key from edge function (avoids hard-coding and account mismatch)
+  React.useEffect(() => {
+    if (!stripePromise) {
+      supabase.functions.invoke('get-stripe-publishable-key').then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load Stripe publishable key', error);
+          setError('Unable to initialize payments. Please try again.');
+          return;
+        }
+        if (data?.publishableKey) {
+          setStripePromise(loadStripe(data.publishableKey));
+        }
+      });
+    }
+  }, [stripePromise]);
 
   // When the modal opens, create a subscription with incomplete payment
   React.useEffect(() => {
