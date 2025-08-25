@@ -35,16 +35,20 @@ export function ProfileTabs({
   return (
     <Tabs defaultValue="stats" value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList>
-        <TabsTrigger value="stats">Stats</TabsTrigger>
+        <TabsTrigger value="stats">Overview</TabsTrigger>
         <TabsTrigger value="streaks">Streaks</TabsTrigger>
-        <TabsTrigger value="nsfw">Content Log</TabsTrigger>
+        <TabsTrigger value="nsfw">Activity Log</TabsTrigger>
         <TabsTrigger value="saves">Saves</TabsTrigger>
         <TabsTrigger value="clips">Clips</TabsTrigger>
       </TabsList>
       
       <TabsContent value="stats" className="space-y-6">
         {isSubscribed ? (
-          <ProfileStats stats={stats} loading={logsLoading || insightsLoading} />
+          <ProfileStats 
+            stats={stats} 
+            insights={nsfwInsights}
+            loading={logsLoading || insightsLoading} 
+          />
         ) : (
           <AnalyticsUpgradePrompt />
         )}
@@ -63,9 +67,7 @@ export function ProfileTabs({
       <TabsContent value="nsfw">
         <ProfileNsfwLog 
           logs={nsfwLogs}
-          insights={nsfwInsights}
           loading={logsLoading || insightsLoading}
-          isSubscribed={isSubscribed}
         />
       </TabsContent>
       

@@ -10,10 +10,11 @@ import { useState } from "react";
 
 interface ProfileStatsProps {
   stats: UserStats | null;
+  insights?: any;
   loading?: boolean;
 }
 
-export function ProfileStats({ stats, loading }: ProfileStatsProps) {
+export function ProfileStats({ stats, insights, loading }: ProfileStatsProps) {
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
 
   function formatTime(minutes: number): string {
@@ -71,6 +72,22 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
           </CardHeader>
           <CardContent>
             <Skeleton className="h-[250px] w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-4 border rounded-lg">
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <Skeleton className="h-8 w-12" />
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -189,6 +206,40 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Content Insights */}
+      {insights && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Content Insights</CardTitle>
+            <CardDescription>
+              Analysis of your content browsing patterns
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+              <div className="p-4 border rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground">Total Visits</p>
+                <p className="text-2xl font-bold">{insights.totalVisits || 0}</p>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground">Top Source</p>
+                <p className="text-lg font-bold">
+                  {insights.topSources && insights.topSources.length > 0 
+                    ? insights.topSources[0].source 
+                    : 'None'}
+                </p>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground">Average Duration</p>
+                <p className="text-2xl font-bold">
+                  {insights.averageDuration ? formatTime(Math.floor(insights.averageDuration / 60)) : '0m'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
