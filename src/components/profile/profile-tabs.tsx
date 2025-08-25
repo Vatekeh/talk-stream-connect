@@ -6,7 +6,7 @@ import { ProfileNsfwLog } from "./profile-nsfw-log";
 import { ProfileSaves } from "./profile-saves";
 import { ProfileClips } from "./profile-clips";
 import { AnalyticsUpgradePrompt } from "./analytics-upgrade-prompt";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 interface ProfileTabsProps {
   stats: any;
@@ -44,7 +44,7 @@ export function ProfileTabs({
       
       <TabsContent value="stats" className="space-y-6">
         {isSubscribed ? (
-          <ProfileStats stats={stats} />
+          <ProfileStats stats={stats} loading={logsLoading || insightsLoading} />
         ) : (
           <AnalyticsUpgradePrompt />
         )}
@@ -53,7 +53,7 @@ export function ProfileTabs({
       <TabsContent value="streaks">
         <div className="space-y-6">
           {isSubscribed ? (
-            <ProfileStreaks streak={streak} />
+            <ProfileStreaks streak={streak} loading={logsLoading || insightsLoading} />
           ) : (
             <AnalyticsUpgradePrompt />
           )}

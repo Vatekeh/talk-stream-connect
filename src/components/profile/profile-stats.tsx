@@ -4,12 +4,14 @@ import { UserStats } from "@/types";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Clock, MessageCircle, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileStatsProps {
-  stats: UserStats;
+  stats: UserStats | null;
+  loading?: boolean;
 }
 
-export function ProfileStats({ stats }: ProfileStatsProps) {
+export function ProfileStats({ stats, loading }: ProfileStatsProps) {
   function formatTime(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -29,6 +31,47 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
       },
     },
   };
+
+  // Show loading skeleton if data is loading or stats is null
+  if (loading || !stats) {
+    return (
+      <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <Skeleton className="h-5 w-5 mr-2" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[250px] w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[250px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6">

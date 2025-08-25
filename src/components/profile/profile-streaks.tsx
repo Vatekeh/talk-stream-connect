@@ -4,12 +4,60 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, Award, CheckCircle } from "lucide-react";
 import { UserStreak } from "@/types";
 import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileStreaksProps {
-  streak: UserStreak;
+  streak: UserStreak | null;
+  loading?: boolean;
 }
 
-export function ProfileStreaks({ streak }: ProfileStreaksProps) {
+export function ProfileStreaks({ streak, loading }: ProfileStreaksProps) {
+  // Show loading skeleton if data is loading or streak is null
+  if (loading || !streak) {
+    return (
+      <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center">
+                  <Skeleton className="h-5 w-5 mr-2" />
+                  <Skeleton className="h-6 w-32" />
+                </div>
+                <Skeleton className="h-4 w-48 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-end gap-2">
+                    <Skeleton className="h-12 w-16" />
+                    <Skeleton className="h-5 w-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-8" />
+                    </div>
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Calculate the percentage for the progress bar
   const streakPercentage = streak.longest > 0 
     ? Math.min(100, (streak.current / streak.longest) * 100) 
