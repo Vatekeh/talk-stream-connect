@@ -2,9 +2,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserStats } from "@/types";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Clock, MessageCircle, Users } from "lucide-react";
+import { Eye, Globe, Hash } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ProfileStatsProps {
   stats: UserStats | null;
@@ -12,6 +14,8 @@ interface ProfileStatsProps {
 }
 
 export function ProfileStats({ stats, loading }: ProfileStatsProps) {
+  const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
+
   function formatTime(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -79,12 +83,12 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Time in Rooms
+              Time Watching NSFW
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Clock className="h-5 w-5 text-talkstream-purple mr-2" />
+              <Eye className="h-5 w-5 text-destructive mr-2" />
               <span className="text-2xl font-bold">{formatTime(stats.timeInRooms)}</span>
             </div>
           </CardContent>
@@ -93,12 +97,12 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Rooms Joined
+              NSFW Sources Visited
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Users className="h-5 w-5 text-talkstream-purple mr-2" />
+              <Globe className="h-5 w-5 text-destructive mr-2" />
               <span className="text-2xl font-bold">{stats.roomsJoined}</span>
             </div>
           </CardContent>
@@ -107,12 +111,12 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Messages Posted
+              Total NSFW Visits
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <MessageCircle className="h-5 w-5 text-talkstream-purple mr-2" />
+              <Hash className="h-5 w-5 text-destructive mr-2" />
               <span className="text-2xl font-bold">{stats.messagesPosted}</span>
             </div>
           </CardContent>
@@ -121,53 +125,32 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
       
       <Card>
         <CardHeader>
-          <CardTitle>Weekly Activity</CardTitle>
-          <CardDescription>
-            Time spent in rooms over the past week
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[250px] w-full">
-            <ChartContainer
-              config={chartConfig}
-              className="h-full w-full"
-            >
-              <BarChart data={stats.weeklyActivity}>
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleDateString(undefined, { weekday: 'short' });
-                  }}
-                />
-                <YAxis 
-                  tickFormatter={(value) => `${value}m`}
-                />
-                <ChartTooltip 
-                  content={
-                    <ChartTooltipContent 
-                      formatter={(value) => `${value} minutes`}
-                    />
-                  } 
-                />
-                <Bar 
-                  dataKey="duration" 
-                  name="activity"
-                  radius={4} 
-                  fill="var(--color-activity)" 
-                />
-              </BarChart>
-            </ChartContainer>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} NSFW Activity
+              </CardTitle>
+              <CardDescription>
+                Time spent watching NSFW content over the past {viewMode === 'weekly' ? 'week' : '30 days'}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'weekly' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('weekly')}
+              >
+                Weekly
+              </Button>
+              <Button
+                variant={viewMode === 'monthly' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('monthly')}
+              >
+                Monthly
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Activity</CardTitle>
-          <CardDescription>
-            Time spent in rooms over the past 30 days
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[250px] w-full">
@@ -175,21 +158,23 @@ export function ProfileStats({ stats, loading }: ProfileStatsProps) {
               config={chartConfig}
               className="h-full w-full"
             >
-              <BarChart data={stats.monthlyActivity}>
+              <BarChart data={viewMode === 'weekly' ? stats.weeklyActivity : stats.monthlyActivity}>
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={(value) => {
                     const date = new Date(value);
-                    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                    return viewMode === 'weekly' 
+                      ? date.toLocaleDateString(undefined, { weekday: 'short' })
+                      : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                   }}
                 />
                 <YAxis 
-                  tickFormatter={(value) => `${Math.floor(value / 60)}h`}
+                  tickFormatter={(value) => viewMode === 'weekly' ? `${value}m` : `${Math.floor(value / 60)}h`}
                 />
                 <ChartTooltip 
                   content={
                     <ChartTooltipContent 
-                      formatter={(value) => formatTime(Number(value))}
+                      formatter={(value) => viewMode === 'weekly' ? `${value} minutes` : formatTime(Number(value))}
                     />
                   } 
                 />
