@@ -1,23 +1,33 @@
 
-import { Link } from "react-router-dom";
-import { ShieldAlert, History, DollarSign } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ShieldAlert, DollarSign } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
 interface NavigationLinksProps {
-  isModerator?: boolean;
   className?: string;
   onClickLink?: () => void;
 }
 
 export function NavigationLinks({ 
-  isModerator = false, 
   className = "", 
   onClickLink 
 }: NavigationLinksProps) {
+  const location = useLocation();
+  const { user } = useAuth();
+  const isModerator = user?.user_metadata?.is_moderator;
+
+  const getLinkClassName = (path: string) => {
+    const isActive = location.pathname === path;
+    return `text-sm font-medium text-clutsh-light hover:text-primary transition-colors relative ${
+      isActive ? 'text-primary' : ''
+    } ${isActive ? 'after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full' : 'hover:after:absolute hover:after:bottom-[-4px] hover:after:left-0 hover:after:right-0 hover:after:h-0.5 hover:after:bg-primary/50 hover:after:rounded-full'}`;
+  };
+
   return (
-    <nav className={className}>
+    <nav className={`flex items-center gap-8 ${className}`}>
       <Link 
         to="/" 
-        className="text-sm font-medium"
+        className={getLinkClassName('/')}
         onClick={onClickLink}
       >
         Home
@@ -25,28 +35,20 @@ export function NavigationLinks({
       {isModerator && (
         <Link 
           to="/moderation" 
-          className="text-sm font-medium flex items-center gap-1"
+          className={`${getLinkClassName('/moderation')} flex items-center gap-1.5`}
           onClick={onClickLink}
         >
-          <ShieldAlert size={14} />
+          <ShieldAlert size={16} />
           Moderation
         </Link>
       )}
       <Link 
         to="/pricing" 
-        className="text-sm font-medium flex items-center gap-1"
+        className={`${getLinkClassName('/pricing')} flex items-center gap-1.5`}
         onClick={onClickLink}
       >
-        <DollarSign size={14} />
+        <DollarSign size={16} />
         Pricing
-      </Link>
-      <Link 
-        to="/changelog" 
-        className="text-sm font-medium flex items-center gap-1"
-        onClick={onClickLink}
-      >
-        <History size={14} />
-        Changelog
       </Link>
     </nav>
   );

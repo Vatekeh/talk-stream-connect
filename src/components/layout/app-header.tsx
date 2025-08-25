@@ -1,10 +1,10 @@
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NavigationLinks } from "./navigation-links";
+import { MobileNavigation } from "./mobile-navigation";
 import { Button } from "../ui/button";
-import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
-import { TrialCountdown } from "@/components/subscription/TrialCountdown";
 import { UserDropdown } from "./user-dropdown";
 
 export function AppHeader() {
@@ -14,44 +14,39 @@ export function AppHeader() {
     <header className="bg-clutsh-midnight sticky top-0 z-10 border-b border-clutsh-slate">
       <div className="container flex items-center justify-between h-16 mx-auto px-4">
         {/* Logo */}
-        <Link to="/" className="text-xl font-bold text-clutsh-light flex items-center">
+        <Link to="/" className="text-xl font-bold text-clutsh-light flex items-center hover:opacity-80 transition-opacity">
           <img 
             src="/lovable-uploads/f6617d82-9257-4618-bd1e-c81e35bc55fa.png" 
             alt="Clutsh Logo" 
-            className="h-8 w-8 mr-2 rounded"
+            className="h-8 w-8 mr-3 rounded"
           />
           Clutsh
         </Link>
 
         {/* Navigation Links - Hidden on Mobile */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex flex-1 justify-center">
           <NavigationLinks />
         </div>
 
-        {/* Trial badge */}
-        <div className="hidden md:block">
-          <TrialCountdown />
-        </div>
-
-        {/* Auth Buttons */}
-        <div className="flex items-center space-x-2">
+        {/* Auth Section */}
+        <div className="flex items-center gap-4">
           {user ? (
             <UserDropdown />
           ) : (
             <Link to="/login">
               <Button 
                 variant="outline" 
-                className="bg-clutsh-slate text-clutsh-light hover:bg-clutsh-steel"
+                className="bg-clutsh-slate text-clutsh-light hover:bg-clutsh-steel border-clutsh-slate"
               >
                 Sign In
               </Button>
             </Link>
           )}
           
-          {/* Mobile menu button - just for visuals, not functional in this example */}
-          <Button variant="ghost" className="text-clutsh-light hover:bg-clutsh-steel md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <MobileNavigation />
+          </div>
         </div>
       </div>
     </header>

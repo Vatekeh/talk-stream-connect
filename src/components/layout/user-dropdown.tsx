@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LogOut, User, CreditCard, Settings, Plus, Users } from "lucide-react";
+import { LogOut, User, CreditCard, Settings, Plus, Users, History } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth";
 import { useProfile } from "@/contexts/ProfileContext";
+import { TrialCountdown } from "@/components/subscription/TrialCountdown";
 
 export function UserDropdown() {
-  const { user: authUser, signOut, isSubscribed } = useAuth();
+  const { user: authUser, signOut, isSubscribed, isTrialing } = useAuth();
   const { user } = useProfile();
   const [isOpen, setIsOpen] = useState(false);
   
@@ -51,15 +52,22 @@ export function UserDropdown() {
         align="end" 
         className="w-56 bg-clutsh-midnight border-clutsh-slate shadow-lg shadow-black/20"
       >
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>My Account</span>
-          {isSubscribed && (
-            <Badge 
-              variant="outline" 
-              className="bg-clutsh-slate/30 text-clutsh-light border-talkstream-purple-dark"
-            >
-              Pro Member
-            </Badge>
+        <DropdownMenuLabel className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span>My Account</span>
+            {isSubscribed && (
+              <Badge 
+                variant="outline" 
+                className="bg-clutsh-slate/30 text-clutsh-light border-primary"
+              >
+                Pro Member
+              </Badge>
+            )}
+          </div>
+          {isTrialing && (
+            <div className="flex justify-start">
+              <TrialCountdown />
+            </div>
           )}
         </DropdownMenuLabel>
         
@@ -107,6 +115,14 @@ export function UserDropdown() {
             >
               <Users className="mr-2 h-4 w-4" />
               <span>Join Public House</span>
+            </DropdownMenuItem>
+          </Link>
+          <Link to="/changelog">
+            <DropdownMenuItem 
+              className="cursor-pointer hover:bg-clutsh-slate/50 focus:bg-clutsh-slate/50"
+            >
+              <History className="mr-2 h-4 w-4" />
+              <span>Changelog</span>
             </DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>
