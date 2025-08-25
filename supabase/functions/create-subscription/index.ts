@@ -230,11 +230,7 @@ serve(async (req) => {
 
       if (!hasDefaultPM) {
         logStep('No default payment method on customer; creating SetupIntent');
-        const setupIntent = await stripe.setupIntents.create({ 
-          customer: customerId, 
-          usage: 'off_session',
-          payment_method_types: ['card', 'apple_pay']
-        });
+        const setupIntent = await stripe.setupIntents.create({ customer: customerId, usage: 'off_session' });
         return new Response(
           JSON.stringify({
             success: true,
@@ -308,10 +304,7 @@ serve(async (req) => {
       customer: customerId,
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
-      payment_settings: { 
-        save_default_payment_method: 'on_subscription'
-      },
-      payment_method_types: ['card', 'apple_pay'],
+      payment_settings: { save_default_payment_method: 'on_subscription' },
       expand: ['latest_invoice.payment_intent'],
       trial_period_days: 30,
       metadata: { userId: user.id },
@@ -341,11 +334,7 @@ serve(async (req) => {
         .eq("id", user.id);
 
       logStep('No PaymentIntent client secret; creating SetupIntent');
-      const setupIntent = await stripe.setupIntents.create({ 
-        customer: customerId, 
-        usage: 'off_session',
-        payment_method_types: ['card', 'apple_pay']
-      });
+      const setupIntent = await stripe.setupIntents.create({ customer: customerId, usage: 'off_session' });
       return new Response(
         JSON.stringify({
           success: true,
