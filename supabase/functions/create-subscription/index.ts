@@ -309,9 +309,9 @@ serve(async (req) => {
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
       payment_settings: { 
-        save_default_payment_method: 'on_subscription',
-        payment_method_types: ['card', 'apple_pay']
+        save_default_payment_method: 'on_subscription'
       },
+      payment_method_types: ['card', 'apple_pay'],
       expand: ['latest_invoice.payment_intent'],
       trial_period_days: 30,
       metadata: { userId: user.id },
